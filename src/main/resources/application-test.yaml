@@ -1,0 +1,7 @@
+server:
+  port: 8080
+
+app:
+  jwt:
+    secret: test-secret-key-which-is-long-enough-for-hs256
+    expiration: 3600000

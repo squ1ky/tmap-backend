@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgis/postgis:16-3.4
+    image: postgres:16-alpine
     container_name: tmap-db
     restart: unless-stopped
     environment:
@@ -17,10 +17,11 @@ services:
       timeout: 5s
       retries: 10
 
-  app:
-    profiles: ["prod"]
-    build: .
-    container_name: tmap-backend
+  heatmap-api:
+    build:
+      context: .
+      dockerfile: heatmap-api/Dockerfile
+    container_name: heatmap-api
     restart: unless-stopped
     depends_on:
       db:
@@ -28,13 +29,27 @@ services:
     env_file:
       - .env
     ports:
-      - "${SERVER_PORT}:${SERVER_PORT}"
+      - "${SERVER_PORT}:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST: db
       DB_PORT: 5432
-      SERVER_PORT: 8080
 
+  data-generator:
+    build:
+      context: .
+      dockerfile: data-generator/Dockerfile
+    container_name: data-generator
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: db
+      DB_PORT: 5432
 
 volumes:
   tmap-pgdata:

@@ -1,0 +1,9 @@
+spring:
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    root: INFO
+    ru.tbank.tmap: DEBUG
+    org.springframework.security: DEBUG

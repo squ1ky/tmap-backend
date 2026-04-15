@@ -2,8 +2,14 @@ spring:
   jpa:
     show-sql: true
 
+  kafka:
+    producer:
+      properties:
+        delivery.timeout.ms: 5000
+
 logging:
   level:
     root: INFO
     ru.tbank.tmap: DEBUG
+    org.springframework.kafka: DEBUG
     org.springframework.security: DEBUG

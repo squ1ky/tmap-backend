@@ -17,6 +17,49 @@ services:
       timeout: 5s
       retries: 10
 
+  kafka:
+    image: apache/kafka:3.9.0
+    container_name: tmap-kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:${KAFKA_EXTERNAL_PORT}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    ports:
+      - "${KAFKA_EXTERNAL_PORT}:9094"
+    volumes:
+      - tmap-kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  kafka-init:
+    image: apache/kafka:3.9.0
+    container_name: tmap-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 \
+          --create --if-not-exists \
+          --topic ${KAFKA_TRANSACTIONS_TOPIC} \
+          --partitions ${KAFKA_TRANSACTIONS_PARTITIONS} \
+          --replication-factor 1
+        echo "Topic ${KAFKA_TRANSACTIONS_TOPIC} ready"
+    restart: "no"
+
   heatmap-api:
     build:
       context: .
@@ -26,6 +69,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     env_file:
       - .env
     ports:
@@ -34,6 +79,7 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST: db
       DB_PORT: 5432
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
   data-generator:
     build:
@@ -44,12 +90,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     env_file:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST: db
       DB_PORT: 5432
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
 volumes:
   tmap-pgdata:
+  tmap-kafka-data:

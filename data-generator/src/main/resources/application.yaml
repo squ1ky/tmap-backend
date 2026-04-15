@@ -23,6 +23,21 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        delivery.timeout.ms: 10000
+        enable.idempotence: true
+
+app:
+  kafka:
+    topic: ${KAFKA_TRANSACTIONS_TOPIC}
+
 logging:
   level:
     root: WARN

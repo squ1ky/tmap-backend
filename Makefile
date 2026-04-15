@@ -1,6 +1,14 @@
+ifneq (,$(wildcard .env))
+    include .env
+    export
+endif
+
 DC = docker compose
 
-.PHONY: up down dev db run logs build migrate
+API_MODULE = heatmap-api
+GEN_MODULE = data-generator
+
+.PHONY: up down dev-api dev-gen db run logs build migrate
 
 # ===== Продакшн: всё в докере =====
 up:
@@ -9,9 +17,14 @@ up:
 down:
 	$(DC) --profile prod down
 
-# ===== Локальная разработка: БД в докере + приложение локально =====
-dev: db
-	./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+# ===== Локальная разработка =====
+# Запуск API локально (нужна поднятая БД)
+dev-api: db
+	./mvnw spring-boot:run -pl $(API_MODULE) -Dspring-boot.run.profiles=local
+
+# Запуск Генератора локально
+dev-gen: db
+	./mvnw spring-boot:run -pl $(GEN_MODULE) -Dspring-boot.run.profiles=local
 
 # Поднять только БД
 db:
@@ -25,12 +38,14 @@ logs:
 build:
 	./mvnw clean package -DskipTests
 
+# ===== Миграции (только для heatmap-api) =====
 migrate:
-	@if [ -z "$(name)" ]; then echo "Использование: make migrate name=create_users"; exit 1; fi
-	$(eval VERSION := $(shell ls src/main/resources/db/migration/V*.sql 2>/dev/null | sed 's/.*V\([0-9]*\)__.*/\1/' | sort -n | tail -1))
+	@if [ -z "$(name)" ]; then echo "Использование: make migrate name=description"; exit 1; fi
+	$(eval MIGRATION_DIR := $(API_MODULE)/src/main/resources/db/migration)
+	$(eval VERSION := $(shell ls $(MIGRATION_DIR)/V*.sql 2>/dev/null | sed 's/.*V\([0-9]*\)__.*/\1/' | sort -n | tail -1))
 	$(eval NEXT := $(shell echo $$(( $(if $(VERSION),$(VERSION),0) + 1 ))))
-	touch src/main/resources/db/migration/V$(NEXT)__$(name).sql
-	@echo "Создан: src/main/resources/db/migration/V$(NEXT)__$(name).sql"
+	touch $(MIGRATION_DIR)/V$(NEXT)__$(name).sql
+	@echo "Создан файл миграции: $(MIGRATION_DIR)/V$(NEXT)__$(name).sql"
 
 .PHONY: lint lint-checkstyle lint-pmd
 

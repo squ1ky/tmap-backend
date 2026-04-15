@@ -8,7 +8,7 @@ import org.springframework.test.context.ActiveProfiles;
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
 @ActiveProfiles("test")
-class TmapBackendApplicationTests {
+class HeatmapApiApplicationTests {
 
 	@Test
 	void contextLoads() {

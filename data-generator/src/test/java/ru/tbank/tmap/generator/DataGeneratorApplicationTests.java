@@ -1,4 +1,4 @@
-package ru.tbank.tmap;
+package ru.tbank.tmap.generator;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

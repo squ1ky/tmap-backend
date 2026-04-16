@@ -61,6 +61,7 @@ public class TransactionScheduler {
         executor.schedule(this::generateBatch, delay, TimeUnit.MILLISECONDS);
     }
 
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     private void generateBatch() {
         try {
             if (venueCache.isEmpty()) {

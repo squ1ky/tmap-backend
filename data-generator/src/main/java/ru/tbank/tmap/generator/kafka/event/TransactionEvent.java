@@ -10,6 +10,7 @@ public record TransactionEvent(
         BigDecimal amount,
         double lat,
         double lng,
+        String category,
         Instant occurredAt
 ) {
 }

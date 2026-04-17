@@ -1,0 +1,70 @@
+openapi: 3.0.3
+info:
+  title: T-Map API
+  version: 0.1.0
+  description: Minimal API contract for testing public heatmap data.
+
+paths:
+  /heatmap:
+    get:
+      tags:
+        - Map & Heatmap
+      summary: Get heatmap data
+      description: Returns heatmap clusters aggregated for the last 60 minutes.
+      operationId: getHeatmapData
+      responses:
+        '200':
+          description: Heatmap clusters loaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeatmapResponse'
+
+components:
+  schemas:
+    HeatmapResponse:
+      type: object
+      required:
+        - windowMinutes
+        - generatedAt
+        - clusters
+      properties:
+        windowMinutes:
+          type: integer
+          example: 60
+        generatedAt:
+          type: string
+          format: date-time
+          example: '2026-04-17T13:20:00Z'
+        clusters:
+          type: array
+          items:
+            $ref: '#/components/schemas/HeatmapCluster'
+    HeatmapCluster:
+      type: object
+      required:
+        - centerLat
+        - centerLng
+        - weight
+        - avgCheck
+        - updatedAt
+      properties:
+        centerLat:
+          type: number
+          format: double
+          example: 55.796127
+        centerLng:
+          type: number
+          format: double
+          example: 49.106414
+        weight:
+          type: integer
+          example: 128
+        avgCheck:
+          type: number
+          format: decimal
+          example: 742.50
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-04-17T13:15:00Z'

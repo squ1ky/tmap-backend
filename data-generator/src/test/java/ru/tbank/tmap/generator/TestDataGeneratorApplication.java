@@ -1,4 +1,4 @@
-package ru.tbank.tmap;
+package ru.tbank.tmap.generator;
 
 import org.springframework.boot.SpringApplication;
 

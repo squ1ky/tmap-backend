@@ -1,6 +1,7 @@
 package ru.tbank.tmap.heatmap.api;
 
 import static org.mockito.BDDMockito.given;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -8,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -17,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.config.SecurityConfig;
 import ru.tbank.tmap.heatmap.api.dto.ClusterDetailsResponse;
 import ru.tbank.tmap.heatmap.api.dto.HeatmapClusterResponse;
+import org.springframework.web.server.ResponseStatusException;
 
 @WebMvcTest(HeatmapController.class)
 @Import(SecurityConfig.class)
@@ -60,7 +63,7 @@ class HeatmapControllerTest {
     @Test
     void shouldReturnClusterDetailsWithoutAuthentication() throws Exception {
         given(heatmapService.getClusterDetails("89115b22b0bffff", 9))
-                .willReturn(java.util.Optional.of(new ClusterDetailsResponse(
+                .willReturn(Optional.of(new ClusterDetailsResponse(
                         "89115b22b0bffff",
                         9,
                         128,
@@ -78,5 +81,33 @@ class HeatmapControllerTest {
                 .andExpect(jsonPath("$.avgCheck").value(742.50))
                 .andExpect(jsonPath("$.sumAmount").value(95040.00))
                 .andExpect(jsonPath("$.updatedAt").value("2026-04-17T10:20:00Z"));
+    }
+
+    @Test
+    void shouldReturnValidationErrorBody() throws Exception {
+        given(heatmapService.getHeatmapClusters(55.9, 49.2, 55.8, 49.1, 8, 60))
+                .willThrow(new ResponseStatusException(BAD_REQUEST, "Invalid map bounds"));
+
+        mockMvc.perform(get("/heatmap/clusters")
+                        .param("swLat", "55.9")
+                        .param("swLng", "49.2")
+                        .param("neLat", "55.8")
+                        .param("neLng", "49.1")
+                        .param("resolution", "8"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").value("Invalid map bounds"));
+    }
+
+    @Test
+    void shouldReturnNotFoundErrorBodyForMissingCluster() throws Exception {
+        given(heatmapService.getClusterDetails("89115b22b0bffff", 9))
+                .willReturn(Optional.empty());
+
+        mockMvc.perform(get("/heatmap/clusters/89115b22b0bffff")
+                        .param("resolution", "9"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("Cluster not found"));
     }
 }

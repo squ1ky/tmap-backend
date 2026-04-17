@@ -46,7 +46,7 @@ paths:
           required: true
           schema:
             type: integer
-            minimum: 5
+            minimum: 7
             maximum: 9
             example: 8
         - name: window
@@ -80,7 +80,7 @@ paths:
           required: true
           schema:
             type: integer
-            minimum: 5
+            minimum: 7
             maximum: 9
             example: 9
       responses:

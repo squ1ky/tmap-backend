@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap.api;
+package ru.tbank.tmap.api;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -7,8 +7,8 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import ru.tbank.tmap.heatmap.api.dto.ClusterDetailsResponse;
-import ru.tbank.tmap.heatmap.api.dto.HeatmapClusterResponse;
+import ru.tbank.tmap.api.dto.ClusterDetailsResponse;
+import ru.tbank.tmap.api.dto.HeatmapClusterResponse;
 
 @Service
 public class HeatmapServiceImpl implements HeatmapService {

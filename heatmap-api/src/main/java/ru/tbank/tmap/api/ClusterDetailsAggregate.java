@@ -1,12 +1,11 @@
-package ru.tbank.tmap.heatmap.api.dto;
+package ru.tbank.tmap.api;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
-public record HeatmapClusterResponse(
-        String h3Index,
-        double centerLat,
-        double centerLng,
+public record ClusterDetailsAggregate(
+        long h3Index,
+        int resolution,
         int txCount,
         BigDecimal avgCheck,
         BigDecimal sumAmount,

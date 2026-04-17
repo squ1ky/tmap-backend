@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap.api;
+package ru.tbank.tmap.api;
 
 import java.time.Instant;
 import java.util.List;

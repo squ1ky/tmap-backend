@@ -1,9 +1,9 @@
-package ru.tbank.tmap.heatmap.api;
+package ru.tbank.tmap.api;
 
 import java.util.List;
 import java.util.Optional;
-import ru.tbank.tmap.heatmap.api.dto.ClusterDetailsResponse;
-import ru.tbank.tmap.heatmap.api.dto.HeatmapClusterResponse;
+import ru.tbank.tmap.api.dto.ClusterDetailsResponse;
+import ru.tbank.tmap.api.dto.HeatmapClusterResponse;
 
 public interface HeatmapService {
 

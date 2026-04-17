@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap.api;
+package ru.tbank.tmap.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -15,8 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.web.server.ResponseStatusException;
-import ru.tbank.tmap.heatmap.api.dto.ClusterDetailsResponse;
-import ru.tbank.tmap.heatmap.api.dto.HeatmapClusterResponse;
+import ru.tbank.tmap.api.dto.ClusterDetailsResponse;
+import ru.tbank.tmap.api.dto.HeatmapClusterResponse;
 
 class HeatmapServiceImplTest {
 

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap.api;
+package ru.tbank.tmap.api;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -16,13 +16,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.tbank.tmap.config.GlobalExceptionHandler;
 import ru.tbank.tmap.config.SecurityConfig;
-import ru.tbank.tmap.heatmap.api.dto.ClusterDetailsResponse;
-import ru.tbank.tmap.heatmap.api.dto.HeatmapClusterResponse;
+import ru.tbank.tmap.api.dto.ClusterDetailsResponse;
+import ru.tbank.tmap.api.dto.HeatmapClusterResponse;
 import org.springframework.web.server.ResponseStatusException;
 
 @WebMvcTest(HeatmapController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, GlobalExceptionHandler.class})
 class HeatmapControllerTest {
 
     @Autowired

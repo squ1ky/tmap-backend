@@ -1,10 +1,11 @@
-package ru.tbank.tmap.generator.kafka.event;
+package ru.tbank.tmap.generator.kafka;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.generator.config.GeneratorProperties;
+import ru.tbank.tmap.generator.kafka.event.TransactionEvent;
 
 @Component
 @RequiredArgsConstructor

@@ -8,7 +8,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.generator.config.GeneratorProperties;
 import ru.tbank.tmap.generator.kafka.event.TransactionEvent;
-import ru.tbank.tmap.generator.kafka.event.TransactionProducer;
+import ru.tbank.tmap.generator.kafka.TransactionProducer;
 import ru.tbank.tmap.generator.service.TransactionGenerator;
 import ru.tbank.tmap.generator.service.VenueCache;
 
@@ -62,7 +62,7 @@ public class TransactionScheduler {
     }
 
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    private void generateBatch() {
+    /* package */ void generateBatch() {
         try {
             if (venueCache.isEmpty()) {
                 log.debug("No active venues, skipping batch");

@@ -5,13 +5,55 @@ info:
   description: Minimal API contract for testing public heatmap data.
 
 paths:
-  /heatmap:
+  /heatmap/clusters:
     get:
       tags:
         - Map & Heatmap
-      summary: Get heatmap data
-      description: Returns heatmap clusters aggregated for the last 60 minutes.
-      operationId: getHeatmapData
+      summary: Get heatmap clusters
+      description: Returns a flat array of activity clusters for the requested viewport.
+      operationId: getHeatmapClusters
+      parameters:
+        - name: swLat
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            example: 55.7481
+        - name: swLng
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            example: 49.0664
+        - name: neLat
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            example: 55.8402
+        - name: neLng
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            example: 49.1912
+        - name: resolution
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 5
+            maximum: 9
+            example: 8
+        - name: window
+          in: query
+          schema:
+            type: integer
+            default: 60
       responses:
         '200':
           description: Heatmap clusters loaded successfully
@@ -19,36 +61,58 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HeatmapResponse'
+  /heatmap/clusters/{h3Index}:
+    get:
+      tags:
+        - Map & Heatmap
+      summary: Get cluster details by H3 index
+      description: Returns aggregated metrics for a specific cluster.
+      operationId: getClusterDetails
+      parameters:
+        - name: h3Index
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "89115b22b0bffff"
+        - name: resolution
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 5
+            maximum: 9
+            example: 9
+      responses:
+        '200':
+          description: Cluster details loaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClusterDetailsResponse'
+        '404':
+          description: Cluster not found
 
 components:
   schemas:
     HeatmapResponse:
-      type: object
-      required:
-        - windowMinutes
-        - generatedAt
-        - clusters
-      properties:
-        windowMinutes:
-          type: integer
-          example: 60
-        generatedAt:
-          type: string
-          format: date-time
-          example: '2026-04-17T13:20:00Z'
-        clusters:
-          type: array
-          items:
-            $ref: '#/components/schemas/HeatmapCluster'
+      type: array
+      items:
+        $ref: '#/components/schemas/HeatmapCluster'
     HeatmapCluster:
       type: object
       required:
+        - h3Index
         - centerLat
         - centerLng
-        - weight
+        - txCount
         - avgCheck
+        - sumAmount
         - updatedAt
       properties:
+        h3Index:
+          type: string
+          example: "89115b22b0bffff"
         centerLat:
           type: number
           format: double
@@ -57,13 +121,48 @@ components:
           type: number
           format: double
           example: 49.106414
-        weight:
+        txCount:
           type: integer
           example: 128
         avgCheck:
           type: number
           format: decimal
           example: 742.50
+        sumAmount:
+          type: number
+          format: decimal
+          example: 95040.00
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-04-17T13:15:00Z'
+    ClusterDetailsResponse:
+      type: object
+      required:
+        - h3Index
+        - resolution
+        - txCount
+        - avgCheck
+        - sumAmount
+        - updatedAt
+      properties:
+        h3Index:
+          type: string
+          example: "89115b22b0bffff"
+        resolution:
+          type: integer
+          example: 9
+        txCount:
+          type: integer
+          example: 128
+        avgCheck:
+          type: number
+          format: decimal
+          example: 742.50
+        sumAmount:
+          type: number
+          format: decimal
+          example: 95040.00
         updatedAt:
           type: string
           format: date-time

@@ -3,10 +3,9 @@ package ru.tbank.tmap.heatmap.api.dto;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-public record HeatmapClusterResponse(
+public record ClusterDetailsResponse(
         String h3Index,
-        double centerLat,
-        double centerLng,
+        int resolution,
         int txCount,
         BigDecimal avgCheck,
         BigDecimal sumAmount,

@@ -1,8 +1,20 @@
 package ru.tbank.tmap.heatmap.api;
 
-import ru.tbank.tmap.heatmap.api.dto.HeatmapResponse;
+import java.util.List;
+import java.util.Optional;
+import ru.tbank.tmap.heatmap.api.dto.ClusterDetailsResponse;
+import ru.tbank.tmap.heatmap.api.dto.HeatmapClusterResponse;
 
 public interface HeatmapService {
 
-    HeatmapResponse getHeatmap();
+    List<HeatmapClusterResponse> getHeatmapClusters(
+            double swLat,
+            double swLng,
+            double neLat,
+            double neLng,
+            int resolution,
+            int window
+    );
+
+    Optional<ClusterDetailsResponse> getClusterDetails(String h3Index, int resolution);
 }

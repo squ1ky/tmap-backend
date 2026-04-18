@@ -114,4 +114,3 @@ CREATE INDEX idx_transactions_venue_id_occurred_at ON transactions (venue_id, oc
 CREATE INDEX idx_cluster_history_hour_bucket ON cluster_history (hour_bucket);
 CREATE UNIQUE INDEX uq_loyalty_verifications_rule_user
   ON loyalty_verifications (rule_id, user_id);
-CREATE UNIQUE INDEX uq_h3_to_district_h3_index ON h3_to_district (h3_index);

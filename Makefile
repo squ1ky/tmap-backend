@@ -47,9 +47,10 @@ migrate:
 	@if [ -z "$(name)" ]; then echo "Использование: make migrate name=description"; exit 1; fi
 	$(eval MIGRATION_DIR := $(API_MODULE)/src/main/resources/db/migration)
 	$(eval VERSION := $(shell ls $(MIGRATION_DIR)/V*.sql 2>/dev/null | sed 's/.*V\([0-9]*\)__.*/\1/' | sort -n | tail -1))
-	$(eval NEXT := $(shell echo $$(( $(if $(VERSION),$(VERSION),0) + 1 ))))
-	touch $(MIGRATION_DIR)/V$(NEXT)__$(name).sql
-	@echo "Создан файл миграции: $(MIGRATION_DIR)/V$(NEXT)__$(name).sql"
+	$(eval NEXT_NUM := $(shell echo $$(( $(if $(VERSION),$(VERSION),0) + 1 ))))
+	$(eval NEXT_VERSION := $(shell printf "%03d" $(NEXT_NUM)))
+	@touch $(MIGRATION_DIR)/V$(NEXT_VERSION)__$(name).sql
+	@echo "Создан файл миграции: $(MIGRATION_DIR)/V$(NEXT_VERSION)__$(name).sql"
 
 .PHONY: lint lint-checkstyle lint-pmd
 

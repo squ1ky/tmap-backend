@@ -9,15 +9,15 @@ import org.openapitools.model.ClusterDTO;
 import org.openapitools.model.ClusterDetailsResponse;
 import org.openapitools.model.HeatmapResponse;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.repository.HeatmapQueryRepository;
 
 @Service
+@Transactional(readOnly = true)
 public class HeatmapServiceImpl implements HeatmapService {
 
     private static final int DEFAULT_WINDOW_MINUTES = 60;
     private static final int REFRESH_INTERVAL_MINUTES = 5;
-    private static final int MIN_SUPPORTED_RESOLUTION = 7;
-    private static final int MAX_SUPPORTED_RESOLUTION = 9;
 
     private final HeatmapQueryRepository heatmapQueryRepository;
     private final Clock clock;
@@ -37,8 +37,6 @@ public class HeatmapServiceImpl implements HeatmapService {
             final int window
     ) {
         validateBounds(swLat, neLat);
-        validateResolution(resolution);
-        validateWindow(window);
 
         final Instant from = Instant.now(clock).minusSeconds(window * 60L);
         return new HeatmapResponse()
@@ -56,8 +54,6 @@ public class HeatmapServiceImpl implements HeatmapService {
 
     @Override
     public Optional<ClusterDetailsResponse> getClusterDetails(final String h3Index, final int resolution) {
-        validateResolution(resolution);
-
         final Instant from = Instant.now(clock).minusSeconds(DEFAULT_WINDOW_MINUTES * 60L);
         final long dbH3Index = parseH3Index(h3Index);
         return heatmapQueryRepository.findClusterDetails(dbH3Index, resolution, from)
@@ -76,18 +72,6 @@ public class HeatmapServiceImpl implements HeatmapService {
     ) {
         if (swLat >= neLat) {
             throw new IllegalArgumentException("Invalid map bounds");
-        }
-    }
-
-    private void validateResolution(final int resolution) {
-        if (resolution < MIN_SUPPORTED_RESOLUTION || resolution > MAX_SUPPORTED_RESOLUTION) {
-            throw new IllegalArgumentException("Supported resolution range is 7..9");
-        }
-    }
-
-    private void validateWindow(final int window) {
-        if (window <= 0) {
-            throw new IllegalArgumentException("Window must be positive");
         }
     }
 

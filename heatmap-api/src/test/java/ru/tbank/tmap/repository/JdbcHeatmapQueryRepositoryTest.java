@@ -1,4 +1,4 @@
-package ru.tbank.tmap.api;
+package ru.tbank.tmap.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,10 +19,10 @@ import ru.tbank.tmap.repository.model.ClusterDetailsAggregate;
 import ru.tbank.tmap.repository.model.HeatmapClusterAggregate;
 
 @JdbcTest
-@Import({TestcontainersConfiguration.class, HeatmapQueryRepositoryImpl.class})
+@Import({TestcontainersConfiguration.class, JdbcHeatmapQueryRepository.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
-class HeatmapQueryRepositoryImplTest {
+class JdbcHeatmapQueryRepositoryTest {
 
     @Autowired
     private HeatmapQueryRepository heatmapQueryRepository;
@@ -76,18 +76,14 @@ class HeatmapQueryRepositoryImplTest {
 
     @Test
     void findClusterDetails_whenClusterExists_thenReturnsAggregate() {
-        final String venueId = UUID.randomUUID().toString();
-        insertVenue(venueId);
-        insertTransaction(
-                UUID.randomUUID().toString(),
-                venueId,
+        insertClusterHistory(
                 "89115b22b0bffff",
-                "88115b22b1fffff",
-                "87115b22bffffff",
+                9,
+                "food",
+                Instant.parse("2026-04-17T10:00:00Z"),
+                3,
                 new BigDecimal("900.00"),
-                55.7950,
-                49.1100,
-                Instant.parse("2026-04-17T10:18:00Z")
+                new BigDecimal("2700.00")
         );
 
         final Optional<ClusterDetailsAggregate> result = heatmapQueryRepository.findClusterDetails(
@@ -97,9 +93,9 @@ class HeatmapQueryRepositoryImplTest {
         );
 
         assertThat(result).isPresent();
-        assertThat(result.orElseThrow().txCount()).isEqualTo(1);
+        assertThat(result.orElseThrow().txCount()).isEqualTo(3);
         assertThat(result.orElseThrow().avgCheck()).isEqualByComparingTo("900.00");
-        assertThat(result.orElseThrow().sumAmount()).isEqualByComparingTo("900.00");
+        assertThat(result.orElseThrow().sumAmount()).isEqualByComparingTo("2700.00");
     }
 
     private void insertVenue(final String venueId) {
@@ -149,6 +145,32 @@ class HeatmapQueryRepositoryImplTest {
                 Long.parseUnsignedLong(h3Res8, 16),
                 Long.parseUnsignedLong(h3Res9, 16),
                 java.sql.Timestamp.from(occurredAt)
+        );
+    }
+
+    private void insertClusterHistory(
+            final String h3Index,
+            final int resolution,
+            final String category,
+            final Instant hourBucket,
+            final int txCount,
+            final BigDecimal avgCheck,
+            final BigDecimal sumAmount
+    ) {
+        jdbcTemplate.update(
+                """
+                INSERT INTO cluster_history (
+                    h3_index, resolution, category, hour_bucket, tx_count, avg_check, sum_amount, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                Long.parseUnsignedLong(h3Index, 16),
+                resolution,
+                category,
+                java.sql.Timestamp.from(hourBucket),
+                txCount,
+                avgCheck,
+                sumAmount,
+                java.sql.Timestamp.from(hourBucket)
         );
     }
 }

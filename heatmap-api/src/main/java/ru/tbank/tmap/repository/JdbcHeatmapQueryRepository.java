@@ -1,10 +1,11 @@
-package ru.tbank.tmap.api;
+package ru.tbank.tmap.repository;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -13,11 +14,11 @@ import ru.tbank.tmap.repository.model.ClusterDetailsAggregate;
 import ru.tbank.tmap.repository.model.HeatmapClusterAggregate;
 
 @Repository
-public class HeatmapQueryRepositoryImpl implements HeatmapQueryRepository {
+public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
-    public HeatmapQueryRepositoryImpl(final NamedParameterJdbcTemplate jdbcTemplate) {
+    public JdbcHeatmapQueryRepository(final NamedParameterJdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -74,21 +75,25 @@ public class HeatmapQueryRepositoryImpl implements HeatmapQueryRepository {
             final int resolution,
             final Instant from
     ) {
-        final String h3Column = resolveH3Column(resolution);
         final String sql = """
                 SELECT
-                    COUNT(*) AS tx_count,
-                    COALESCE(AVG(t.amount), 0) AS avg_check,
-                    COALESCE(SUM(t.amount), 0) AS sum_amount,
-                    MAX(t.occurred_at) AS updated_at
-                FROM transactions t
-                WHERE t.occurred_at >= :from
-                  AND %s = :h3Index
-                """.formatted(h3Column);
+                    COALESCE(SUM(ch.tx_count), 0) AS tx_count,
+                    CASE
+                        WHEN COALESCE(SUM(ch.tx_count), 0) = 0 THEN 0
+                        ELSE COALESCE(SUM(ch.sum_amount), 0) / SUM(ch.tx_count)
+                    END AS avg_check,
+                    COALESCE(SUM(ch.sum_amount), 0) AS sum_amount,
+                    MAX(ch.hour_bucket) AS updated_at
+                FROM cluster_history ch
+                WHERE ch.hour_bucket >= :from
+                  AND ch.h3_index = :h3Index
+                  AND ch.resolution = :resolution
+                """;
 
         final MapSqlParameterSource params = new MapSqlParameterSource(Map.of(
                 "from", Timestamp.from(from),
-                "h3Index", h3Index
+                "h3Index", h3Index,
+                "resolution", resolution
         ));
 
         return jdbcTemplate.query(sql, params, rs -> {
@@ -117,6 +122,6 @@ public class HeatmapQueryRepositoryImpl implements HeatmapQueryRepository {
     }
 
     private BigDecimal defaultIfNull(final BigDecimal value) {
-        return value == null ? BigDecimal.ZERO : value;
+        return Objects.requireNonNullElse(value, BigDecimal.ZERO);
     }
 }

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.api;
+package ru.tbank.tmap.service;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -8,9 +8,8 @@ import java.util.Optional;
 import org.openapitools.model.ClusterDTO;
 import org.openapitools.model.ClusterDetailsResponse;
 import org.openapitools.model.HeatmapResponse;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import ru.tbank.tmap.repository.HeatmapQueryRepository;
 
 @Service
 public class HeatmapServiceImpl implements HeatmapService {
@@ -77,23 +76,20 @@ public class HeatmapServiceImpl implements HeatmapService {
             final double neLat,
             final double neLng
     ) {
-        if (swLat >= neLat || swLng >= neLng) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid map bounds");
+        if (swLat >= neLat) {
+            throw new IllegalArgumentException("Invalid map bounds");
         }
     }
 
     private void validateResolution(final int resolution) {
         if (resolution < MIN_SUPPORTED_RESOLUTION || resolution > MAX_SUPPORTED_RESOLUTION) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Supported resolution range is 7..9"
-            );
+            throw new IllegalArgumentException("Supported resolution range is 7..9");
         }
     }
 
     private void validateWindow(final int window) {
         if (window <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Window must be positive");
+            throw new IllegalArgumentException("Window must be positive");
         }
     }
 
@@ -101,7 +97,7 @@ public class HeatmapServiceImpl implements HeatmapService {
         try {
             return Long.parseUnsignedLong(h3Index, 16);
         } catch (NumberFormatException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid h3Index", ex);
+            throw new IllegalArgumentException("Invalid h3Index", ex);
         }
     }
 }

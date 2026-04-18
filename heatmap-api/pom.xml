@@ -86,10 +86,19 @@
             <artifactId>spring-dotenv</artifactId>
             <version>${spring-dotenv.version}</version>
         </dependency>
+      
+        <!-- ===== H3 ===== -->
         <dependency>
             <groupId>com.uber</groupId>
             <artifactId>h3</artifactId>
             <version>3.6.0</version>
+        </dependency>
+
+        <!-- ===== OpenAPI Nullable Support ===== -->
+        <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>jackson-databind-nullable</artifactId>
+            <version>0.2.6</version>
         </dependency>
 
         <!-- ===== Lombok ===== -->
@@ -130,6 +139,27 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>7.2.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/api/openapi.yaml</inputSpec>
+                            <generatorName>spring</generatorName>
+                            <configOptions>
+                                <useSpringBoot3>true</useSpringBoot3>
+                                <interfaceOnly>true</interfaceOnly>
+                                <useResponseEntity>true</useResponseEntity>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

@@ -1,0 +1,1855 @@
+openapi: 3.0.3
+info:
+  title: T-Map API
+  description: >
+    REST API for a city activity visualization platform with venue management
+    and loyalty features. Includes a heatmap and QR-based loyalty.
+  version: 1.0.0
+  contact:
+    name: Backend Team
+    email: backend@citymap.local
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local Development Server
+
+tags:
+  - name: Auth
+    description: Registration, sign-in, and token management
+  - name: Map & Heatmap
+    description: Aggregated geospatial data for activity visualization
+  - name: Venues (Public)
+    description: Public venue pages
+  - name: Business (Owner)
+    description: Venue, content, promotion and loyalty management for owners
+  - name: Profile
+    description: Current user profile and loyalty history
+  - name: Admin
+    description: Administrative moderation for venues and users
+
+paths:
+  # ── Auth ────────────────────────────────────
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      description: >
+        Creates a user account and returns an access token.
+        The refresh token is issued as an httpOnly cookie.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Sign in
+      description: >
+        Authenticates the user, returns an access token,
+        and issues a refresh token as an httpOnly cookie.
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Rotate refresh token
+      operationId: refreshAuthToken
+      description: >
+        Rotates the refresh token from an httpOnly cookie and returns
+        a new access token. A new refresh token is issued as an httpOnly cookie.
+      security: []
+      parameters:
+        - name: refreshToken
+          in: cookie
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: New token pair issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Sign out
+      operationId: logoutUser
+      description: >
+        Invalidates the current session for the authenticated user logged in
+        with a bearer JWT.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Logged out successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ── Heatmap ─────────────────────────────────
+  /heatmap/clusters:
+    get:
+      tags: [Map & Heatmap]
+      summary: Get heatmap clusters
+      description: >
+        Returns a flat array of activity clusters for the requested viewport,
+        optimized for native deck.gl rendering.
+      operationId: getHeatmapClusters
+      parameters:
+        - name: swLat
+          in: query
+          required: true
+          description: South-west corner latitude (e.g., bottom-left of Kazan)
+          schema:
+            type: number
+            format: double
+            example: 55.7481
+        - name: swLng
+          in: query
+          required: true
+          description: South-west corner longitude
+          schema:
+            type: number
+            format: double
+            example: 49.0664
+        - name: neLat
+          in: query
+          required: true
+          description: North-east corner latitude (e.g., top-right of Kazan)
+          schema:
+            type: number
+            format: double
+            example: 55.8402
+        - name: neLng
+          in: query
+          required: true
+          description: North-east corner longitude
+          schema:
+            type: number
+            format: double
+            example: 49.1912
+        - name: resolution
+          in: query
+          required: true
+          description: H3 resolution
+          schema:
+            type: integer
+            minimum: 5
+            maximum: 9
+            example: 8
+        - name: category
+          in: query
+          description: Category filter. Can be repeated.
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [food, entertainment, shopping]
+        - name: window
+          in: query
+          description: Aggregation window in minutes
+          schema:
+            type: integer
+            default: 60
+      responses:
+        '200':
+          description: Flat array of clusters for deck.gl
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeatmapResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /heatmap/clusters/{h3Index}:
+    get:
+      tags: [Map & Heatmap]
+      summary: Get cluster details by H3 index
+      description: Returns human-readable aggregated metrics for a specific hex (used for pop-ups).
+      operationId: getClusterDetails
+      parameters:
+        - name: h3Index
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "89115b22b0bffff"
+        - name: resolution
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 5
+            maximum: 9
+            example: 9
+      responses:
+        '200':
+          description: Zone metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClusterDetailsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Venues (Public) ─────────────────────────
+  /venues:
+    get:
+      tags: [Venues (Public)]
+      summary: Get venues in viewport
+      description: Returns only venues with ACTIVE moderation status inside the requested viewport
+      operationId: getVenuesInViewport
+      parameters:
+        - name: swLat
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            example: 55.7801
+        - name: swLng
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            example: 49.1102
+        - name: neLat
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            example: 55.7995
+        - name: neLng
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            example: 49.1355
+        - name: category
+          in: query
+          description: Category filter. Can be repeated.
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [food, entertainment, shopping]
+      responses:
+        '200':
+          description: Venues in viewport
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VenuePublicResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /venues/{id}:
+    get:
+      tags: [Venues (Public)]
+      summary: Get venue page
+      description: Returns only venues with ACTIVE moderation status
+      operationId: getVenueById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Venue details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenuePublicResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /venues/{id}/promos:
+    get:
+      tags: [Venues (Public)]
+      summary: Get active venue promos
+      description: Returns only active promos for venues with ACTIVE moderation status
+      operationId: getVenuePromos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Active venue promos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VenuePromoResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /venues/{id}/loyalty-rules:
+    get:
+      tags: [Venues (Public)]
+      summary: Get active loyalty rules for a venue
+      description: >
+        Returns active loyalty rules available for the given venue.
+        Public endpoint — users need to see available discounts before scanning QR.
+      operationId: getVenueLoyaltyRules
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Active loyalty rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoyaltyRuleResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Profile (current user) ──────────────────
+  /profile/loyalty/qr:
+    get:
+      tags: [Profile]
+      summary: Get current user loyalty QR payload
+      operationId: getMyLoyaltyQr
+      description: Returns data for rendering the personal loyalty QR code.
+      x-required-roles: [USER]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User QR code payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoyaltyQrResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /profile/loyalty/history:
+    get:
+      tags: [Profile]
+      summary: Get current user loyalty activation history
+      operationId: getLoyaltyHistory
+      x-required-roles: [USER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Current user loyalty activation history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoyaltyVerificationPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /profile/loyalty/used-promos:
+    get:
+      tags: [Profile]
+      summary: Get current user used promos history
+      operationId: getUsedPromosHistory
+      x-required-roles: [USER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Current user used promos history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsedPromoPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ── Business (Owner) ────────────────────────
+  /business/venues:
+    get:
+      tags: [Business (Owner)]
+      summary: Get my venues
+      operationId: getMyVenues
+      description: Requires an authenticated user with the `BUSINESS_OWNER` role
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Owner venue list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VenueOwnerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Business (Owner)]
+      summary: Register a venue
+      operationId: createVenue
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VenueCreateRequest'
+      responses:
+        '201':
+          description: Venue created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenueOwnerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /business/venues/{id}:
+    get:
+      tags: [Business (Owner)]
+      summary: Get my venue by id
+      operationId: getMyVenueById
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Owner venue details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenueOwnerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Business (Owner)]
+      summary: Update venue details
+      operationId: updateVenue
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VenueUpdateRequest'
+      responses:
+        '200':
+          description: Venue updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenueOwnerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Business (Owner)]
+      summary: Delete a venue
+      operationId: deleteVenue
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Venue deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /business/venues/{id}/loyalty-rules:
+    get:
+      tags: [Business (Owner)]
+      summary: Get venue loyalty rules (owner view)
+      operationId: getBusinessVenueLoyaltyRules
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Venue loyalty rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoyaltyRuleResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Business (Owner)]
+      summary: Create loyalty rule
+      operationId: createBusinessVenueLoyaltyRule
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoyaltyRuleCreateRequest'
+      responses:
+        '201':
+          description: Loyalty rule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoyaltyRuleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /business/venues/{id}/promos:
+    post:
+      tags: [Business (Owner)]
+      summary: Create promo
+      operationId: createBusinessVenuePromo
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VenuePromoCreateRequest'
+      responses:
+        '201':
+          description: Promo created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenuePromoResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /business/promos/{id}:
+    get:
+      tags: [Business (Owner)]
+      summary: Get promo by id
+      operationId: getBusinessPromoById
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Promo details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenuePromoResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Business (Owner)]
+      summary: Update promo
+      operationId: updateBusinessPromo
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VenuePromoUpdateRequest'
+      responses:
+        '200':
+          description: Promo updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenuePromoResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Business (Owner)]
+      summary: Delete promo
+      operationId: deleteBusinessPromo
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Promo deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /business/loyalty-rules/{id}:
+    patch:
+      tags: [Business (Owner)]
+      summary: Update or deactivate loyalty rule
+      operationId: updateBusinessLoyaltyRule
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoyaltyRuleUpdateRequest'
+      responses:
+        '200':
+          description: Loyalty rule updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoyaltyRuleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /business/loyalty-rules/{ruleId}/activate:
+    post:
+      tags: [Business (Owner)]
+      summary: Activate guest loyalty QR code
+      description: >
+        Allows the authenticated owner of the venue linked to the selected
+        loyalty rule to activate it for a specific user.
+      operationId: activateLoyaltyQr
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoyaltyActivationRequest'
+      responses:
+        '200':
+          description: Loyalty activation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoyaltyVerifyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /business/loyalty-rules/{id}/history:
+    get:
+      tags: [Business (Owner)]
+      summary: Get loyalty rule usage history
+      operationId: getBusinessLoyaltyRuleHistory
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Loyalty rule usage history with anonymized user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessLoyaltyVerificationPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Admin ───────────────────────────────────
+  /admin/venues:
+    get:
+      tags: [Admin]
+      summary: Get venue moderation queue
+      operationId: getAdminVenues
+      x-required-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/VenueModerationStatus'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Venue moderation queue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminVenueModerationPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/venues/{id}:
+    get:
+      tags: [Admin]
+      summary: Get venue moderation details
+      operationId: getAdminVenueById
+      x-required-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Venue moderation details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminVenueModerationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/venues/{id}/verify:
+    patch:
+      tags: [Admin]
+      summary: Verify venue
+      operationId: verifyAdminVenue
+      x-required-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Venue verified and activated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminVenueModerationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /admin/venues/{id}/reject:
+    patch:
+      tags: [Admin]
+      summary: Reject venue
+      operationId: rejectAdminVenue
+      x-required-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminModerationDecision'
+      responses:
+        '200':
+          description: Venue rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminVenueModerationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: Get users for moderation
+      operationId: getAdminUsers
+      x-required-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: blocked
+          in: query
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: User moderation queue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserModerationPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/users/{id}/block:
+    patch:
+      tags: [Admin]
+      summary: Block user
+      operationId: blockAdminUser
+      x-required-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminModerationDecision'
+      responses:
+        '200':
+          description: User blocked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserModerationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /admin/users/{id}/unblock:
+    patch:
+      tags: [Admin]
+      summary: Unblock user
+      operationId: unblockAdminUser
+      x-required-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User unblocked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserModerationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+# ──────────────────────────────────────────────
+#  COMPONENTS
+# ──────────────────────────────────────────────
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  # ── Reusable parameters ─────────────────────
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Zero-based page index
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    SizeParam:
+      name: size
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  # ── Schemas ─────────────────────────────────
+  schemas:
+
+    # ── Auth DTOs ─────────────────────────────
+    RegisterRequest:
+      type: object
+      required: [email, password, nickname]
+      properties:
+        email:
+          type: string
+          format: email
+          example: "kazan_guest@example.com"
+        password:
+          type: string
+          minLength: 8
+          pattern: '^(?=.*\d).{8,}$'
+          example: "Echak123!"
+        nickname:
+          type: string
+          minLength: 3
+          example: "Tatarin116"
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: "kazan_guest@example.com"
+        password:
+          type: string
+          example: "Echak123!"
+
+    AuthResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        role:
+          $ref: '#/components/schemas/UserRole'
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    UserRole:
+      type: string
+      enum: [USER, BUSINESS_OWNER, ADMIN]
+
+    VenueModerationStatus:
+      type: string
+      enum: [PENDING, ACTIVE, REJECTED]
+
+    # ── Map / Heatmap DTOs ────────────────────
+    HeatmapResponse:
+      type: object
+      required: [generatedAt, aggregationWindowMinutes, clusters]
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+        refreshIntervalMinutes:
+          type: integer
+          example: 5
+        aggregationWindowMinutes:
+          type: integer
+          example: 60
+        clusters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClusterDTO'
+
+    ClusterDTO:
+      type: object
+      required: [h3Index, txCount, avgCheck]
+      properties:
+        h3Index:
+          type: string
+          description: H3 hex index as string
+          example: "89115b22b0bffff"
+        txCount:
+          type: integer
+          description: Transaction count weight for coloring the hex
+          example: 345
+        avgCheck:
+          type: number
+          format: double
+          description: Average check amount
+          example: 850.00
+
+    ClusterDetailsResponse:
+      type: object
+      required: [h3Index, resolution, districtName, txCount, avgCheck]
+      properties:
+        h3Index:
+          type: string
+          example: "89115b22b0bffff"
+        resolution:
+          type: integer
+          example: 9
+        districtName:
+          type: string
+          description: Human-readable district name for the selected zone
+          example: "Вахитовский район"
+        category:
+          type: string
+          enum: [food, entertainment, shopping]
+          example: "food"
+        hourBucket:
+          type: string
+          format: date-time
+        txCount:
+          type: integer
+          example: 345
+        avgCheck:
+          type: number
+          format: double
+          example: 850.00
+        sumAmount:
+          type: number
+          format: double
+          example: 293250.00
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Venue DTOs ────────────────────────────
+    VenueCreateRequest:
+      type: object
+      required: [name, address, lat, lng, category]
+      properties:
+        name:
+          type: string
+          example: "Скуратов Кофе"
+        address:
+          type: string
+          example: "ул. Баумана, 9, Казань"
+        lat:
+          type: number
+          format: double
+          example: 55.7915
+        lng:
+          type: number
+          format: double
+          example: 49.1118
+        category:
+          type: string
+          enum: [food, entertainment, shopping]
+          example: "food"
+        description:
+          type: string
+          example: "Лучший кофе в центре Казани. Зерно свежей обжарки."
+        photoUrl:
+          type: string
+          format: uri
+          example: "https://s3.local/images/skuratov_kzn.jpg"
+        dishOfDay:
+          type: string
+          example: "Нитро кофе + Круассан"
+        music:
+          type: string
+          example: "Indie Pop, Lo-Fi"
+
+    VenueUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        description:
+          type: string
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        category:
+          type: string
+          enum: [food, entertainment, shopping]
+        photoUrl:
+          type: string
+          format: uri
+        dishOfDay:
+          type: string
+        music:
+          type: string
+
+    VenuePublicResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "5085d345-3129-4e4b-972d-8bcf9a2ea9c9"
+        name:
+          type: string
+          example: "Скуратов Кофе"
+        address:
+          type: string
+          example: "ул. Баумана, 9, Казань"
+        lat:
+          type: number
+          format: double
+          example: 55.7915
+        lng:
+          type: number
+          format: double
+          example: 49.1118
+        description:
+          type: string
+          example: "Лучший кофе в центре Казани"
+        category:
+          type: string
+          enum: [food, entertainment, shopping]
+          example: "food"
+        photoUrl:
+          type: string
+          format: uri
+        dishOfDay:
+          type: string
+          example: "Нитро кофе + Круассан"
+        music:
+          type: string
+          example: "Indie Pop"
+        peopleNow:
+          type: integer
+          description: Approximate number of people currently at the venue based on tx
+          example: 18
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        promotions:
+          type: array
+          items:
+            $ref: '#/components/schemas/VenuePromoResponse'
+
+    VenueOwnerResponse:
+      allOf:
+        - $ref: '#/components/schemas/VenuePublicResponse'
+        - type: object
+          properties:
+            ownerId:
+              type: string
+              format: uuid
+            h3Res9:
+              type: string
+              description: H3 resolution-9 index as string
+              example: "89115b22b0bffff"
+            moderationStatus:
+              $ref: '#/components/schemas/VenueModerationStatus'
+            rejectReason:
+              type: string
+              description: Reason for rejection (filled only if REJECTED)
+              example: "Адрес не совпадает с координатами"
+
+    # ── Promo DTOs ────────────────────────────
+    VenuePromoResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        venueId:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: "Счастливые часы!"
+        description:
+          type: string
+          example: "Скидка 20% на всю выпечку после 20:00"
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    VenuePromoCreateRequest:
+      type: object
+      required: [title, startsAt, endsAt]
+      properties:
+        title:
+          type: string
+          example: "Счастливые часы"
+        description:
+          type: string
+          example: "Скидка 20% на всю выпечку после 20:00"
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+
+    VenuePromoUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+
+    # ── Loyalty DTOs ──────────────────────────
+    LoyaltyActivationRequest:
+      type: object
+      required: [userId, venueId]
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: ID пользователя из отсканированного QR-кода
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        venueId:
+          type: string
+          format: uuid
+          description: ID заведения, в котором происходит активация
+          example: "5085d345-3129-4e4b-972d-8bcf9a2ea9c9"
+
+    LoyaltyVerifyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        venueId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        ruleId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/LoyaltyActivationStatus'
+        discountApplied:
+          type: number
+          format: double
+          example: 15.0
+        verifiedAt:
+          type: string
+          format: date-time
+
+    LoyaltyActivationStatus:
+      type: string
+      enum: [SUCCESS, LIMIT_EXCEEDED, ALREADY_USED]
+
+    LoyaltyQrResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        qrPayload:
+          type: string
+          description: String to be encoded into QR (e.g. JWT or HMAC signed string)
+          example: "usr_3fa85f6457174562b3fc2c963f66afa6:signature"
+
+    LoyaltyRuleResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        venueId:
+          type: string
+          format: uuid
+        description:
+          type: string
+          example: "Скидка 15% на капучино"
+        discountPercent:
+          type: number
+          format: double
+          example: 15.0
+        maxUsages:
+          type: integer
+          example: 100
+        currentUsages:
+          type: integer
+          example: 45
+        active:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+
+    LoyaltyRuleCreateRequest:
+      type: object
+      required: [description, discountPercent, maxUsages]
+      properties:
+        description:
+          type: string
+          example: "Скидка 15% на капучино"
+        discountPercent:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          example: 15.0
+        maxUsages:
+          type: integer
+          minimum: 1
+          example: 100
+
+    LoyaltyRuleUpdateRequest:
+      type: object
+      properties:
+        description:
+          type: string
+        discountPercent:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+        maxUsages:
+          type: integer
+          minimum: 1
+        active:
+          type: boolean
+
+    LoyaltyVerificationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        venueId:
+          type: string
+          format: uuid
+        venueName:
+          type: string
+          example: "Скуратов Кофе"
+        ruleId:
+          type: string
+          format: uuid
+        ruleDescription:
+          type: string
+          example: "Скидка 15% на капучино"
+        discountApplied:
+          type: number
+          format: double
+          example: 15.0
+        verifiedAt:
+          type: string
+          format: date-time
+
+    LoyaltyVerificationPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoyaltyVerificationResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalPages:
+          type: integer
+        totalElements:
+          type: integer
+
+    UsedPromoResponse:
+      type: object
+      properties:
+        venueName:
+          type: string
+          example: "ТЦ Кольцо"
+        description:
+          type: string
+          example: "-20% на билеты в кино"
+        discountPercent:
+          type: number
+          format: double
+          example: 20.0
+        usedAt:
+          type: string
+          format: date-time
+
+    UsedPromoPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UsedPromoResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalPages:
+          type: integer
+        totalElements:
+          type: integer
+
+    BusinessLoyaltyVerificationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        venueId:
+          type: string
+          format: uuid
+        userLabel:
+          type: string
+          description: Anonymized user label visible to the business owner
+          example: "Guest #842"
+        ruleId:
+          type: string
+          format: uuid
+        discountApplied:
+          type: number
+          format: double
+          example: 15.0
+        verifiedAt:
+          type: string
+          format: date-time
+
+    BusinessLoyaltyVerificationPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessLoyaltyVerificationResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalPages:
+          type: integer
+        totalElements:
+          type: integer
+
+    # ── Admin DTOs ────────────────────────────
+    AdminModerationDecision:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 1000
+          example: "Заведение нарушает правила размещения (спам в названии)"
+
+    AdminVenueModerationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ownerId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Скуратов Кофе"
+        address:
+          type: string
+          example: "ул. Баумана, 9"
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        h3Res9:
+          type: string
+          example: "89115b22b0bffff"
+        category:
+          type: string
+          enum: [food, entertainment, shopping]
+        moderationStatus:
+          $ref: '#/components/schemas/VenueModerationStatus'
+        rejectReason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AdminVenueModerationPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminVenueModerationResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalPages:
+          type: integer
+        totalElements:
+          type: integer
+
+    AdminUserModerationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+          example: "spammer123@example.com"
+        nickname:
+          type: string
+          example: "PromoSpammer"
+        role:
+          $ref: '#/components/schemas/UserRole'
+        blocked:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+
+    AdminUserModerationPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminUserModerationResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalPages:
+          type: integer
+        totalElements:
+          type: integer
+
+    # ── Error Schema ──────────────────────────
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: "ERROR_CODE"
+        message:
+          type: string
+          example: "Human-readable message"
+
+  # ── Reusable Error Responses ────────────────
+  responses:
+    BadRequest:
+      description: Request validation failed (e.g. missing fields, invalid format)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: VALIDATION_FAILED
+            message: "Field 'lat' must be a valid float number."
+
+    Unauthorized:
+      description: Token is missing, expired, or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: UNAUTHORIZED
+            message: "Access token is missing or has expired."
+
+    Forbidden:
+      description: Insufficient permissions to perform this action (e.g. USER accessing ADMIN route)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: FORBIDDEN
+            message: "You do not have the required 'BUSINESS_OWNER' role to access this resource."
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: NOT_FOUND
+            message: "Requested venue with ID 5085d345-3129-4e4b-972d-8bcf9a2ea9c9 was not found."
+
+    Conflict:
+      description: Data conflict (e.g. duplicate email, already used promo, activation limit reached)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: CONFLICT
+            message: "User with email kazan_guest@example.com is already registered."
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: INTERNAL_ERROR
+            message: "An unexpected error occurred on the server."

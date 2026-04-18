@@ -1,4 +1,4 @@
-package ru.tbank.tmap.config;
+package ru.tbank.tmap.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
+import ru.tbank.tmap.dto.ErrorResponse;
 
 @Slf4j
 @RestControllerAdvice
@@ -23,14 +24,14 @@ public class GlobalExceptionHandler {
             log.error("Response status exception", ex);
         }
         return ResponseEntity.status(status)
-                .body(new ErrorResponse(resolveErrorCode(status), message));
+                .body(new ErrorResponse(status.name(), message));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(final MethodArgumentNotValidException ex) {
         final String message = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .findFirst()
+                .reduce((left, right) -> left + ", " + right)
                 .orElse("Validation failed");
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse("VALIDATION_ERROR", message));
@@ -42,20 +43,17 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse("VALIDATION_ERROR", "Invalid value for parameter: " + ex.getName()));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(final IllegalArgumentException ex) {
+        log.warn("Validation error: {}", ex.getMessage());
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse("VALIDATION_ERROR", ex.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(final Exception ex) {
         log.error("Unexpected error", ex);
         return ResponseEntity.internalServerError()
                 .body(new ErrorResponse("INTERNAL_ERROR", "Something went wrong"));
-    }
-
-    private String resolveErrorCode(final HttpStatus status) {
-        return switch (status) {
-            case BAD_REQUEST -> "VALIDATION_ERROR";
-            case NOT_FOUND -> "NOT_FOUND";
-            case UNAUTHORIZED -> "UNAUTHORIZED";
-            case FORBIDDEN -> "ACCESS_DENIED";
-            default -> status.is5xxServerError() ? "INTERNAL_ERROR" : "REQUEST_FAILED";
-        };
     }
 }

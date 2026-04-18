@@ -1,4 +1,4 @@
-package ru.tbank.tmap.api;
+package ru.tbank.tmap.repository;
 
 import java.time.Instant;
 import java.util.List;

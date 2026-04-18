@@ -1,4 +1,4 @@
-package ru.tbank.tmap.api;
+package ru.tbank.tmap.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -16,7 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.openapitools.model.ClusterDetailsResponse;
 import org.openapitools.model.HeatmapResponse;
-import org.springframework.web.server.ResponseStatusException;
+import ru.tbank.tmap.repository.HeatmapQueryRepository;
 import ru.tbank.tmap.repository.model.ClusterDetailsAggregate;
 import ru.tbank.tmap.repository.model.HeatmapClusterAggregate;
 
@@ -37,7 +37,7 @@ class HeatmapServiceImplTest {
     }
 
     @Test
-    void shouldMapAggregatedClustersToResponse() {
+    void getHeatmapClusters_whenRepositoryReturnsClusters_thenReturnHeatmapData() {
         given(heatmapQueryRepository.findClusters(
                 55.7481,
                 49.0664,
@@ -73,7 +73,7 @@ class HeatmapServiceImplTest {
     }
 
     @Test
-    void shouldMapClusterDetailsToResponse() {
+    void getClusterDetails_whenRepositoryReturnsCluster_thenReturnClusterDetails() {
         given(heatmapQueryRepository.findClusterDetails(
                 Long.parseUnsignedLong("89115b22b0bffff", 16),
                 9,
@@ -99,7 +99,7 @@ class HeatmapServiceImplTest {
     }
 
     @Test
-    void shouldRejectInvalidBounds() {
+    void getHeatmapClusters_whenBoundsAreInvalid_thenThrowIllegalArgumentException() {
         assertThatThrownBy(() -> heatmapService.getHeatmapClusters(
                 55.9,
                 49.2,
@@ -107,6 +107,7 @@ class HeatmapServiceImplTest {
                 49.1,
                 8,
                 60
-        )).isInstanceOf(ResponseStatusException.class);
+        )).isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Invalid map bounds");
     }
 }

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.api;
+package ru.tbank.tmap.service;
 
 import java.util.Optional;
 import org.openapitools.model.ClusterDetailsResponse;

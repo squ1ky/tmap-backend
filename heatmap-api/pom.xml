@@ -86,11 +86,7 @@
             <artifactId>spring-dotenv</artifactId>
             <version>${spring-dotenv.version}</version>
         </dependency>
-<<<<<<< HEAD
-
-=======
-      
->>>>>>> 50f580f8ccac39153d77d7b3821f628d822479fd
+        
         <!-- ===== H3 ===== -->
         <dependency>
             <groupId>com.uber</groupId>
@@ -105,10 +101,6 @@
             <version>0.2.6</version>
         </dependency>
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 50f580f8ccac39153d77d7b3821f628d822479fd
         <!-- ===== Lombok ===== -->
         <dependency>
             <groupId>org.projectlombok</groupId>

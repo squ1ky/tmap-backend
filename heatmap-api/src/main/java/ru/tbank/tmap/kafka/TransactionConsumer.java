@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import ru.tbank.tmap.h3.H3Service;
+import ru.tbank.tmap.service.H3IndexService;
 import ru.tbank.tmap.kafka.event.TransactionEvent;
 import ru.tbank.tmap.repository.jdbc.TransactionBatchWriter;
 import ru.tbank.tmap.repository.model.TransactionRow;
@@ -17,7 +17,7 @@ import java.util.List;
 @Slf4j
 public class TransactionConsumer {
 
-    private final H3Service h3Service;
+    private final H3IndexService h3IndexService;
     private final TransactionBatchWriter batchWriter;
 
     @KafkaListener(
@@ -46,9 +46,9 @@ public class TransactionConsumer {
                 event.amount(),
                 event.lat(),
                 event.lng(),
-                h3Service.toH3(event.lat(), event.lng(), H3Service.RES_7),
-                h3Service.toH3(event.lat(), event.lng(), H3Service.RES_8),
-                h3Service.toH3(event.lat(), event.lng(), H3Service.RES_9),
+                h3IndexService.toH3(event.lat(), event.lng(), H3IndexService.RES_7),
+                h3IndexService.toH3(event.lat(), event.lng(), H3IndexService.RES_8),
+                h3IndexService.toH3(event.lat(), event.lng(), H3IndexService.RES_9),
                 event.category(),
                 event.occurredAt()
         );

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.h3;
+package ru.tbank.tmap.service;
 
 import com.uber.h3core.H3Core;
 import lombok.RequiredArgsConstructor;
@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class H3Service {
+public class H3IndexService {
 
     public static final int RES_7 = 7;
     public static final int RES_8 = 8;

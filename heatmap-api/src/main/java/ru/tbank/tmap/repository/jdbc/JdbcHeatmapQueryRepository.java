@@ -1,12 +1,13 @@
 package ru.tbank.tmap.repository.jdbc;
 
 import com.uber.h3core.H3Core;
-import com.uber.h3core.util.GeoCoord;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import com.uber.h3core.util.LatLng;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -118,7 +119,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
 
     private HeatmapClusterAggregate toClusterAggregate(final java.sql.ResultSet rs) throws java.sql.SQLException {
         final long h3Index = rs.getLong("h3_index");
-        final GeoCoord center = h3Core.h3ToGeo(h3Index);
+        final LatLng center = h3Core.cellToLatLng(h3Index);
         return new HeatmapClusterAggregate(
                 h3Index,
                 center.lat,

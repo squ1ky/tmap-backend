@@ -95,7 +95,7 @@ public class Venue {
     @Column(name = "reject_reason", columnDefinition = "text")
     private String rejectReason;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private OffsetDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
@@ -119,12 +119,8 @@ public class Venue {
 
     @PrePersist
     /* default */ void onCreate() {
-        OffsetDateTime now = OffsetDateTime.now();
-        if (createdAt == null) {
-            createdAt = now;
-        }
         if (updatedAt == null) {
-            updatedAt = now;
+            updatedAt = OffsetDateTime.now();
         }
     }
 

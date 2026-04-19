@@ -55,8 +55,8 @@ public class RefreshToken {
     @ToString.Include
     private OffsetDateTime expiresAt;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+    private OffsetDateTime createdAt;
 
     public RefreshToken(UUID id, User user, String tokenHash, OffsetDateTime expiresAt) {
         this.id = Objects.requireNonNull(id, "id");

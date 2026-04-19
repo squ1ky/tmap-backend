@@ -2,7 +2,6 @@ package ru.tbank.tmap.repository.jdbc;
 
 import com.uber.h3core.H3Core;
 import com.uber.h3core.util.GeoCoord;
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
@@ -34,8 +33,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
             final double neLng,
             final int resolution,
             final List<String> category,
-            final Instant from
-    ) {
+            final Instant from) {
         final StringBuilder sql = new StringBuilder(640).append("""
                 SELECT
                     ch.h3_index AS h3_index,
@@ -74,8 +72,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
                         swLat,
                         swLng,
                         neLat,
-                        neLng
-                ))
+                        neLng))
                 .toList();
     }
 
@@ -83,8 +80,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
     public Optional<ClusterDetailsAggregate> findClusterDetails(
             final long h3Index,
             final int resolution,
-            final Instant from
-    ) {
+            final Instant from) {
         final String sql = """
                 SELECT
                     COALESCE(SUM(ch.tx_count), 0) AS tx_count,
@@ -103,8 +99,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
         final MapSqlParameterSource params = new MapSqlParameterSource(Map.of(
                 "from", Timestamp.from(from),
                 "h3Index", h3Index,
-                "resolution", resolution
-        ));
+                "resolution", resolution));
 
         return jdbcTemplate.query(sql, params, rs -> {
             if (!rs.next() || rs.getTimestamp("updated_at") == null) {
@@ -117,8 +112,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
                     rs.getInt("tx_count"),
                     rs.getBigDecimal("avg_check"),
                     rs.getBigDecimal("sum_amount"),
-                    rs.getTimestamp("updated_at").toInstant()
-            ));
+                    rs.getTimestamp("updated_at").toInstant()));
         });
     }
 
@@ -132,8 +126,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
                 rs.getInt("tx_count"),
                 rs.getBigDecimal("avg_check"),
                 rs.getBigDecimal("sum_amount"),
-                rs.getTimestamp("updated_at").toInstant()
-        );
+                rs.getTimestamp("updated_at").toInstant());
     }
 
     private boolean isWithinViewport(
@@ -142,8 +135,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
             final double swLat,
             final double swLng,
             final double neLat,
-            final double neLng
-    ) {
+            final double neLng) {
         final boolean withinLatitude = lat >= swLat && lat <= neLat;
         final boolean withinLongitude = swLng <= neLng
                 ? lng >= swLng && lng <= neLng

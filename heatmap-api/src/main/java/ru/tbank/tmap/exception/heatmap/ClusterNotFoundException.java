@@ -2,6 +2,8 @@ package ru.tbank.tmap.exception.heatmap;
 
 public class ClusterNotFoundException extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     private final String h3Index;
 
     public ClusterNotFoundException(final String h3Index) {

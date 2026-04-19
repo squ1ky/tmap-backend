@@ -26,6 +26,30 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  # ===== Kafka =====
+  kafka:
+    bootstrap-servers: "${KAFKA_BOOTSTRAP_SERVERS}"
+    consumer:
+      group-id: "${KAFKA_CONSUMER_GROUP}"
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      max-poll-records: 500
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.value.default.type: ru.tbank.tmap.kafka.event.TransactionEvent
+        spring.json.use.type.headers: false
+        spring.json.trusted.packages: "ru.tbank.tmap.*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+      value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+      acks: all
+    listener:
+      type: batch
+      ack-mode: batch
+
 # ===== Server =====
 server:
   port: ${SERVER_PORT}
@@ -35,6 +59,8 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     expiration: ${JWT_EXPIRATION}
+  kafka:
+    transactions-topic: ${KAFKA_TRANSACTIONS_TOPIC}
 
 # ===== Swagger =====
 springdoc:

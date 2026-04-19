@@ -21,6 +21,12 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- ===== Kafka ===== -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
         <!-- ===== JWT ===== -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

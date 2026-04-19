@@ -27,6 +27,12 @@
         <exclude name="UselessParentheses"/>
     </rule>
 
+    <rule ref="category/java/codestyle.xml/ShortClassName">
+        <properties>
+            <property name="minimum" value="4"/>
+        </properties>
+    </rule>
+
     <rule ref="category/java/design.xml">
         <exclude name="TooManyMethods"/>
         <exclude name="TooManyFields"/>
@@ -37,6 +43,7 @@
 
     <rule ref="category/java/errorprone.xml">
         <exclude name="NullAssignment"/>
+        <exclude name="MissingSerialVersionUID"/>
     </rule>
 
     <rule ref="category/java/multithreading.xml">

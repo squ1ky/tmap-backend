@@ -56,8 +56,8 @@ public class VenuePromo {
     @Column(name = "ends_at")
     private OffsetDateTime endsAt;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+    private OffsetDateTime createdAt;
 
     public VenuePromo(UUID id, Venue venue, String title) {
         this.id = Objects.requireNonNull(id, "id");

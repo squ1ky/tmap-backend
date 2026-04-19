@@ -65,8 +65,8 @@ public class LoyaltyVerification {
     @ToString.Include
     private BigDecimal discountApplied;
 
-    @Column(name = "verified_at", nullable = false, updatable = false)
-    private OffsetDateTime verifiedAt = OffsetDateTime.now();
+    @Column(name = "verified_at", nullable = false, insertable = false, updatable = false)
+    private OffsetDateTime verifiedAt;
 
     public LoyaltyVerification(UUID id,
                                Venue venue,

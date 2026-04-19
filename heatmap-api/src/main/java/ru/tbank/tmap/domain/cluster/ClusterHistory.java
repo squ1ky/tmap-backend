@@ -51,8 +51,8 @@ public class ClusterHistory {
     @ToString.Include
     private BigDecimal sumAmount;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+    private OffsetDateTime createdAt;
 
     public ClusterHistory(Id id, int txCount, BigDecimal avgCheck, BigDecimal sumAmount) {
         this.id = Objects.requireNonNull(id, "id");

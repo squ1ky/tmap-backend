@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -53,7 +54,7 @@ public class User {
     @ToString.Include
     private String nickname;
 
-    @NotBlank
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 32)
     @ToString.Include
@@ -62,8 +63,8 @@ public class User {
     @Column(name = "blocked", nullable = false)
     private boolean blocked;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+    private OffsetDateTime createdAt;
 
     public User(UUID id, String email, String passwordHash, String nickname, UserRole role) {
         this.id = Objects.requireNonNull(id, "id");

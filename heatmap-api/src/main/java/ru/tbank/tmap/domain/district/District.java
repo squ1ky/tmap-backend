@@ -48,8 +48,8 @@ public class District {
     @Column(name = "photo_url", length = 255)
     private String photoUrl;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+    private OffsetDateTime createdAt;
 
     public District(UUID id, String name, String city) {
         this.id = Objects.requireNonNull(id, "id");

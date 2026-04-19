@@ -1,4 +1,6 @@
 package ru.tbank.tmap.dto;
 
-public record ErrorResponse(String code, String message) {
+import ru.tbank.tmap.exception.ErrorCode;
+
+public record ErrorResponse(ErrorCode code, String message) {
 }

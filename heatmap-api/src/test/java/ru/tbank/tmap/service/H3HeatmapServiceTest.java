@@ -20,17 +20,17 @@ import ru.tbank.tmap.repository.HeatmapQueryRepository;
 import ru.tbank.tmap.repository.model.ClusterDetailsAggregate;
 import ru.tbank.tmap.repository.model.HeatmapClusterAggregate;
 
-class HeatmapServiceImplTest {
+class H3HeatmapServiceTest {
 
     @Mock
     private HeatmapQueryRepository heatmapQueryRepository;
 
-    private HeatmapServiceImpl heatmapService;
+    private H3HeatmapService heatmapService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        heatmapService = new HeatmapServiceImpl(
+        heatmapService = new H3HeatmapService(
                 heatmapQueryRepository,
                 Clock.fixed(Instant.parse("2026-04-17T10:20:00Z"), ZoneOffset.UTC)
         );
@@ -44,6 +44,7 @@ class HeatmapServiceImplTest {
                 55.8402,
                 49.1912,
                 8,
+                null,
                 Instant.parse("2026-04-17T09:20:00Z")
         )).willReturn(List.of(new HeatmapClusterAggregate(
                 Long.parseUnsignedLong("89115b22b0bffff", 16),
@@ -61,6 +62,7 @@ class HeatmapServiceImplTest {
                 55.8402,
                 49.1912,
                 8,
+                null,
                 60
         );
 
@@ -106,6 +108,7 @@ class HeatmapServiceImplTest {
                 55.8,
                 49.1,
                 8,
+                null,
                 60
         )).isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Invalid map bounds");

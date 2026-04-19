@@ -1,4 +1,4 @@
-package ru.tbank.tmap.repository;
+package ru.tbank.tmap.repository.jdbc;
 
 import com.uber.h3core.H3Core;
 import com.uber.h3core.util.GeoCoord;
@@ -7,11 +7,11 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import ru.tbank.tmap.repository.HeatmapQueryRepository;
 import ru.tbank.tmap.repository.model.ClusterDetailsAggregate;
 import ru.tbank.tmap.repository.model.HeatmapClusterAggregate;
 
@@ -33,9 +33,10 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
             final double neLat,
             final double neLng,
             final int resolution,
+            final List<String> category,
             final Instant from
     ) {
-        final String sql = """
+        final StringBuilder sql = new StringBuilder(640).append("""
                 SELECT
                     ch.h3_index AS h3_index,
                     COALESCE(SUM(ch.tx_count), 0) AS tx_count,
@@ -48,16 +49,24 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
                 FROM cluster_history ch
                 WHERE ch.hour_bucket >= :from
                   AND ch.resolution = :resolution
+                """);
+
+        final MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("from", Timestamp.from(from))
+                .addValue("resolution", resolution);
+
+        if (category != null && !category.isEmpty()) {
+            sql.append("\n  AND ch.category IN (:categories)");
+            params.addValue("categories", category);
+        }
+
+        sql.append("""
+
                 GROUP BY ch.h3_index
                 ORDER BY SUM(ch.tx_count) DESC, SUM(ch.sum_amount) DESC, ch.h3_index
-                """;
+                """);
 
-        final MapSqlParameterSource params = new MapSqlParameterSource(Map.of(
-                "from", Timestamp.from(from),
-                "resolution", resolution
-        ));
-
-        return jdbcTemplate.query(sql, params, (rs, rowNum) -> toClusterAggregate(rs))
+        return jdbcTemplate.query(sql.toString(), params, (rs, rowNum) -> toClusterAggregate(rs))
                 .stream()
                 .filter(cluster -> isWithinViewport(
                         cluster.centerLat(),
@@ -106,15 +115,11 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
                     h3Index,
                     resolution,
                     rs.getInt("tx_count"),
-                    defaultIfNull(rs.getBigDecimal("avg_check")),
-                    defaultIfNull(rs.getBigDecimal("sum_amount")),
+                    rs.getBigDecimal("avg_check"),
+                    rs.getBigDecimal("sum_amount"),
                     rs.getTimestamp("updated_at").toInstant()
             ));
         });
-    }
-
-    private BigDecimal defaultIfNull(final BigDecimal value) {
-        return Objects.requireNonNullElse(value, BigDecimal.ZERO);
     }
 
     private HeatmapClusterAggregate toClusterAggregate(final java.sql.ResultSet rs) throws java.sql.SQLException {
@@ -125,8 +130,8 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
                 center.lat,
                 center.lng,
                 rs.getInt("tx_count"),
-                defaultIfNull(rs.getBigDecimal("avg_check")),
-                defaultIfNull(rs.getBigDecimal("sum_amount")),
+                rs.getBigDecimal("avg_check"),
+                rs.getBigDecimal("sum_amount"),
                 rs.getTimestamp("updated_at").toInstant()
         );
     }

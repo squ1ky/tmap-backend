@@ -32,7 +32,7 @@ class HeatmapControllerTest {
 
     @Test
     void getHeatmapClusters_whenRequestIsValid_thenReturnHeatmapData() throws Exception {
-        given(heatmapService.getHeatmapClusters(55.7481, 49.0664, 55.8402, 49.1912, 8, 60))
+        given(heatmapService.getHeatmapClusters(55.7481, 49.0664, 55.8402, 49.1912, 8, null, 60))
                 .willReturn(new HeatmapResponse()
                         .aggregationWindowMinutes(60)
                         .refreshIntervalMinutes(5)
@@ -78,7 +78,7 @@ class HeatmapControllerTest {
 
     @Test
     void getHeatmapClusters_whenBoundsAreInvalid_thenReturnValidationError() throws Exception {
-        given(heatmapService.getHeatmapClusters(55.9, 49.2, 55.8, 49.1, 8, 60))
+        given(heatmapService.getHeatmapClusters(55.9, 49.2, 55.8, 49.1, 8, null, 60))
                 .willThrow(new IllegalArgumentException("Invalid map bounds"));
 
         mockMvc.perform(get("/api/v1/heatmap/clusters")

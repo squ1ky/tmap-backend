@@ -14,6 +14,7 @@ public interface HeatmapQueryRepository {
             double neLat,
             double neLng,
             int resolution,
+            List<String> category,
             Instant from
     );
 

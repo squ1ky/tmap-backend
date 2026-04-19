@@ -1,5 +1,7 @@
 package ru.tbank.tmap.exception;
 
+import jakarta.validation.ConstraintViolationException;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,10 +11,18 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import ru.tbank.tmap.dto.ErrorResponse;
+import ru.tbank.tmap.exception.heatmap.ClusterNotFoundException;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ClusterNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleClusterNotFound(final ClusterNotFoundException ex) {
+        log.warn("Cluster not found: h3Index={}", ex.getH3Index());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(ErrorCode.NOT_FOUND, ex.getMessage()));
+    }
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponse> handleResponseStatus(final ResponseStatusException ex) {
@@ -24,36 +34,54 @@ public class GlobalExceptionHandler {
             log.error("Response status exception", ex);
         }
         return ResponseEntity.status(status)
-                .body(new ErrorResponse(status.name(), message));
+                .body(new ErrorResponse(ErrorCode.valueOf(status.name()), message));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(final MethodArgumentNotValidException ex) {
         final String message = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .reduce((left, right) -> left + ", " + right)
-                .orElse("Validation failed");
+                .collect(Collectors.joining(", "));
         return ResponseEntity.badRequest()
-                .body(new ErrorResponse("VALIDATION_ERROR", message));
+                .body(new ErrorResponse(
+                        ErrorCode.VALIDATION_ERROR,
+                        message.isBlank() ? "Validation failed" : message
+                ));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(final ConstraintViolationException ex) {
+        final String message = ex.getConstraintViolations().stream()
+                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+                .collect(Collectors.joining(", "));
+        log.warn("Constraint violation: {}", message);
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse(
+                        ErrorCode.VALIDATION_ERROR,
+                        message.isBlank() ? "Validation failed" : message
+                ));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleTypeMismatch(final MethodArgumentTypeMismatchException ex) {
         return ResponseEntity.badRequest()
-                .body(new ErrorResponse("VALIDATION_ERROR", "Invalid value for parameter: " + ex.getName()));
+                .body(new ErrorResponse(
+                        ErrorCode.VALIDATION_ERROR,
+                        "Invalid value for parameter: " + ex.getName()
+                ));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(final IllegalArgumentException ex) {
         log.warn("Validation error: {}", ex.getMessage());
         return ResponseEntity.badRequest()
-                .body(new ErrorResponse("VALIDATION_ERROR", ex.getMessage()));
+                .body(new ErrorResponse(ErrorCode.VALIDATION_ERROR, ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(final Exception ex) {
         log.error("Unexpected error", ex);
         return ResponseEntity.internalServerError()
-                .body(new ErrorResponse("INTERNAL_ERROR", "Something went wrong"));
+                .body(new ErrorResponse(ErrorCode.INTERNAL_ERROR, "Something went wrong"));
     }
 }

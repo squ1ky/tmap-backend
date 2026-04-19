@@ -86,11 +86,21 @@
             <artifactId>spring-dotenv</artifactId>
             <version>${spring-dotenv.version}</version>
         </dependency>
+
+        <!-- ===== H3 ===== -->
         <dependency>
             <groupId>com.uber</groupId>
             <artifactId>h3</artifactId>
             <version>3.6.0</version>
         </dependency>
+
+        <!-- ===== OpenAPI Nullable Support ===== -->
+        <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>jackson-databind-nullable</artifactId>
+            <version>0.2.6</version>
+        </dependency>
+
 
         <!-- ===== Lombok ===== -->
         <dependency>

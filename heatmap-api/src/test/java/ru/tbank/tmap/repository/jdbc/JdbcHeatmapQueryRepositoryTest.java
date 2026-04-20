@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,6 +78,12 @@ class JdbcHeatmapQueryRepositoryTest {
 
     @Test
     void findClusterDetails_whenClusterExists_thenReturnsAggregate() {
+        insertDistrictMapping(
+                "89115b22b0bffff",
+                9,
+                "Вахитовский район",
+                ""
+        );
         insertClusterHistory(
                 "89115b22b0bffff",
                 9,
@@ -94,9 +101,41 @@ class JdbcHeatmapQueryRepositoryTest {
         );
 
         assertThat(result).isPresent();
+        assertThat(result.orElseThrow().districtName()).isEqualTo("Вахитовский район");
+        assertThat(result.orElseThrow().districtImageUrl()).isEmpty();
+        assertThat(result.orElseThrow().category()).isEqualTo("food");
+        assertThat(result.orElseThrow().hourBucket()).isEqualTo(Instant.parse("2026-04-17T10:00:00Z"));
         assertThat(result.orElseThrow().txCount()).isEqualTo(3);
         assertThat(result.orElseThrow().avgCheck()).isEqualByComparingTo("900.00");
         assertThat(result.orElseThrow().sumAmount()).isEqualByComparingTo("2700.00");
+    }
+
+    private void insertDistrictMapping(
+            final String h3Index,
+            final int resolution,
+            final String districtName,
+            final String photoUrl
+    ) {
+        final UUID districtId = UUID.randomUUID();
+        jdbcTemplate.update(
+                """
+                INSERT INTO districts (id, name, city, photo_url)
+                VALUES (?, ?, 'Казань', ?)
+                """,
+                districtId,
+                districtName,
+                photoUrl
+        );
+
+        jdbcTemplate.update(
+                """
+                INSERT INTO h3_to_district (h3_index, district_id, resolution)
+                VALUES (?, ?, ?)
+                """,
+                Long.parseUnsignedLong(h3Index, 16),
+                districtId,
+                resolution
+        );
     }
 
     private void insertClusterHistory(

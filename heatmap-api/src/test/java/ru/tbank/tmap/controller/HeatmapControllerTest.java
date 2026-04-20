@@ -63,6 +63,11 @@ class HeatmapControllerTest {
                 .willReturn(Optional.of(new ClusterDetailsResponse()
                         .h3Index("89115b22b0bffff")
                         .resolution(9)
+                        .districtName("Вахитовский район")
+                        .districtImageUrl("")
+                        .category(ClusterDetailsResponse.CategoryEnum.FOOD)
+                        .hourBucket(java.time.Instant.parse("2026-04-17T10:00:00Z")
+                                .atOffset(java.time.ZoneOffset.UTC))
                         .txCount(128)
                         .avgCheck(742.50)
                         .sumAmount(95040.00)));
@@ -72,6 +77,10 @@ class HeatmapControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.h3Index").value("89115b22b0bffff"))
                 .andExpect(jsonPath("$.resolution").value(9))
+                .andExpect(jsonPath("$.districtName").value("Вахитовский район"))
+                .andExpect(jsonPath("$.districtImageUrl").value(""))
+                .andExpect(jsonPath("$.category").value("food"))
+                .andExpect(jsonPath("$.hourBucket").value("2026-04-17T10:00:00Z"))
                 .andExpect(jsonPath("$.txCount").value(128))
                 .andExpect(jsonPath("$.avgCheck").value(742.50))
                 .andExpect(jsonPath("$.sumAmount").value(95040.00));

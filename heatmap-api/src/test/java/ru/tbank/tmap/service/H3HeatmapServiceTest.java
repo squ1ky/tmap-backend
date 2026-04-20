@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.openapitools.model.ClusterDetailsResponse;
 import org.openapitools.model.HeatmapResponse;
+import ru.tbank.tmap.domain.cluster.H3Resolution;
 import ru.tbank.tmap.repository.HeatmapQueryRepository;
 import ru.tbank.tmap.repository.model.ClusterDetailsAggregate;
 import ru.tbank.tmap.repository.model.HeatmapClusterAggregate;
@@ -43,7 +44,7 @@ class H3HeatmapServiceTest {
                 49.0664,
                 55.8402,
                 49.1912,
-                8,
+                H3Resolution.RES_8,
                 null,
                 Instant.parse("2026-04-17T09:20:00Z")
         )).willReturn(List.of(new HeatmapClusterAggregate(
@@ -61,7 +62,7 @@ class H3HeatmapServiceTest {
                 49.0664,
                 55.8402,
                 49.1912,
-                8,
+                H3Resolution.RES_8,
                 null,
                 60
         );
@@ -78,11 +79,11 @@ class H3HeatmapServiceTest {
     void getClusterDetails_whenRepositoryReturnsCluster_thenReturnClusterDetails() {
         given(heatmapQueryRepository.findClusterDetails(
                 Long.parseUnsignedLong("89115b22b0bffff", 16),
-                9,
+                H3Resolution.RES_9,
                 Instant.parse("2026-04-17T09:20:00Z")
         )).willReturn(Optional.of(new ClusterDetailsAggregate(
                 Long.parseUnsignedLong("89115b22b0bffff", 16),
-                9,
+                H3Resolution.RES_9,
                 128,
                 new BigDecimal("742.50"),
                 new BigDecimal("95040.00"),
@@ -90,7 +91,7 @@ class H3HeatmapServiceTest {
         )));
 
         final Optional<ClusterDetailsResponse> response =
-                heatmapService.getClusterDetails("89115b22b0bffff", 9);
+                heatmapService.getClusterDetails("89115b22b0bffff", H3Resolution.RES_9);
 
         assertThat(response).isPresent();
         assertThat(response.orElseThrow().getH3Index()).isEqualTo("89115b22b0bffff");
@@ -107,7 +108,7 @@ class H3HeatmapServiceTest {
                 49.2,
                 55.8,
                 49.1,
-                8,
+                H3Resolution.RES_8,
                 null,
                 60
         )).isInstanceOf(IllegalArgumentException.class)

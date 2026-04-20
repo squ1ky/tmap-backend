@@ -75,7 +75,7 @@ public class ClusterHistory {
         private long h3Index;
 
         @Column(name = "resolution", nullable = false)
-        private short resolution;
+        private H3Resolution resolution;
 
         @Column(name = "category", nullable = false, length = 64)
         private String category;

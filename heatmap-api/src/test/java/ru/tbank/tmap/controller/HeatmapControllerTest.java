@@ -13,10 +13,11 @@ import org.openapitools.model.ClusterDetailsResponse;
 import org.openapitools.model.HeatmapResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.config.SecurityConfig;
+import ru.tbank.tmap.domain.cluster.H3Resolution;
 import ru.tbank.tmap.exception.GlobalExceptionHandler;
 import ru.tbank.tmap.service.HeatmapService;
 
@@ -27,12 +28,12 @@ class HeatmapControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private HeatmapService heatmapService;
 
     @Test
     void getHeatmapClusters_whenRequestIsValid_thenReturnHeatmapData() throws Exception {
-        given(heatmapService.getHeatmapClusters(55.7481, 49.0664, 55.8402, 49.1912, 8, null, 60))
+        given(heatmapService.getHeatmapClusters(55.7481, 49.0664, 55.8402, 49.1912, H3Resolution.RES_8, null, 60))
                 .willReturn(new HeatmapResponse()
                         .aggregationWindowMinutes(60)
                         .refreshIntervalMinutes(5)
@@ -58,7 +59,7 @@ class HeatmapControllerTest {
 
     @Test
     void getClusterDetails_whenClusterExists_thenReturnClusterDetails() throws Exception {
-        given(heatmapService.getClusterDetails("89115b22b0bffff", 9))
+        given(heatmapService.getClusterDetails("89115b22b0bffff", H3Resolution.RES_9))
                 .willReturn(Optional.of(new ClusterDetailsResponse()
                         .h3Index("89115b22b0bffff")
                         .resolution(9)
@@ -78,7 +79,7 @@ class HeatmapControllerTest {
 
     @Test
     void getHeatmapClusters_whenBoundsAreInvalid_thenReturnValidationError() throws Exception {
-        given(heatmapService.getHeatmapClusters(55.9, 49.2, 55.8, 49.1, 8, null, 60))
+        given(heatmapService.getHeatmapClusters(55.9, 49.2, 55.8, 49.1, H3Resolution.RES_8, null, 60))
                 .willThrow(new IllegalArgumentException("Invalid map bounds"));
 
         mockMvc.perform(get("/api/v1/heatmap/clusters")
@@ -94,7 +95,7 @@ class HeatmapControllerTest {
 
     @Test
     void getClusterDetails_whenClusterIsMissing_thenReturnNotFoundError() throws Exception {
-        given(heatmapService.getClusterDetails("89115b22b0bffff", 9))
+        given(heatmapService.getClusterDetails("89115b22b0bffff", H3Resolution.RES_9))
                 .willReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/heatmap/clusters/89115b22b0bffff")

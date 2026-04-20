@@ -68,7 +68,7 @@ public class H3HeatmapService implements HeatmapService {
                         .resolution(cluster.resolution().getValue())
                         .districtName(cluster.districtName())
                         .districtImageUrl(cluster.districtImageUrl())
-                        .category(cluster.category())
+                        .category(ClusterDetailsResponse.CategoryEnum.fromValue(cluster.category()))
                         .hourBucket(OffsetDateTime.ofInstant(cluster.hourBucket(), ZoneOffset.UTC))
                         .txCount(cluster.txCount())
                         .avgCheck(cluster.avgCheck().doubleValue())

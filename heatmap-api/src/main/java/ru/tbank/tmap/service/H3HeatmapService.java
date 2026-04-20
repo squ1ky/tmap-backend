@@ -72,6 +72,7 @@ public class H3HeatmapService implements HeatmapService {
                 .map(cluster -> new ClusterDetailsResponse()
                         .h3Index(Long.toHexString(cluster.h3Index()))
                         .resolution(cluster.resolution().getValue())
+                        .districtImageUrl("")
                         .txCount(cluster.txCount())
                         .avgCheck(cluster.avgCheck().doubleValue())
                         .sumAmount(cluster.sumAmount().doubleValue())

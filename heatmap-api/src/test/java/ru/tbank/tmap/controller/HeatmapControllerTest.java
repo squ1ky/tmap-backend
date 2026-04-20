@@ -63,6 +63,7 @@ class HeatmapControllerTest {
                 .willReturn(Optional.of(new ClusterDetailsResponse()
                         .h3Index("89115b22b0bffff")
                         .resolution(9)
+                        .districtImageUrl("")
                         .txCount(128)
                         .avgCheck(742.50)
                         .sumAmount(95040.00)));
@@ -72,6 +73,7 @@ class HeatmapControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.h3Index").value("89115b22b0bffff"))
                 .andExpect(jsonPath("$.resolution").value(9))
+                .andExpect(jsonPath("$.districtImageUrl").value(""))
                 .andExpect(jsonPath("$.txCount").value(128))
                 .andExpect(jsonPath("$.avgCheck").value(742.50))
                 .andExpect(jsonPath("$.sumAmount").value(95040.00));

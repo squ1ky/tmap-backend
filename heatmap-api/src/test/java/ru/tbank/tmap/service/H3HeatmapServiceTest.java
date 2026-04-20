@@ -96,6 +96,7 @@ class H3HeatmapServiceTest {
         assertThat(response).isPresent();
         assertThat(response.orElseThrow().getH3Index()).isEqualTo("89115b22b0bffff");
         assertThat(response.orElseThrow().getResolution()).isEqualTo(9);
+        assertThat(response.orElseThrow().getDistrictImageUrl()).isEmpty();
         assertThat(response.orElseThrow().getTxCount()).isEqualTo(128);
         assertThat(response.orElseThrow().getAvgCheck()).isEqualTo(742.50);
         assertThat(response.orElseThrow().getSumAmount()).isEqualTo(95040.00);

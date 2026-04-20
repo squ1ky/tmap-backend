@@ -59,6 +59,10 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     expiration: ${JWT_EXPIRATION}
+  aggregation:
+    lookback-hours: 1
+    initial-delay-ms: 10000
+    interval-ms: 60000
   kafka:
     transactions-topic: ${KAFKA_TRANSACTIONS_TOPIC}
 

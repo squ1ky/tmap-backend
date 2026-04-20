@@ -97,6 +97,8 @@ services:
         condition: service_healthy
       kafka-init:
         condition: service_completed_successfully
+      heatmap-api:
+        condition: service_healthy
     env_file:
       - .env
     environment:

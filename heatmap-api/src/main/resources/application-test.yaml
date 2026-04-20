@@ -1,3 +1,8 @@
+spring:
+  kafka:
+    consumer:
+      group-id: test-heatmap-api
+
 server:
   port: 8080
 

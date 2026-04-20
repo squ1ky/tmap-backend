@@ -1,15 +1,17 @@
 package ru.tbank.tmap.repository.jdbc;
 
 import com.uber.h3core.H3Core;
-import com.uber.h3core.util.GeoCoord;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import com.uber.h3core.util.LatLng;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import ru.tbank.tmap.domain.cluster.H3Resolution;
 import ru.tbank.tmap.repository.HeatmapQueryRepository;
 import ru.tbank.tmap.repository.model.ClusterDetailsAggregate;
 import ru.tbank.tmap.repository.model.HeatmapClusterAggregate;
@@ -31,7 +33,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
             final double swLng,
             final double neLat,
             final double neLng,
-            final int resolution,
+            final H3Resolution resolution,
             final List<String> category,
             final Instant from) {
         final StringBuilder sql = new StringBuilder(640).append("""
@@ -51,7 +53,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
 
         final MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("from", Timestamp.from(from))
-                .addValue("resolution", resolution);
+                .addValue("resolution", resolution.getValue());
 
         if (category != null && !category.isEmpty()) {
             sql.append("\n  AND ch.category IN (:categories)");
@@ -79,7 +81,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
     @Override
     public Optional<ClusterDetailsAggregate> findClusterDetails(
             final long h3Index,
-            final int resolution,
+            final H3Resolution resolution,
             final Instant from) {
         final String sql = """
                 SELECT
@@ -99,7 +101,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
         final MapSqlParameterSource params = new MapSqlParameterSource(Map.of(
                 "from", Timestamp.from(from),
                 "h3Index", h3Index,
-                "resolution", resolution));
+                "resolution", resolution.getValue()));
 
         return jdbcTemplate.query(sql, params, rs -> {
             if (!rs.next() || rs.getTimestamp("updated_at") == null) {
@@ -118,7 +120,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
 
     private HeatmapClusterAggregate toClusterAggregate(final java.sql.ResultSet rs) throws java.sql.SQLException {
         final long h3Index = rs.getLong("h3_index");
-        final GeoCoord center = h3Core.h3ToGeo(h3Index);
+        final LatLng center = h3Core.cellToLatLng(h3Index);
         return new HeatmapClusterAggregate(
                 h3Index,
                 center.lat,

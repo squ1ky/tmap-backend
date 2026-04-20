@@ -12,6 +12,7 @@ import org.openapitools.model.ClusterDetailsResponse;
 import org.openapitools.model.HeatmapResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.domain.cluster.H3Resolution;
 import ru.tbank.tmap.repository.HeatmapQueryRepository;
 
 @Service
@@ -35,7 +36,7 @@ public class H3HeatmapService implements HeatmapService {
             final double swLng,
             final double neLat,
             final double neLng,
-            final int resolution,
+            final H3Resolution resolution,
             final List<String> category,
             final int window
     ) {
@@ -64,13 +65,13 @@ public class H3HeatmapService implements HeatmapService {
     }
 
     @Override
-    public Optional<ClusterDetailsResponse> getClusterDetails(final String h3Index, final int resolution) {
+    public Optional<ClusterDetailsResponse> getClusterDetails(final String h3Index, final H3Resolution resolution) {
         final Instant from = Instant.now(clock).minus(DEFAULT_WINDOW_MINUTES, ChronoUnit.MINUTES);
         final long dbH3Index = parseH3Index(h3Index);
         return heatmapQueryRepository.findClusterDetails(dbH3Index, resolution, from)
                 .map(cluster -> new ClusterDetailsResponse()
                         .h3Index(Long.toHexString(cluster.h3Index()))
-                        .resolution(cluster.resolution())
+                        .resolution(cluster.resolution().getValue())
                         .txCount(cluster.txCount())
                         .avgCheck(cluster.avgCheck().doubleValue())
                         .sumAmount(cluster.sumAmount().doubleValue())

@@ -1,9 +1,10 @@
 package ru.tbank.tmap.config;
 
 import com.uber.h3core.H3Core;
-import java.io.IOException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.io.IOException;
 
 @Configuration
 public class H3Config {

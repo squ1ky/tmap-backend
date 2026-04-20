@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import ru.tbank.tmap.TestcontainersConfiguration;
 import ru.tbank.tmap.config.H3Config;
+import ru.tbank.tmap.domain.cluster.H3Resolution;
 import ru.tbank.tmap.repository.HeatmapQueryRepository;
 import ru.tbank.tmap.repository.model.ClusterDetailsAggregate;
 import ru.tbank.tmap.repository.model.HeatmapClusterAggregate;
@@ -59,7 +60,7 @@ class JdbcHeatmapQueryRepositoryTest {
                 49.0664,
                 55.8402,
                 49.1912,
-                8,
+                H3Resolution.RES_8,
                 List.of("food"),
                 Instant.parse("2026-04-17T09:20:00Z")
         );
@@ -88,7 +89,7 @@ class JdbcHeatmapQueryRepositoryTest {
 
         final Optional<ClusterDetailsAggregate> result = heatmapQueryRepository.findClusterDetails(
                 Long.parseUnsignedLong("89115b22b0bffff", 16),
-                9,
+                H3Resolution.RES_9,
                 Instant.parse("2026-04-17T09:20:00Z")
         );
 

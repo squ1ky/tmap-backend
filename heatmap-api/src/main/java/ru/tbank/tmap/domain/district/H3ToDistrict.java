@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import ru.tbank.tmap.domain.cluster.H3Resolution;
 
 import java.util.Objects;
 
@@ -39,9 +40,9 @@ public class H3ToDistrict {
 
     @Column(name = "resolution", nullable = false)
     @ToString.Include
-    private short resolution;
+    private H3Resolution resolution;
 
-    public H3ToDistrict(long h3Index, District district, short resolution) {
+    public H3ToDistrict(long h3Index, District district, H3Resolution resolution) {
         this.h3Index = h3Index;
         this.district = Objects.requireNonNull(district, "district");
         this.resolution = resolution;

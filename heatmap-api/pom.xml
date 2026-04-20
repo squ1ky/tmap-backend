@@ -21,6 +21,12 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- ===== Kafka ===== -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
         <!-- ===== JWT ===== -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -86,12 +92,12 @@
             <artifactId>spring-dotenv</artifactId>
             <version>${spring-dotenv.version}</version>
         </dependency>
-        
+
         <!-- ===== H3 ===== -->
         <dependency>
             <groupId>com.uber</groupId>
             <artifactId>h3</artifactId>
-            <version>3.6.0</version>
+            <version>4.1.1</version>
         </dependency>
 
         <!-- ===== OpenAPI Nullable Support ===== -->

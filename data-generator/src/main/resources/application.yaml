@@ -31,7 +31,6 @@ spring:
       acks: all
       retries: 3
       properties:
-        delivery.timeout.ms: 10000
         enable.idempotence: true
 
 app:

@@ -8,6 +8,7 @@ import org.openapitools.model.HeatmapResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.tbank.tmap.domain.cluster.H3Resolution;
 import ru.tbank.tmap.exception.heatmap.ClusterNotFoundException;
 import ru.tbank.tmap.service.HeatmapService;
 
@@ -28,12 +29,14 @@ public class HeatmapController implements HeatmapApi {
             final List<String> category,
             final Integer window
     ) {
+        H3Resolution enumResolution = H3Resolution.of(resolution);
+
         return ResponseEntity.ok(heatmapService.getHeatmapClusters(
                 swLat,
                 swLng,
                 neLat,
                 neLng,
-                resolution,
+                enumResolution,
                 category,
                 window
         ));
@@ -44,7 +47,9 @@ public class HeatmapController implements HeatmapApi {
             final String h3Index,
             final Integer resolution
     ) {
-        return heatmapService.getClusterDetails(h3Index, resolution)
+        H3Resolution enumResolution = H3Resolution.of(resolution);
+
+        return heatmapService.getClusterDetails(h3Index, enumResolution)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new ClusterNotFoundException(h3Index));
     }

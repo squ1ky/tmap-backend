@@ -1219,7 +1219,7 @@ components:
 
     ClusterDetailsResponse:
       type: object
-      required: [h3Index, resolution, districtName, txCount, avgCheck]
+      required: [h3Index, resolution, districtName, districtImageUrl, txCount, avgCheck]
       properties:
         h3Index:
           type: string
@@ -1231,6 +1231,10 @@ components:
           type: string
           description: Human-readable district name for the selected zone
           example: "Вахитовский район"
+        districtImageUrl:
+          type: string
+          description: URL or path to district image for popup. Empty string if image is unavailable.
+          example: ""
         category:
           type: string
           enum: [food, entertainment, shopping]

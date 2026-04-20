@@ -3,6 +3,7 @@ package ru.tbank.tmap.kafka;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.listener.BatchListenerFailedException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.domain.cluster.H3Resolution;
@@ -11,6 +12,7 @@ import ru.tbank.tmap.kafka.event.TransactionEvent;
 import ru.tbank.tmap.repository.jdbc.TransactionBatchWriter;
 import ru.tbank.tmap.repository.model.TransactionRow;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -32,15 +34,52 @@ public class TransactionConsumer {
             return;
         }
 
-        List<TransactionRow> rows = events.stream()
-                .map(this::toRow)
-                .toList();
+        List<TransactionRow> rows = new ArrayList<>(events.size());
+        for (int i = 0; i < events.size(); i++) {
+            TransactionEvent event = events.get(i);
+            try {
+                rows.add(toRow(event));
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid transaction at batch index {} (id={}): {}",
+                        i, event.transactionId(), e.getMessage());
+                throw new BatchListenerFailedException(
+                        "Failed to map transaction " + event.transactionId(), e, i
+                );
+            }
+        }
 
         int inserted = batchWriter.insertBatch(rows);
         log.info("Consumed batch: received={}, inserted={}", events.size(), inserted);
     }
 
+    @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
     private TransactionRow toRow(TransactionEvent event) {
+        if (event.transactionId() == null) {
+            throw new IllegalArgumentException("transactionId must not be null");
+        }
+        if (event.venueId() == null) {
+            throw new IllegalArgumentException("venueId must not be null");
+        }
+        if (event.amount() == null) {
+            throw new IllegalArgumentException("amount must not be null");
+        }
+        if (event.category() == null || event.category().isBlank()) {
+            throw new IllegalArgumentException("category must not be null or blank");
+        }
+        if (event.occurredAt() == null) {
+            throw new IllegalArgumentException("occurredAt must not be null");
+        }
+
+        if (event.amount().signum() <= 0) {
+            throw new IllegalArgumentException("amount must be positive, got " + event.amount());
+        }
+        if (event.lat() < -90.0 || event.lat() > 90.0) {
+            throw new IllegalArgumentException("lat must be in [-90, 90], got " + event.lat());
+        }
+        if (event.lng() < -180.0 || event.lng() > 180.0) {
+            throw new IllegalArgumentException("lng must be in [-180, 180], got " + event.lng());
+        }
+
         return new TransactionRow(
                 event.transactionId(),
                 event.venueId(),

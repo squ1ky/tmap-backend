@@ -66,11 +66,10 @@ public class Venue {
     @Column(name = "h3_res9", nullable = false)
     private long h3Res9;
 
-    @NotBlank
-    @Size(max = 64)
+    @Enumerated(EnumType.STRING)
     @Column(name = "category", nullable = false, length = 64)
     @ToString.Include
-    private String category;
+    private VenueCategory category;
 
     @Column(name = "description", columnDefinition = "text")
     private String description;
@@ -108,7 +107,7 @@ public class Venue {
                  String address,
                  GeoPoint location,
                  long h3Res9,
-                 String category) {
+                 VenueCategory category) {
         this.id = Objects.requireNonNull(id, "id");
         this.owner = Objects.requireNonNull(owner, "owner");
         this.name = Objects.requireNonNull(name, "name");

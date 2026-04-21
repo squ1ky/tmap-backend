@@ -3,15 +3,15 @@ package ru.tbank.tmap.domain.transaction;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -20,6 +20,7 @@ import lombok.Setter;
 import lombok.ToString;
 import ru.tbank.tmap.domain.geo.GeoPoint;
 import ru.tbank.tmap.domain.venue.Venue;
+import ru.tbank.tmap.domain.venue.VenueCategory;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -65,11 +66,10 @@ public class Transaction {
     @Column(name = "h3_res9", nullable = false)
     private long h3Res9;
 
-    @NotBlank
-    @Size(max = 64)
+    @Enumerated(EnumType.STRING)
     @Column(name = "category", nullable = false, length = 64)
     @ToString.Include
-    private String category;
+    private VenueCategory category;
 
     @NotNull
     @Column(name = "occurred_at", nullable = false)
@@ -83,7 +83,7 @@ public class Transaction {
                        long h3Res7,
                        long h3Res8,
                        long h3Res9,
-                       String category,
+                       VenueCategory category,
                        OffsetDateTime occurredAt) {
         this.id = Objects.requireNonNull(id, "id");
         this.venue = Objects.requireNonNull(venue, "venue");

@@ -13,6 +13,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.tbank.tmap.domain.geo.BoundingBox;
 import ru.tbank.tmap.domain.geo.H3Resolution;
+import ru.tbank.tmap.domain.venue.VenueCategory;
 import ru.tbank.tmap.repository.HeatmapQueryRepository;
 import ru.tbank.tmap.repository.model.ClusterDetailsAggregate;
 import ru.tbank.tmap.repository.model.HeatmapClusterAggregate;
@@ -32,7 +33,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
     public List<HeatmapClusterAggregate> findClusters(
             final BoundingBox boundingBox,
             final H3Resolution resolution,
-            final List<String> category,
+            final List<VenueCategory> category,
             final Instant from) {
         final StringBuilder sql = new StringBuilder(640).append("""
                 SELECT
@@ -55,7 +56,10 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
 
         if (category != null && !category.isEmpty()) {
             sql.append("\n  AND ch.category IN (:categories)");
-            params.addValue("categories", category);
+            params.addValue("categories", category.stream()
+                    .map(Enum::name)
+                    .toList()
+            );
         }
 
         sql.append("""

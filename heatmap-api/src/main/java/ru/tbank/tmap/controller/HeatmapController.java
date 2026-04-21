@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.tbank.tmap.domain.geo.BoundingBox;
 import ru.tbank.tmap.domain.geo.H3Resolution;
+import ru.tbank.tmap.domain.venue.VenueCategory;
 import ru.tbank.tmap.exception.heatmap.ClusterNotFoundException;
 import ru.tbank.tmap.service.HeatmapService;
 
@@ -32,8 +33,14 @@ public class HeatmapController implements HeatmapApi {
     ) {
         BoundingBox boundingBox = new BoundingBox(swLat, swLng, neLat, neLng);
         H3Resolution enumResolution = H3Resolution.of(resolution);
+        List<VenueCategory> categories = null;
+        if (category != null) {
+            categories = category.stream()
+                    .map(VenueCategory::fromString)
+                    .toList();
+        }
 
-        return ResponseEntity.ok(heatmapService.getHeatmapClusters(boundingBox, enumResolution, category, window));
+        return ResponseEntity.ok(heatmapService.getHeatmapClusters(boundingBox, enumResolution, categories, window));
     }
 
     @Override

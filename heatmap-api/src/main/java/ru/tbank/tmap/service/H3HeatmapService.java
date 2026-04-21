@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import org.openapitools.model.ClusterDTO;
 import org.openapitools.model.ClusterDetailsResponse;
@@ -68,7 +69,8 @@ public class H3HeatmapService implements HeatmapService {
                         .resolution(cluster.resolution().getValue())
                         .districtName(cluster.districtName())
                         .districtImageUrl(cluster.districtImageUrl())
-                        .category(ClusterDetailsResponse.CategoryEnum.fromValue(cluster.category()))
+                        .category(ClusterDetailsResponse.CategoryEnum.fromValue(
+                                cluster.category().toLowerCase(Locale.ROOT)))
                         .hourBucket(OffsetDateTime.ofInstant(cluster.hourBucket(), ZoneOffset.UTC))
                         .txCount(cluster.txCount())
                         .avgCheck(cluster.avgCheck().doubleValue())

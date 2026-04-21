@@ -25,7 +25,7 @@ CREATE TABLE venues (
   lat           double precision NOT NULL,
   lng           double precision NOT NULL,
   h3_res9       bigint           NOT NULL,
-  category      varchar(64)      NOT NULL,
+  category      varchar(64)      NOT NULL CHECK (category IN ('FOOD', 'ENTERTAINMENT', 'SHOPPING')),
   description   text,
   photo_url     varchar(255),
   dish_of_day   varchar(255),
@@ -55,14 +55,14 @@ CREATE TABLE transactions (
   h3_res7     bigint           NOT NULL,
   h3_res8     bigint           NOT NULL,
   h3_res9     bigint           NOT NULL,
-  category    varchar(64)      NOT NULL,
+  category    varchar(64)      NOT NULL CHECK (category IN ('FOOD', 'ENTERTAINMENT', 'SHOPPING')),
   occurred_at timestamptz      NOT NULL
 );
 
 CREATE TABLE cluster_history (
   h3_index   bigint         NOT NULL,
   resolution smallint       NOT NULL,
-  category   varchar(64)    NOT NULL,
+  category   varchar(64)    NOT NULL CHECK (category IN ('FOOD', 'ENTERTAINMENT', 'SHOPPING')),
   hour_bucket timestamptz NOT NULL,
   tx_count   integer        NOT NULL,
   avg_check  decimal(12, 2) NOT NULL,

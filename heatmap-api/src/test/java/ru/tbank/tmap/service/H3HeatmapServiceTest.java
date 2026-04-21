@@ -83,7 +83,7 @@ class H3HeatmapServiceTest {
                 H3Resolution.RES_9,
                 "Вахитовский район",
                 "",
-                "food",
+                "FOOD",
                 Instant.parse("2026-04-17T10:00:00Z"),
                 128,
                 new BigDecimal("742.50"),

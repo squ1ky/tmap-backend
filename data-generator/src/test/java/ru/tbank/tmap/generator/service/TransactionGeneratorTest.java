@@ -25,7 +25,7 @@ public class TransactionGeneratorTest {
 
     private TransactionGenerator transactionGenerator;
 
-    private static final Venue TEST_VENUE = TestFactory.activeVenue(55.7558, 37.6173, "restaurant");
+    private static final Venue TEST_VENUE = TestFactory.activeVenue(55.7558, 37.6173, "FOOD");
     private static final GeneratorProperties GENERATOR_PROPS = TestFactory.generatorProps();
 
     @BeforeEach
@@ -41,7 +41,7 @@ public class TransactionGeneratorTest {
 
         assertThat(event.transactionId()).isNotNull();
         assertThat(event.venueId()).isEqualTo(TEST_VENUE.getId());
-        assertThat(event.category()).isEqualTo("restaurant");
+        assertThat(event.category()).isEqualTo("FOOD");
     }
 
     @RepeatedTest(100)

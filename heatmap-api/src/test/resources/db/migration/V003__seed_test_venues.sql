@@ -19,7 +19,7 @@ VALUES
     55.7961,
     49.1064,
     617733123456789001,
-    'food',
+    'FOOD',
     'Seed venue for generator checks',
     'ACTIVE'
   ),
@@ -31,7 +31,7 @@ VALUES
     55.7905,
     49.1140,
     617733123456789002,
-    'entertainment',
+    'ENTERTAINMENT',
     'Seed venue for generator checks',
     'ACTIVE'
   ),
@@ -43,7 +43,7 @@ VALUES
     55.8030,
     49.0950,
     617733123456789003,
-    'shopping',
+    'SHOPPING',
     'Seed venue for generator checks',
     'ACTIVE'
   );

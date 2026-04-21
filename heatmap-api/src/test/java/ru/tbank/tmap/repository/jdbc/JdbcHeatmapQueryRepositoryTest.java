@@ -18,6 +18,7 @@ import ru.tbank.tmap.TestcontainersConfiguration;
 import ru.tbank.tmap.config.H3Config;
 import ru.tbank.tmap.domain.geo.BoundingBox;
 import ru.tbank.tmap.domain.geo.H3Resolution;
+import ru.tbank.tmap.domain.venue.VenueCategory;
 import ru.tbank.tmap.repository.HeatmapQueryRepository;
 import ru.tbank.tmap.repository.model.ClusterDetailsAggregate;
 import ru.tbank.tmap.repository.model.HeatmapClusterAggregate;
@@ -40,7 +41,7 @@ class JdbcHeatmapQueryRepositoryTest {
         insertClusterHistory(
                 "88115b22b1fffff",
                 8,
-                "food",
+                VenueCategory.FOOD,
                 Instant.parse("2026-04-17T10:00:00Z"),
                 1,
                 new BigDecimal("500.00"),
@@ -49,7 +50,7 @@ class JdbcHeatmapQueryRepositoryTest {
         insertClusterHistory(
                 "88115b22b1fffff",
                 8,
-                "food",
+                VenueCategory.FOOD,
                 Instant.parse("2026-04-17T10:15:00Z"),
                 1,
                 new BigDecimal("700.00"),
@@ -59,7 +60,7 @@ class JdbcHeatmapQueryRepositoryTest {
         final List<HeatmapClusterAggregate> result = heatmapQueryRepository.findClusters(
                 new BoundingBox(55.7481, 49.0664, 55.8402, 49.1912),
                 H3Resolution.RES_8,
-                List.of("food"),
+                List.of(VenueCategory.FOOD),
                 Instant.parse("2026-04-17T09:20:00Z")
         );
 
@@ -78,7 +79,7 @@ class JdbcHeatmapQueryRepositoryTest {
         insertClusterHistory(
                 "89115b22b0bffff",
                 9,
-                "food",
+                VenueCategory.FOOD,
                 Instant.parse("2026-04-17T10:00:00Z"),
                 3,
                 new BigDecimal("900.00"),
@@ -100,7 +101,7 @@ class JdbcHeatmapQueryRepositoryTest {
     private void insertClusterHistory(
             final String h3Index,
             final int resolution,
-            final String category,
+            final VenueCategory category,
             final Instant hourBucket,
             final int txCount,
             final BigDecimal avgCheck,
@@ -114,7 +115,7 @@ class JdbcHeatmapQueryRepositoryTest {
                 """,
                 Long.parseUnsignedLong(h3Index, 16),
                 resolution,
-                category,
+                category.name(),
                 java.sql.Timestamp.from(hourBucket),
                 txCount,
                 avgCheck,

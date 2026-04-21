@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.domain.geo.BoundingBox;
 import ru.tbank.tmap.domain.geo.H3Resolution;
+import ru.tbank.tmap.domain.venue.VenueCategory;
 import ru.tbank.tmap.repository.HeatmapQueryRepository;
 
 @Service
@@ -35,7 +36,7 @@ public class H3HeatmapService implements HeatmapService {
     public HeatmapResponse getHeatmapClusters(
             final BoundingBox boundingBox,
             final H3Resolution resolution,
-            final List<String> category,
+            final List<VenueCategory> category,
             final int window
     ) {
         final Instant from = Instant.now(clock).minus(window, ChronoUnit.MINUTES);

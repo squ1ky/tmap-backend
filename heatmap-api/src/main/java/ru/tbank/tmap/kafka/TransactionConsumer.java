@@ -7,6 +7,7 @@ import org.springframework.kafka.listener.BatchListenerFailedException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.domain.geo.H3Resolution;
+import ru.tbank.tmap.domain.venue.VenueCategory;
 import ru.tbank.tmap.service.H3IndexService;
 import ru.tbank.tmap.kafka.event.TransactionEvent;
 import ru.tbank.tmap.repository.jdbc.TransactionBatchWriter;
@@ -63,9 +64,9 @@ public class TransactionConsumer {
         if (event.amount() == null) {
             throw new IllegalArgumentException("amount must not be null");
         }
-        if (event.category() == null || event.category().isBlank()) {
-            throw new IllegalArgumentException("category must not be null or blank");
-        }
+        VenueCategory category = VenueCategory.fromString(
+                event.category() != null ? event.category() : ""
+        );
         if (event.occurredAt() == null) {
             throw new IllegalArgumentException("occurredAt must not be null");
         }
@@ -89,7 +90,7 @@ public class TransactionConsumer {
                 h3IndexService.toH3(event.lat(), event.lng(), H3Resolution.RES_7),
                 h3IndexService.toH3(event.lat(), event.lng(), H3Resolution.RES_8),
                 h3IndexService.toH3(event.lat(), event.lng(), H3Resolution.RES_9),
-                event.category(),
+                category,
                 event.occurredAt()
         );
     }

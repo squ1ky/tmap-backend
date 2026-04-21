@@ -1,6 +1,7 @@
 package ru.tbank.tmap.domain.cluster;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -15,6 +16,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import ru.tbank.tmap.domain.geo.H3Resolution;
+import ru.tbank.tmap.domain.venue.VenueCategory;
+import ru.tbank.tmap.domain.venue.VenueCategoryConverter;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -78,8 +81,9 @@ public class ClusterHistory {
         @Column(name = "resolution", nullable = false)
         private H3Resolution resolution;
 
+        @Convert(converter = VenueCategoryConverter.class)
         @Column(name = "category", nullable = false, length = 64)
-        private String category;
+        private VenueCategory category;
 
         @Column(name = "hour_bucket", nullable = false)
         private OffsetDateTime hourBucket;

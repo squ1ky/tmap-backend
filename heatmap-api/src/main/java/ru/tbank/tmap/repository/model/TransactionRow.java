@@ -1,5 +1,7 @@
 package ru.tbank.tmap.repository.model;
 
+import ru.tbank.tmap.domain.venue.VenueCategory;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -13,7 +15,7 @@ public record TransactionRow(
         long h3Res7,
         long h3Res8,
         long h3Res9,
-        String category,
+        VenueCategory category,
         Instant occurredAt
 ) {
 }

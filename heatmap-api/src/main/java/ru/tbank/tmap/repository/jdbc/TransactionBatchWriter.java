@@ -56,7 +56,7 @@ public class TransactionBatchWriter {
                 .addValue("h3Res7", r.h3Res7())
                 .addValue("h3Res8", r.h3Res8())
                 .addValue("h3Res9", r.h3Res9())
-                .addValue("category", r.category())
+                .addValue("category", r.category().name())
                 .addValue("occurredAt", Timestamp.from(r.occurredAt()));
     }
 }

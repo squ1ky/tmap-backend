@@ -11,7 +11,8 @@ import com.uber.h3core.util.LatLng;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import ru.tbank.tmap.domain.cluster.H3Resolution;
+import ru.tbank.tmap.domain.geo.BoundingBox;
+import ru.tbank.tmap.domain.geo.H3Resolution;
 import ru.tbank.tmap.repository.HeatmapQueryRepository;
 import ru.tbank.tmap.repository.model.ClusterDetailsAggregate;
 import ru.tbank.tmap.repository.model.HeatmapClusterAggregate;
@@ -29,10 +30,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
 
     @Override
     public List<HeatmapClusterAggregate> findClusters(
-            final double swLat,
-            final double swLng,
-            final double neLat,
-            final double neLng,
+            final BoundingBox boundingBox,
             final H3Resolution resolution,
             final List<String> category,
             final Instant from) {
@@ -68,13 +66,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
 
         return jdbcTemplate.query(sql.toString(), params, (rs, rowNum) -> toClusterAggregate(rs))
                 .stream()
-                .filter(cluster -> isWithinViewport(
-                        cluster.centerLat(),
-                        cluster.centerLng(),
-                        swLat,
-                        swLng,
-                        neLat,
-                        neLng))
+                .filter(cluster -> boundingBox.contains(cluster.centerLat(), cluster.centerLng()))
                 .toList();
     }
 
@@ -129,19 +121,5 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
                 rs.getBigDecimal("avg_check"),
                 rs.getBigDecimal("sum_amount"),
                 rs.getTimestamp("updated_at").toInstant());
-    }
-
-    private boolean isWithinViewport(
-            final double lat,
-            final double lng,
-            final double swLat,
-            final double swLng,
-            final double neLat,
-            final double neLng) {
-        final boolean withinLatitude = lat >= swLat && lat <= neLat;
-        final boolean withinLongitude = swLng <= neLng
-                ? lng >= swLng && lng <= neLng
-                : lng >= swLng || lng <= neLng;
-        return withinLatitude && withinLongitude;
     }
 }

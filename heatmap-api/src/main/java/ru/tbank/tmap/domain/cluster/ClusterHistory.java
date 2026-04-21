@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import ru.tbank.tmap.domain.geo.H3Resolution;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

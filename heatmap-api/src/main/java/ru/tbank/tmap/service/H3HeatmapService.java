@@ -12,7 +12,8 @@ import org.openapitools.model.ClusterDetailsResponse;
 import org.openapitools.model.HeatmapResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.tbank.tmap.domain.cluster.H3Resolution;
+import ru.tbank.tmap.domain.geo.BoundingBox;
+import ru.tbank.tmap.domain.geo.H3Resolution;
 import ru.tbank.tmap.repository.HeatmapQueryRepository;
 
 @Service
@@ -32,26 +33,18 @@ public class H3HeatmapService implements HeatmapService {
 
     @Override
     public HeatmapResponse getHeatmapClusters(
-            final double swLat,
-            final double swLng,
-            final double neLat,
-            final double neLng,
+            final BoundingBox boundingBox,
             final H3Resolution resolution,
             final List<String> category,
             final int window
     ) {
-        validateBounds(swLat, neLat);
-
         final Instant from = Instant.now(clock).minus(window, ChronoUnit.MINUTES);
         return new HeatmapResponse()
                 .generatedAt(OffsetDateTime.ofInstant(Instant.now(clock), ZoneOffset.UTC))
                 .refreshIntervalMinutes(REFRESH_INTERVAL_MINUTES)
                 .aggregationWindowMinutes(window)
                 .clusters(heatmapQueryRepository.findClusters(
-                                swLat,
-                                swLng,
-                                neLat,
-                                neLng,
+                                boundingBox,
                                 resolution,
                                 category,
                                 from
@@ -76,15 +69,6 @@ public class H3HeatmapService implements HeatmapService {
                         .avgCheck(cluster.avgCheck().doubleValue())
                         .sumAmount(cluster.sumAmount().doubleValue())
                         .createdAt(OffsetDateTime.ofInstant(cluster.updatedAt(), ZoneOffset.UTC)));
-    }
-
-    private void validateBounds(
-            final double swLat,
-            final double neLat
-    ) {
-        if (swLat >= neLat) {
-            throw new IllegalArgumentException("Invalid map bounds");
-        }
     }
 
     private long parseH3Index(final String h3Index) {

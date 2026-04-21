@@ -1,4 +1,4 @@
-package ru.tbank.tmap.domain.venue;
+package ru.tbank.tmap.domain.geo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

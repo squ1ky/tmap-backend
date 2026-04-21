@@ -1,4 +1,4 @@
-package ru.tbank.tmap.domain.cluster;
+package ru.tbank.tmap.domain.geo;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

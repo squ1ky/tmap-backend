@@ -4,17 +4,15 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import ru.tbank.tmap.domain.cluster.H3Resolution;
+import ru.tbank.tmap.domain.geo.BoundingBox;
+import ru.tbank.tmap.domain.geo.H3Resolution;
 import ru.tbank.tmap.repository.model.ClusterDetailsAggregate;
 import ru.tbank.tmap.repository.model.HeatmapClusterAggregate;
 
 public interface HeatmapQueryRepository {
 
     List<HeatmapClusterAggregate> findClusters(
-            double swLat,
-            double swLng,
-            double neLat,
-            double neLng,
+            BoundingBox boundingBox,
             H3Resolution resolution,
             List<String> category,
             Instant from

@@ -1,7 +1,6 @@
 package ru.tbank.tmap.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
 import java.math.BigDecimal;
@@ -16,7 +15,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.openapitools.model.ClusterDetailsResponse;
 import org.openapitools.model.HeatmapResponse;
-import ru.tbank.tmap.domain.cluster.H3Resolution;
+import ru.tbank.tmap.domain.geo.BoundingBox;
+import ru.tbank.tmap.domain.geo.H3Resolution;
 import ru.tbank.tmap.repository.HeatmapQueryRepository;
 import ru.tbank.tmap.repository.model.ClusterDetailsAggregate;
 import ru.tbank.tmap.repository.model.HeatmapClusterAggregate;
@@ -27,6 +27,9 @@ class H3HeatmapServiceTest {
     private HeatmapQueryRepository heatmapQueryRepository;
 
     private H3HeatmapService heatmapService;
+
+    private static final BoundingBox KAZAN_BOUNDING_BOX =
+            new BoundingBox(55.7481, 49.0664, 55.8402, 49.1912);
 
     @BeforeEach
     void setUp() {
@@ -40,10 +43,7 @@ class H3HeatmapServiceTest {
     @Test
     void getHeatmapClusters_whenRepositoryReturnsClusters_thenReturnHeatmapData() {
         given(heatmapQueryRepository.findClusters(
-                55.7481,
-                49.0664,
-                55.8402,
-                49.1912,
+                KAZAN_BOUNDING_BOX,
                 H3Resolution.RES_8,
                 null,
                 Instant.parse("2026-04-17T09:20:00Z")
@@ -58,10 +58,7 @@ class H3HeatmapServiceTest {
         )));
 
         final HeatmapResponse response = heatmapService.getHeatmapClusters(
-                55.7481,
-                49.0664,
-                55.8402,
-                49.1912,
+                KAZAN_BOUNDING_BOX,
                 H3Resolution.RES_8,
                 null,
                 60
@@ -99,19 +96,5 @@ class H3HeatmapServiceTest {
         assertThat(response.orElseThrow().getTxCount()).isEqualTo(128);
         assertThat(response.orElseThrow().getAvgCheck()).isEqualTo(742.50);
         assertThat(response.orElseThrow().getSumAmount()).isEqualTo(95040.00);
-    }
-
-    @Test
-    void getHeatmapClusters_whenBoundsAreInvalid_thenThrowIllegalArgumentException() {
-        assertThatThrownBy(() -> heatmapService.getHeatmapClusters(
-                55.9,
-                49.2,
-                55.8,
-                49.1,
-                H3Resolution.RES_8,
-                null,
-                60
-        )).isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Invalid map bounds");
     }
 }

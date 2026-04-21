@@ -102,7 +102,7 @@ class H3HeatmapServiceTest {
         assertThat(response.orElseThrow().getResolution()).isEqualTo(9);
         assertThat(response.orElseThrow().getDistrictName()).isEqualTo("Вахитовский район");
         assertThat(response.orElseThrow().getDistrictImageUrl()).isEmpty();
-        assertThat(response.orElseThrow().getCategory()).isEqualTo("food");
+        assertThat(response.orElseThrow().getCategory().getValue()).isEqualTo("food");
         assertThat(response.orElseThrow().getHourBucket().toInstant())
                 .isEqualTo(Instant.parse("2026-04-17T10:00:00Z"));
         assertThat(response.orElseThrow().getTxCount()).isEqualTo(128);

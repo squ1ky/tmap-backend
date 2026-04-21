@@ -17,7 +17,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.config.SecurityConfig;
+import ru.tbank.tmap.domain.geo.BoundingBox;
 import ru.tbank.tmap.domain.geo.H3Resolution;
+import ru.tbank.tmap.exception.ErrorCode;
 import ru.tbank.tmap.exception.GlobalExceptionHandler;
 import ru.tbank.tmap.service.HeatmapService;
 
@@ -33,7 +35,10 @@ class HeatmapControllerTest {
 
     @Test
     void getHeatmapClusters_whenRequestIsValid_thenReturnHeatmapData() throws Exception {
-        given(heatmapService.getHeatmapClusters(55.7481, 49.0664, 55.8402, 49.1912, H3Resolution.RES_8, null, 60))
+        given(heatmapService.getHeatmapClusters(new BoundingBox(55.7481, 49.0664, 55.8402, 49.1912),
+                        H3Resolution.RES_8,
+                        null,
+                        60))
                 .willReturn(new HeatmapResponse()
                         .aggregationWindowMinutes(60)
                         .refreshIntervalMinutes(5)
@@ -79,9 +84,6 @@ class HeatmapControllerTest {
 
     @Test
     void getHeatmapClusters_whenBoundsAreInvalid_thenReturnValidationError() throws Exception {
-        given(heatmapService.getHeatmapClusters(55.9, 49.2, 55.8, 49.1, H3Resolution.RES_8, null, 60))
-                .willThrow(new IllegalArgumentException("Invalid map bounds"));
-
         mockMvc.perform(get("/api/v1/heatmap/clusters")
                         .param("swLat", "55.9")
                         .param("swLng", "49.2")

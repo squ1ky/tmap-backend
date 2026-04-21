@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import ru.tbank.tmap.TestcontainersConfiguration;
 import ru.tbank.tmap.config.H3Config;
+import ru.tbank.tmap.domain.geo.BoundingBox;
 import ru.tbank.tmap.domain.geo.H3Resolution;
 import ru.tbank.tmap.repository.HeatmapQueryRepository;
 import ru.tbank.tmap.repository.model.ClusterDetailsAggregate;
@@ -56,10 +57,7 @@ class JdbcHeatmapQueryRepositoryTest {
         );
 
         final List<HeatmapClusterAggregate> result = heatmapQueryRepository.findClusters(
-                55.7481,
-                49.0664,
-                55.8402,
-                49.1912,
+                new BoundingBox(55.7481, 49.0664, 55.8402, 49.1912),
                 H3Resolution.RES_8,
                 List.of("food"),
                 Instant.parse("2026-04-17T09:20:00Z")

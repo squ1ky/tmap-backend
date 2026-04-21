@@ -1,4 +1,4 @@
-package ru.tbank.tmap.domain.cluster;
+package ru.tbank.tmap.domain.geo;
 
 import lombok.Getter;
 

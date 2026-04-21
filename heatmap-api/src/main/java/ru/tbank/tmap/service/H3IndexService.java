@@ -3,7 +3,7 @@ package ru.tbank.tmap.service;
 import com.uber.h3core.H3Core;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.tbank.tmap.domain.cluster.H3Resolution;
+import ru.tbank.tmap.domain.geo.H3Resolution;
 
 @Service
 @RequiredArgsConstructor

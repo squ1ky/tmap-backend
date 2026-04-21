@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.config.SecurityConfig;
-import ru.tbank.tmap.domain.cluster.H3Resolution;
+import ru.tbank.tmap.domain.geo.H3Resolution;
 import ru.tbank.tmap.exception.GlobalExceptionHandler;
 import ru.tbank.tmap.service.HeatmapService;
 

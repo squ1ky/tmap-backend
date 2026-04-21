@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.openapitools.model.ClusterDetailsResponse;
 import org.openapitools.model.HeatmapResponse;
-import ru.tbank.tmap.domain.cluster.H3Resolution;
+import ru.tbank.tmap.domain.geo.H3Resolution;
 
 public interface HeatmapService {
 

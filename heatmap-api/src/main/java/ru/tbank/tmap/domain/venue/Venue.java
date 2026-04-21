@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import ru.tbank.tmap.domain.geo.GeoPoint;
 import ru.tbank.tmap.domain.user.User;
 
 import java.time.OffsetDateTime;

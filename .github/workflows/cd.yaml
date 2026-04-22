@@ -56,12 +56,12 @@ jobs:
       - name: Preflight checks
         run: |
           ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "cd '${{ secrets.DEPLOY_PATH }}' && echo '=== Disk usage ===' && df -h && echo '=== Docker Compose config check ===' && docker compose config > /dev/null"
+            "cd '${{ secrets.DEPLOY_PATH }}' && echo '=== Disk usage ===' && df -h && echo '=== Docker Compose config check ===' && docker-compose config > /dev/null"
 
       - name: Deploy with Docker Compose
         run: |
           ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "cd '${{ secrets.DEPLOY_PATH }}' && docker compose up -d --build --remove-orphans"
+            "cd '${{ secrets.DEPLOY_PATH }}' && docker-compose up -d --build --remove-orphans"
 
       - name: Health check (actuator)
         run: |
@@ -83,7 +83,7 @@ jobs:
                   echo \"Health check failed fast: HTTP \$code on /actuator/health\"
                   cat \"\$body_file\"
                   rm -f \"\$body_file\"
-                  docker compose logs --tail=200 heatmap-api
+                  docker-compose logs --tail=200 heatmap-api
                   exit 1
                   ;;
               esac
@@ -91,6 +91,6 @@ jobs:
               sleep 5
             done
             echo \"Health check failed: last HTTP code was \$last_code on /actuator/health\"
-            docker compose logs --tail=200 heatmap-api
+            docker-compose logs --tail=200 heatmap-api
             exit 1
           "

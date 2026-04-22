@@ -1,0 +1,91 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: cd-deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to VM
+    if: >
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Prepare SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf "%s" "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Ensure deploy directory exists
+        run: |
+          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "mkdir -p '${{ secrets.DEPLOY_PATH }}'"
+
+      - name: Sync project to VM
+        run: |
+          rsync -az \
+            --exclude ".git" \
+            --exclude ".github" \
+            --exclude ".idea" \
+            --exclude ".vscode" \
+            --exclude ".env" \
+            ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+
+      - name: Preflight checks
+        run: |
+          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "cd '${{ secrets.DEPLOY_PATH }}' && echo '=== Disk usage ===' && df -h && echo '=== Docker Compose config check ===' && docker compose config > /dev/null"
+
+      - name: Deploy with Docker Compose
+        run: |
+          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "cd '${{ secrets.DEPLOY_PATH }}' && docker compose up -d --build --remove-orphans"
+
+      - name: Health check (actuator)
+        run: |
+          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "
+            set -e
+            cd '${{ secrets.DEPLOY_PATH }}'
+            last_code='000'
+            for i in $(seq 1 20); do
+              body_file=\$(mktemp)
+              code=\$(curl -sS -o \"\$body_file\" -w '%{http_code}' 'http://localhost:8080/actuator/health' || true)
+              last_code=\$code
+              if [ \"\$code\" = '200' ] && grep -q '\"status\":\"UP\"' \"\$body_file\"; then
+                echo 'Health check passed: actuator status is UP'
+                rm -f \"\$body_file\"
+                exit 0
+              fi
+              case \"\$code\" in
+                5*)
+                  echo \"Health check failed fast: HTTP \$code on /actuator/health\"
+                  cat \"\$body_file\"
+                  rm -f \"\$body_file\"
+                  docker compose logs --tail=200 heatmap-api
+                  exit 1
+                  ;;
+              esac
+              rm -f \"\$body_file\"
+              sleep 5
+            done
+            echo \"Health check failed: last HTTP code was \$last_code on /actuator/health\"
+            docker compose logs --tail=200 heatmap-api
+            exit 1
+          "

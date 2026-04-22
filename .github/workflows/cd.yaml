@@ -5,6 +5,8 @@ on:
     workflows: ["CI"]
     types: [completed]
   workflow_dispatch:
+  push:
+    branches: [ "fix/cd-actions-node-error" ]
 
 concurrency:
   group: cd-deploy-prod
@@ -17,6 +19,7 @@ jobs:
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.head_branch == 'main') ||
+      github.event_name == 'push' ||
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
@@ -29,7 +32,7 @@ jobs:
       - name: Prepare SSH
         run: |
           mkdir -p ~/.ssh
-          printf "%s" "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          printf '%s' '${{ secrets.SSH_PRIVATE_KEY }}' | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 

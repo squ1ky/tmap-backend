@@ -39,6 +39,8 @@ public class SecurityConfig {
             "/error",
             "/swagger-ui/**",
             "/api-docs/**",
+            "/actuator/health",
+            "/actuator/health/**"
     };
 
     private static final String ADMIN_ENDPOINTS = "/api/v1/admin/**";

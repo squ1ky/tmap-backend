@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: tmap-backend-test
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
@@ -8,8 +10,35 @@ server:
   port: 8080
 
 app:
+  security:
+    cookie:
+      secure: false
+      same-site: Lax
+    cors:
+      allowed-origins:
+        - "http://localhost:3000"
+      allowed-methods:
+        - "*"
+      allowed-headers:
+        - "*"
+      exposed-headers:
+        - Authorization
+        - Set-Cookie
+      allow-credentials: true
+      max-age: 1h
   jwt:
-    secret: test-secret-key-which-is-long-enough-for-hs256
-    expiration: 3600000
+    secret: "bXktc3VwZXItc2VjcmV0LWtleS1mb3ItdGVzdHMtdGhhdC1pcy1sb25nLWVub3VnaA=="
+    access-expiration: 15m
+    refresh-expiration: 7d
+  aggregation:
+    lookback-hours: 1
+    initial-delay-ms: 10000
+    interval-ms: 60000
   kafka:
-    transactions-topic: test-transactions
+    transactions-topic: test-transactions-topic
+
+logging:
+  level:
+    root: INFO
+    ru.tbank.tmap: DEBUG
+    org.springframework: WARN

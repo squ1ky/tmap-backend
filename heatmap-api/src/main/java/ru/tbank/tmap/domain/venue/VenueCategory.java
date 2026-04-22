@@ -1,25 +1,21 @@
 package ru.tbank.tmap.domain.venue;
 
-import lombok.Getter;
-
-@Getter
 public enum VenueCategory {
-    FOOD("Еда"),
-    ENTERTAINMENT("Развлечения"),
-    SHOPPING("Шоппинг");
-
-    private final String displayName;
-
-    VenueCategory(String displayName) {
-        this.displayName = displayName;
-    }
+    FOOD,
+    ENTERTAINMENT,
+    SHOPPING;
 
     public static VenueCategory fromString(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Venue category must not be null or blank");
+        }
+
+        String normalizedValue = value.trim();
         for (VenueCategory category : values()) {
-            if (category.name().equalsIgnoreCase(value)) {
+            if (category.name().equalsIgnoreCase(normalizedValue)) {
                 return category;
             }
         }
-        throw new IllegalArgumentException("Unknown category: " + value);
+        throw new IllegalArgumentException("Unsupported venue category: " + value);
     }
 }

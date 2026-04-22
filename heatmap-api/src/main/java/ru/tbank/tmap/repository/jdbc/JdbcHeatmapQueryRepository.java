@@ -80,18 +80,48 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
             final H3Resolution resolution,
             final Instant from) {
         final String sql = """
+                WITH aggregated AS (
+                    SELECT
+                        COALESCE(SUM(ch.tx_count), 0) AS tx_count,
+                        CASE
+                            WHEN COALESCE(SUM(ch.tx_count), 0) = 0 THEN 0
+                            ELSE COALESCE(SUM(ch.sum_amount), 0) / SUM(ch.tx_count)
+                        END AS avg_check,
+                        COALESCE(SUM(ch.sum_amount), 0) AS sum_amount,
+                        MAX(ch.hour_bucket) AS updated_at
+                    FROM cluster_history ch
+                    WHERE ch.hour_bucket >= :from
+                      AND ch.h3_index = :h3Index
+                      AND ch.resolution = :resolution
+                ),
+                latest_bucket AS (
+                    SELECT
+                        ch.category AS category,
+                        ch.hour_bucket AS hour_bucket
+                    FROM cluster_history ch
+                    WHERE ch.hour_bucket >= :from
+                      AND ch.h3_index = :h3Index
+                      AND ch.resolution = :resolution
+                    ORDER BY ch.hour_bucket DESC, ch.category ASC
+                    LIMIT 1
+                )
                 SELECT
-                    COALESCE(SUM(ch.tx_count), 0) AS tx_count,
-                    CASE
-                        WHEN COALESCE(SUM(ch.tx_count), 0) = 0 THEN 0
-                        ELSE COALESCE(SUM(ch.sum_amount), 0) / SUM(ch.tx_count)
-                    END AS avg_check,
-                    COALESCE(SUM(ch.sum_amount), 0) AS sum_amount,
-                    MAX(ch.hour_bucket) AS updated_at
-                FROM cluster_history ch
-                WHERE ch.hour_bucket >= :from
-                  AND ch.h3_index = :h3Index
-                  AND ch.resolution = :resolution
+                    d.name AS district_name,
+                    COALESCE(d.photo_url, '') AS district_image_url,
+                    lb.category AS category,
+                    lb.hour_bucket AS hour_bucket,
+                    a.tx_count AS tx_count,
+                    a.avg_check AS avg_check,
+                    a.sum_amount AS sum_amount,
+                    a.updated_at AS updated_at
+                FROM aggregated a
+                JOIN h3_to_district hd
+                  ON hd.h3_index = :h3Index
+                 AND hd.resolution = :resolution
+                JOIN districts d
+                  ON d.id = hd.district_id
+                LEFT JOIN latest_bucket lb
+                  ON true
                 """;
 
         final MapSqlParameterSource params = new MapSqlParameterSource(Map.of(
@@ -107,6 +137,10 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
             return Optional.of(new ClusterDetailsAggregate(
                     h3Index,
                     resolution,
+                    rs.getString("district_name"),
+                    rs.getString("district_image_url"),
+                    rs.getString("category"),
+                    rs.getTimestamp("hour_bucket").toInstant(),
                     rs.getInt("tx_count"),
                     rs.getBigDecimal("avg_check"),
                     rs.getBigDecimal("sum_amount"),

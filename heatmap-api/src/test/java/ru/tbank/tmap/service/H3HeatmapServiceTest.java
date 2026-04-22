@@ -81,6 +81,10 @@ class H3HeatmapServiceTest {
         )).willReturn(Optional.of(new ClusterDetailsAggregate(
                 Long.parseUnsignedLong("89115b22b0bffff", 16),
                 H3Resolution.RES_9,
+                "Вахитовский район",
+                "",
+                "FOOD",
+                Instant.parse("2026-04-17T10:00:00Z"),
                 128,
                 new BigDecimal("742.50"),
                 new BigDecimal("95040.00"),
@@ -93,6 +97,11 @@ class H3HeatmapServiceTest {
         assertThat(response).isPresent();
         assertThat(response.orElseThrow().getH3Index()).isEqualTo("89115b22b0bffff");
         assertThat(response.orElseThrow().getResolution()).isEqualTo(9);
+        assertThat(response.orElseThrow().getDistrictName()).isEqualTo("Вахитовский район");
+        assertThat(response.orElseThrow().getDistrictImageUrl()).isEmpty();
+        assertThat(response.orElseThrow().getCategory().getValue()).isEqualTo("food");
+        assertThat(response.orElseThrow().getHourBucket().toInstant())
+                .isEqualTo(Instant.parse("2026-04-17T10:00:00Z"));
         assertThat(response.orElseThrow().getTxCount()).isEqualTo(128);
         assertThat(response.orElseThrow().getAvgCheck()).isEqualTo(742.50);
         assertThat(response.orElseThrow().getSumAmount()).isEqualTo(95040.00);

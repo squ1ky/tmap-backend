@@ -56,9 +56,13 @@ server:
 
 # ===== JWT =====
 app:
+  security:
+    cookie:
+      secure: true
   jwt:
     secret: ${JWT_SECRET}
-    expiration: ${JWT_EXPIRATION}
+    access-expiration: ${JWT_ACCESS_EXPIRATION}
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION}
   aggregation:
     lookback-hours: 1
     initial-delay-ms: 10000

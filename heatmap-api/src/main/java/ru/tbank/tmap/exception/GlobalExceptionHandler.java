@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import ru.tbank.tmap.dto.ErrorResponse;
+import ru.tbank.tmap.exception.auth.EmailAlreadyExistsException;
+import ru.tbank.tmap.exception.auth.InvalidCredentialsException;
 import ru.tbank.tmap.exception.heatmap.ClusterNotFoundException;
 
 @Slf4j
@@ -76,6 +78,19 @@ public class GlobalExceptionHandler {
         log.warn("Validation error: {}", ex.getMessage());
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse(ErrorCode.VALIDATION_ERROR, ex.getMessage()));
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(final EmailAlreadyExistsException ex) {
+        log.warn("Registration conflict: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(ErrorCode.CONFLICT, ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCredentials(final InvalidCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponse(ErrorCode.UNAUTHORIZED, ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

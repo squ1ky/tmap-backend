@@ -86,6 +86,12 @@
             <version>${springdoc.version}</version>
         </dependency>
 
+        <!-- ===== Actuator ===== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- ===== .env support ===== -->
         <dependency>
             <groupId>me.paulschwarz</groupId>

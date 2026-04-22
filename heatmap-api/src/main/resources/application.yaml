@@ -73,6 +73,18 @@ springdoc:
   swagger-ui:
     path: /swagger-ui
 
+# ===== Actuator =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
 # ===== Logging =====
 logging:
   level:

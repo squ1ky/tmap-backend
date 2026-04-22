@@ -11,7 +11,6 @@ public class RefreshTokenCookieFactory {
 
     private static final String COOKIE_NAME = "refreshToken";
     private static final String COOKIE_PATH = "/api/v1/auth/refresh";
-    private static final String SAME_SITE_STRICT = "Strict";
 
     private final JwtProperties jwtProperties;
     private final CookieSecurityProperties cookieSecurityProperties;
@@ -27,6 +26,6 @@ public class RefreshTokenCookieFactory {
                 .httpOnly(true)
                 .secure(cookieSecurityProperties.secure())
                 .path(COOKIE_PATH)
-                .sameSite(SAME_SITE_STRICT);
+                .sameSite(cookieSecurityProperties.sameSite());
     }
 }

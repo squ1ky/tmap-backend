@@ -59,6 +59,24 @@ app:
   security:
     cookie:
       secure: true
+      same-site: None
+    cors:
+      allowed-origins:
+        - https://tmap.example.com # заглушка пока у фронтендеров не появится VPS
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      allowed-headers:
+        - "*"
+      exposed-headers:
+        - Authorization
+        - Set-Cookie
+      allow-credentials: true
+      max-age: 1h
   jwt:
     secret: ${JWT_SECRET}
     access-expiration: ${JWT_ACCESS_EXPIRATION}

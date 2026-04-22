@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "app.security.cookie")
 public record CookieSecurityProperties(
-        boolean secure
+        boolean secure,
+        String sameSite
 ) {
 }

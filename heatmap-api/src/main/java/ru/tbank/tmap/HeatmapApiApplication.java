@@ -6,12 +6,17 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import ru.tbank.tmap.config.security.cors.CorsProperties;
 import ru.tbank.tmap.config.security.cookie.CookieSecurityProperties;
 import ru.tbank.tmap.config.security.jwt.JwtProperties;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableConfigurationProperties({JwtProperties.class, CookieSecurityProperties.class})
+@EnableConfigurationProperties({
+        JwtProperties.class,
+        CookieSecurityProperties.class,
+        CorsProperties.class
+})
 public class HeatmapApiApplication {
 
     @Bean

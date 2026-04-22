@@ -17,7 +17,7 @@ import ru.tbank.tmap.dto.auth.AuthResult;
 import ru.tbank.tmap.service.auth.AuthService;
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class AuthController implements AuthApi {
 

@@ -11,18 +11,19 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.openapitools.model.VenuePublicResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.tbank.tmap.config.SecurityConfig;
 import ru.tbank.tmap.domain.geo.BoundingBox;
 import ru.tbank.tmap.domain.venue.VenueCategory;
 import ru.tbank.tmap.exception.GlobalExceptionHandler;
 import ru.tbank.tmap.service.VenueService;
 
 @WebMvcTest(VenueController.class)
-@Import({SecurityConfig.class, GlobalExceptionHandler.class})
+@AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 class VenueControllerTest {
 
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");

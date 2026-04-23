@@ -12,33 +12,17 @@ import org.openapitools.model.ClusterDTO;
 import org.openapitools.model.ClusterDetailsResponse;
 import org.openapitools.model.HeatmapResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.tbank.tmap.config.security.SecurityConfig;
-import ru.tbank.tmap.config.security.jwt.JwtAuthenticationFilter;
 import ru.tbank.tmap.domain.geo.BoundingBox;
 import ru.tbank.tmap.domain.geo.H3Resolution;
 import ru.tbank.tmap.exception.GlobalExceptionHandler;
 import ru.tbank.tmap.service.HeatmapService;
 
-@WebMvcTest(
-        controllers = HeatmapController.class,
-        excludeAutoConfiguration = {
-                SecurityAutoConfiguration.class,
-                SecurityFilterAutoConfiguration.class
-        },
-        excludeFilters = @ComponentScan.Filter(
-                type = FilterType.ASSIGNABLE_TYPE,
-                classes = {SecurityConfig.class, JwtAuthenticationFilter.class}
-        )
-)
+@WebMvcTest(controllers = HeatmapController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @Import(GlobalExceptionHandler.class)
 class HeatmapControllerTest {

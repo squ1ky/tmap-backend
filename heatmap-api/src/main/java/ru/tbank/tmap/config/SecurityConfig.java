@@ -19,6 +19,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/heatmap/clusters", "/api/v1/heatmap/clusters/**").permitAll()
+                        .requestMatchers("/api/v1/venues", "/api/v1/venues/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()

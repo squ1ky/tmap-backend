@@ -73,4 +73,14 @@ public class User {
         this.nickname = Objects.requireNonNull(nickname, "nickname");
         this.role = Objects.requireNonNull(role, "role");
     }
+
+    public static User create(final String email, final String passwordHash, final String nickname) {
+        return new User(
+                UUID.randomUUID(),
+                email,
+                passwordHash,
+                nickname,
+                UserRole.USER
+        );
+    }
 }

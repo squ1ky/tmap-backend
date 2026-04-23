@@ -56,9 +56,31 @@ server:
 
 # ===== JWT =====
 app:
+  security:
+    cookie:
+      secure: true
+      same-site: None
+    cors:
+      allowed-origins:
+        - https://tmap.example.com # заглушка пока у фронтендеров не появится VPS
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      allowed-headers:
+        - "*"
+      exposed-headers:
+        - Authorization
+        - Set-Cookie
+      allow-credentials: true
+      max-age: 1h
   jwt:
     secret: ${JWT_SECRET}
-    expiration: ${JWT_EXPIRATION}
+    access-expiration: ${JWT_ACCESS_EXPIRATION}
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION}
   aggregation:
     lookback-hours: 1
     initial-delay-ms: 10000

@@ -1,0 +1,57 @@
+package ru.tbank.tmap.service.auth;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.domain.user.User;
+import ru.tbank.tmap.dto.auth.AuthResult;
+import ru.tbank.tmap.exception.auth.EmailAlreadyExistsException;
+import ru.tbank.tmap.exception.auth.InvalidCredentialsException;
+import ru.tbank.tmap.repository.jpa.UserRepository;
+import ru.tbank.tmap.service.auth.token.RefreshTokenService;
+import ru.tbank.tmap.service.auth.jwt.JwtService;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class AuthService {
+
+    private final UserRepository userRepository;
+    private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
+    private final PasswordEncoder passwordEncoder;
+
+    public AuthResult register(String email, String password, String nickname) {
+        if (userRepository.existsByEmail(email)) {
+            throw new EmailAlreadyExistsException(email);
+        }
+
+        final User user = User.create(email, passwordEncoder.encode(password), nickname);
+        userRepository.save(user);
+
+        return issueTokens(user);
+    }
+
+    public AuthResult login(String email, String password) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(InvalidCredentialsException::new);
+
+        if (user.isBlocked() || !passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new InvalidCredentialsException();
+        }
+
+        return issueTokens(user);
+    }
+
+    private AuthResult issueTokens(User user) {
+        final String plainRefreshToken = refreshTokenService.issue(user);
+
+        return new AuthResult(
+                user.getId(),
+                user.getRole(),
+                jwtService.generateAccessToken(user),
+                plainRefreshToken
+        );
+    }
+}

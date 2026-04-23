@@ -17,6 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 import ru.tbank.tmap.config.security.jwt.JwtAuthenticationFilter;
+import ru.tbank.tmap.service.auth.jwt.JwtService;
 
 @Configuration
 @EnableMethodSecurity
@@ -46,13 +47,14 @@ public class SecurityConfig {
     private static final String ADMIN_ENDPOINTS = "/api/v1/admin/**";
     private static final String ROLE_ADMIN = "ADMIN";
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
     private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")
-    public SecurityFilterChain filterChain(final HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(final HttpSecurity http, JwtService jwtService) throws Exception {
+        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtService, userDetailsService);
+
         return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)

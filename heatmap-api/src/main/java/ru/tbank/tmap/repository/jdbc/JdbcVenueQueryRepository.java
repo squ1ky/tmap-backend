@@ -1,12 +1,10 @@
 package ru.tbank.tmap.repository.jdbc;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -19,6 +17,7 @@ import ru.tbank.tmap.repository.model.VenuePublicRow;
 public class JdbcVenueQueryRepository implements VenueQueryRepository {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final DataClassRowMapper<VenuePublicRow> rowMapper = new DataClassRowMapper<>(VenuePublicRow.class);
 
     public JdbcVenueQueryRepository(final NamedParameterJdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -42,7 +41,7 @@ public class JdbcVenueQueryRepository implements VenueQueryRepository {
         addCategoryFilter(sql, params, categories);
         sql.append("\nORDER BY name, id");
 
-        return jdbcTemplate.query(sql.toString(), params, this::toVenuePublicRow);
+        return jdbcTemplate.query(sql.toString(), params, rowMapper);
     }
 
     @Override
@@ -51,7 +50,12 @@ public class JdbcVenueQueryRepository implements VenueQueryRepository {
                 WHERE status = 'ACTIVE'
                   AND id = :id
                 """).toString();
-        return jdbcTemplate.query(sql, Map.of("id", id), this::toOptionalVenuePublicRow);
+        return jdbcTemplate.query(sql, Map.of("id", id), rs -> {
+            if (!rs.next()) {
+                return Optional.empty();
+            }
+            return Optional.of(rowMapper.mapRow(rs, 0));
+        });
     }
 
     private StringBuilder baseSelect() {
@@ -64,11 +68,11 @@ public class JdbcVenueQueryRepository implements VenueQueryRepository {
                     lng,
                     description,
                     category,
-                    photo_url,
-                    dish_of_day,
+                    photo_url AS photoUrl,
+                    dish_of_day AS dishOfDay,
                     music,
-                    created_at,
-                    updated_at
+                    created_at AS createdAt,
+                    updated_at AS updatedAt
                 FROM venues
                 """);
     }
@@ -84,30 +88,5 @@ public class JdbcVenueQueryRepository implements VenueQueryRepository {
                     .map(Enum::name)
                     .toList());
         }
-    }
-
-    @SuppressWarnings("PMD.UnusedFormalParameter")
-    private VenuePublicRow toVenuePublicRow(final ResultSet rs, final int rowNum) throws SQLException {
-        return new VenuePublicRow(
-                rs.getObject("id", UUID.class),
-                rs.getString("name"),
-                rs.getString("address"),
-                rs.getDouble("lat"),
-                rs.getDouble("lng"),
-                rs.getString("description"),
-                VenueCategory.valueOf(rs.getString("category")),
-                rs.getString("photo_url"),
-                rs.getString("dish_of_day"),
-                rs.getString("music"),
-                rs.getObject("created_at", OffsetDateTime.class),
-                rs.getObject("updated_at", OffsetDateTime.class)
-        );
-    }
-
-    private Optional<VenuePublicRow> toOptionalVenuePublicRow(final ResultSet rs) throws SQLException {
-        if (!rs.next()) {
-            return Optional.empty();
-        }
-        return Optional.of(toVenuePublicRow(rs, 0));
     }
 }

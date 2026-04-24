@@ -6,7 +6,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.config.security.jwt.JwtProperties;
 import ru.tbank.tmap.domain.user.RefreshToken;
 import ru.tbank.tmap.domain.user.User;
+import ru.tbank.tmap.dto.auth.AuthResult;
+import ru.tbank.tmap.exception.auth.InvalidRefreshTokenException;
 import ru.tbank.tmap.repository.jpa.RefreshTokenRepository;
+import ru.tbank.tmap.service.auth.jwt.JwtService;
 
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
@@ -22,6 +25,7 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final TokenHasher tokenHasher;
     private final JwtProperties jwtProperties;
+    private final JwtService jwtService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Transactional
@@ -35,6 +39,37 @@ public class RefreshTokenService {
         );
         refreshTokenRepository.save(refreshToken);
         return plainToken;
+    }
+
+    @Transactional
+    public AuthResult rotate(final String plainToken) {
+        if (plainToken == null || plainToken.isBlank()) {
+            throw new InvalidRefreshTokenException("Refresh token is missing");
+        }
+        final String hash = tokenHasher.hash(plainToken);
+        final RefreshToken existing = refreshTokenRepository.findByTokenHash(hash)
+                .orElseThrow(() -> new InvalidRefreshTokenException("Refresh token not found"));
+
+        if (existing.isRevoked()) {
+            throw new InvalidRefreshTokenException("Refresh token is revoked");
+        }
+        if (existing.getExpiresAt().isBefore(OffsetDateTime.now())) {
+            throw new InvalidRefreshTokenException("Refresh token is expired");
+        }
+
+        existing.setRevoked(true);
+        refreshTokenRepository.save(existing);
+
+        final User user = existing.getUser();
+        final String newPlainRefreshToken = issue(user);
+        final String accessToken = jwtService.generateAccessToken(user);
+
+        return new AuthResult(
+                user.getId(),
+                user.getRole(),
+                accessToken,
+                newPlainRefreshToken
+        );
     }
 
     public String generatePlainToken() {

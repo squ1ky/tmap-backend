@@ -62,7 +62,7 @@ app:
       same-site: None
     cors:
       allowed-origins:
-        - https://tmap.example.com # заглушка пока у фронтендеров не появится VPS
+        - http://localhost:5173 # заглушка пока у фронтендеров не появится VPS
       allowed-methods:
         - GET
         - POST

@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.openapitools.model.VenuePublicResponse;
+import org.openapitools.model.VenueSearchResultResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -20,6 +21,7 @@ import ru.tbank.tmap.domain.geo.BoundingBox;
 import ru.tbank.tmap.domain.venue.VenueCategory;
 import ru.tbank.tmap.exception.GlobalExceptionHandler;
 import ru.tbank.tmap.service.VenueService;
+import ru.tbank.tmap.service.VenueSearchService;
 
 @WebMvcTest(VenueController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -33,6 +35,9 @@ class VenueControllerTest {
 
     @MockitoBean
     private VenueService venueService;
+
+    @MockitoBean
+    private VenueSearchService venueSearchService;
 
     @Test
     void getVenuesInViewport_whenRequestIsValid_thenReturnVenues() throws Exception {
@@ -103,6 +108,39 @@ class VenueControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("NOT_FOUND"))
                 .andExpect(jsonPath("$.message").value("Venue not found"));
+    }
+
+    @Test
+    void searchVenues_whenRequestIsValid_thenReturnsMatchingVenues() throws Exception {
+        given(venueSearchService.searchByName("bar"))
+                .willReturn(List.of(new VenueSearchResultResponse()
+                        .id(VENUE_ID)
+                        .name("Bar One")
+                        .address("Kazan Center, 2")
+                        .lat(55.7905)
+                        .lng(49.1140)
+                        .category(VenueSearchResultResponse.CategoryEnum.ENTERTAINMENT)));
+
+        mockMvc.perform(get("/api/v1/venues/search")
+                        .param("q", "bar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(VENUE_ID.toString()))
+                .andExpect(jsonPath("$[0].name").value("Bar One"))
+                .andExpect(jsonPath("$[0].address").value("Kazan Center, 2"))
+                .andExpect(jsonPath("$[0].lat").value(55.7905))
+                .andExpect(jsonPath("$[0].lng").value(49.1140))
+                .andExpect(jsonPath("$[0].category").value("entertainment"));
+    }
+
+    @Test
+    void searchVenues_whenNoMatches_thenReturnsEmptyArray() throws Exception {
+        given(venueSearchService.searchByName("missing")).willReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/venues/search")
+                        .param("q", "missing"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     private VenuePublicResponse venueResponse() {

@@ -291,6 +291,33 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+  /venues/search:
+    get:
+      tags: [Venues (Public)]
+      summary: Search venues by name
+      description: Returns ACTIVE public venues whose names match the requested text, case-insensitively.
+      operationId: searchVenues
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Full or partial venue name.
+          schema:
+            type: string
+            minLength: 1
+            example: "Скуратов"
+      responses:
+        '200':
+          description: Matching venues
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VenueSearchResultResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
   /venues/{id}:
     get:
       tags: [Venues (Public)]
@@ -1371,6 +1398,35 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/VenuePromoResponse'
+
+    VenueSearchResultResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "5085d345-3129-4e4b-972d-8bcf9a2ea9c9"
+        name:
+          type: string
+          example: "Скуратов Кофе"
+        address:
+          type: string
+          example: "ул. Баумана, 9, Казань"
+        lat:
+          type: number
+          format: double
+          example: 55.7915
+        lng:
+          type: number
+          format: double
+          example: 49.1118
+        category:
+          type: string
+          enum: [food, entertainment, shopping]
+          example: "food"
+        photoUrl:
+          type: string
+          format: uri
 
     VenueOwnerResponse:
       allOf:

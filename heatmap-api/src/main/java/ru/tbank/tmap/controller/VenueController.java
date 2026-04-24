@@ -5,6 +5,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.openapitools.api.VenuesApi;
 import org.openapitools.model.VenuePublicResponse;
+import org.openapitools.model.VenueSearchResultResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.tbank.tmap.domain.geo.BoundingBox;
 import ru.tbank.tmap.domain.venue.VenueCategory;
 import ru.tbank.tmap.service.VenueService;
+import ru.tbank.tmap.service.VenueSearchService;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -20,6 +22,7 @@ import ru.tbank.tmap.service.VenueService;
 public class VenueController implements VenuesApi {
 
     private final VenueService venueService;
+    private final VenueSearchService venueSearchService;
 
     @Override
     public ResponseEntity<List<VenuePublicResponse>> getVenuesInViewport(
@@ -27,12 +30,10 @@ public class VenueController implements VenuesApi {
             final Double swLng,
             final Double neLat,
             final Double neLng,
-            final List<String> category
-    ) {
+            final List<String> category) {
         return ResponseEntity.ok(venueService.getVenuesInViewport(
                 new BoundingBox(swLat, swLng, neLat, neLng),
-                toCategories(category)
-        ));
+                toCategories(category)));
     }
 
     @Override
@@ -40,6 +41,11 @@ public class VenueController implements VenuesApi {
         return venueService.getVenueById(id)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venue not found"));
+    }
+
+    @Override
+    public ResponseEntity<List<VenueSearchResultResponse>> searchVenues(final String q) {
+        return ResponseEntity.ok(venueSearchService.searchByName(q));
     }
 
     private List<VenueCategory> toCategories(final List<String> category) {

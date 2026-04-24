@@ -1,6 +1,7 @@
 package ru.tbank.tmap.controller.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openapitools.model.LoginRequest;
@@ -21,6 +22,7 @@ import ru.tbank.tmap.domain.user.UserRole;
 import ru.tbank.tmap.dto.auth.AuthResult;
 import ru.tbank.tmap.exception.auth.EmailAlreadyExistsException;
 import ru.tbank.tmap.exception.auth.InvalidCredentialsException;
+import ru.tbank.tmap.exception.auth.InvalidRefreshTokenException;
 import ru.tbank.tmap.service.auth.AuthService;
 import ru.tbank.tmap.service.auth.jwt.JwtService;
 
@@ -47,6 +49,7 @@ class AuthControllerTest {
 
     private static final String REGISTER_URL = "/api/v1/auth/register";
     private static final String LOGIN_URL = "/api/v1/auth/login";
+    private static final String REFRESH_URL = "/api/v1/auth/refresh";
 
     private static final String VALID_EMAIL = "kazan_guest@example.com";
     private static final String VALID_PASSWORD = "Echak123!";
@@ -236,6 +239,40 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
         verifyNoInteractions(authService);
+    }
+
+    @Test
+    void refreshAuthToken_whenTokenValid_thenReturnOkWithNewPair() throws Exception {
+        final String oldRefreshToken = "old-refresh-token";
+        given(authService.refresh(oldRefreshToken)).willReturn(authResult);
+
+        mockMvc.perform(post(REFRESH_URL)
+                        .with(csrf())
+                        .cookie(new Cookie(REFRESH_TOKEN_COOKIE_NAME, oldRefreshToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(USER_ID.toString()))
+                .andExpect(jsonPath("$.role").value("USER"))
+                .andExpect(jsonPath("$.accessToken").value(ACCESS_TOKEN))
+                .andExpect(cookie().exists(REFRESH_TOKEN_COOKIE_NAME))
+                .andExpect(cookie().httpOnly(REFRESH_TOKEN_COOKIE_NAME, true))
+                .andExpect(cookie().path(REFRESH_TOKEN_COOKIE_NAME, "/api/v1/auth/refresh"))
+                .andExpect(cookie().value(REFRESH_TOKEN_COOKIE_NAME, REFRESH_TOKEN));
+
+        verify(authService).refresh(oldRefreshToken);
+    }
+
+    @Test
+    void refreshAuthToken_whenTokenInvalid_thenReturnUnauthorized() throws Exception {
+        final String badToken = "bad-refresh-token";
+        willThrow(new InvalidRefreshTokenException("Refresh token is revoked"))
+                .given(authService).refresh(badToken);
+
+        mockMvc.perform(post(REFRESH_URL)
+                        .with(csrf())
+                        .cookie(new Cookie(REFRESH_TOKEN_COOKIE_NAME, badToken)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
+                .andExpect(header().doesNotExist("Set-Cookie"));
     }
 
     @TestConfiguration

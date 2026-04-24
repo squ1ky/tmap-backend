@@ -4,21 +4,21 @@ import java.util.List;
 
 import org.openapitools.model.VenueSearchResultResponse;
 import org.springframework.stereotype.Service;
-import ru.tbank.tmap.mapper.VenueSearchMapper;
+import ru.tbank.tmap.mapper.VenuePublicMapper;
 import ru.tbank.tmap.repository.VenueSearchRepository;
 
 @Service
 public class PublicVenueSearchService implements VenueSearchService {
 
     private final VenueSearchRepository venueSearchRepository;
-    private final VenueSearchMapper venueSearchMapper;
+    private final VenuePublicMapper venuePublicMapper;
 
     public PublicVenueSearchService(
             final VenueSearchRepository venueSearchRepository,
-            final VenueSearchMapper venueSearchMapper
+            final VenuePublicMapper venuePublicMapper
     ) {
         this.venueSearchRepository = venueSearchRepository;
-        this.venueSearchMapper = venueSearchMapper;
+        this.venuePublicMapper = venuePublicMapper;
     }
 
     @Override
@@ -30,7 +30,7 @@ public class PublicVenueSearchService implements VenueSearchService {
 
         return venueSearchRepository.searchByName(normalizedQuery)
                 .stream()
-                .map(venueSearchMapper::toResponse)
+                .map(venuePublicMapper::toSearchResponse)
                 .toList();
     }
 }

@@ -6,13 +6,12 @@ import java.util.Map;
 import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import ru.tbank.tmap.domain.venue.VenueStatus;
 import ru.tbank.tmap.repository.VenueSearchRepository;
 import ru.tbank.tmap.repository.model.VenueSearchResult;
 
 @Repository
 public class JdbcVenueSearchRepository implements VenueSearchRepository {
-
-    private static final String ACTIVE_STATUS = "ACTIVE";
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final DataClassRowMapper<VenueSearchResult> rowMapper = new DataClassRowMapper<>(VenueSearchResult.class);
@@ -33,7 +32,7 @@ public class JdbcVenueSearchRepository implements VenueSearchRepository {
 
         return jdbcTemplate.query(
                 sql,
-                Map.of("status", ACTIVE_STATUS, "query", query),
+                Map.of("status", VenueStatus.ACTIVE.name(), "query", query),
                 rowMapper
         );
     }

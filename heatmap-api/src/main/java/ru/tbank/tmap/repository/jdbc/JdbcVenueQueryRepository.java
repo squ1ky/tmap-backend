@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.tbank.tmap.domain.geo.BoundingBox;
 import ru.tbank.tmap.domain.venue.VenueCategory;
+import ru.tbank.tmap.domain.venue.VenueStatus;
 import ru.tbank.tmap.repository.VenueQueryRepository;
 import ru.tbank.tmap.repository.model.VenuePublicRow;
 
@@ -29,11 +30,12 @@ public class JdbcVenueQueryRepository implements VenueQueryRepository {
             final List<VenueCategory> categories
     ) {
         final StringBuilder sql = baseSelect().append("""
-                WHERE status = 'ACTIVE'
+                WHERE status = :status
                   AND lat BETWEEN :swLat AND :neLat
                   AND lng BETWEEN :swLng AND :neLng
                 """);
         final MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("status", VenueStatus.ACTIVE.name())
                 .addValue("swLat", boundingBox.swLat())
                 .addValue("swLng", boundingBox.swLng())
                 .addValue("neLat", boundingBox.neLat())
@@ -47,10 +49,10 @@ public class JdbcVenueQueryRepository implements VenueQueryRepository {
     @Override
     public Optional<VenuePublicRow> findActiveById(final UUID id) {
         final String sql = baseSelect().append("""
-                WHERE status = 'ACTIVE'
+                WHERE status = :status
                   AND id = :id
                 """).toString();
-        return jdbcTemplate.query(sql, Map.of("id", id), rs -> {
+        return jdbcTemplate.query(sql, Map.of("status", VenueStatus.ACTIVE.name(), "id", id), rs -> {
             if (!rs.next()) {
                 return Optional.empty();
             }

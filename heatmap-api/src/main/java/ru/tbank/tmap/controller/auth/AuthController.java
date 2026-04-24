@@ -40,6 +40,12 @@ public class AuthController implements AuthApi {
         return buildAuthResponse(result, HttpStatus.OK);
     }
 
+    @Override
+    public ResponseEntity<AuthResponse> refreshAuthToken(final String refreshToken) {
+        final AuthResult result = authService.refresh(refreshToken);
+        return buildAuthResponse(result, HttpStatus.OK);
+    }
+
     private ResponseEntity<AuthResponse> buildAuthResponse(final AuthResult result, final HttpStatus status) {
         final AuthResponse body = new AuthResponse()
                 .userId(result.userId())

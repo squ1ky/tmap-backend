@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.tbank.tmap.dto.ErrorResponse;
 import ru.tbank.tmap.exception.auth.EmailAlreadyExistsException;
 import ru.tbank.tmap.exception.auth.InvalidCredentialsException;
+import ru.tbank.tmap.exception.auth.InvalidRefreshTokenException;
 import ru.tbank.tmap.exception.heatmap.ClusterNotFoundException;
 
 @Slf4j
@@ -89,6 +90,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleInvalidCredentials(final InvalidCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponse(ErrorCode.UNAUTHORIZED, ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRefreshToken(final InvalidRefreshTokenException ex) {
+        log.warn("Invalid refresh token: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponse(ErrorCode.UNAUTHORIZED, ex.getMessage()));
     }

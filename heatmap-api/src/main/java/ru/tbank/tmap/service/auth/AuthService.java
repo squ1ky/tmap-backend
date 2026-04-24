@@ -44,6 +44,10 @@ public class AuthService {
         return issueTokens(user);
     }
 
+    public AuthResult refresh(final String plainRefreshToken) {
+        return refreshTokenService.rotate(plainRefreshToken);
+    }
+
     private AuthResult issueTokens(User user) {
         final String plainRefreshToken = refreshTokenService.issue(user);
 

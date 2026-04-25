@@ -12,15 +12,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.openapitools.model.AdminModerationDecision;
-import org.openapitools.model.AdminVenueModerationResponse;
-import org.openapitools.model.VenueModerationStatus;
-import org.springframework.web.server.ResponseStatusException;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.User;
 import ru.tbank.tmap.user.UserRole;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenueModerationStateException;
+import ru.tbank.tmap.venue.domain.VenueNotFoundException;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.repository.VenueRepository;
 
@@ -37,10 +35,7 @@ class VenueModerationServiceTest {
 
     @BeforeEach
     void setUp() {
-        venueModerationService = new VenueModerationService(
-                venueRepository,
-                new VenueModerationMapper()
-        );
+        venueModerationService = new VenueModerationService(venueRepository);
     }
 
     @Test
@@ -49,27 +44,25 @@ class VenueModerationServiceTest {
         given(venueRepository.findById(VENUE_ID)).willReturn(Optional.of(venue));
         given(venueRepository.save(venue)).willReturn(venue);
 
-        final AdminVenueModerationResponse response = venueModerationService.verifyAdminVenue(VENUE_ID);
+        final Venue response = venueModerationService.verifyAdminVenue(VENUE_ID);
 
         assertThat(venue.getStatus()).isEqualTo(VenueStatus.ACTIVE);
         assertThat(venue.getRejectReason()).isNull();
-        assertThat(response.getModerationStatus()).isEqualTo(VenueModerationStatus.ACTIVE);
+        assertThat(response.getStatus()).isEqualTo(VenueStatus.ACTIVE);
         verify(venueRepository).save(venue);
     }
 
     @Test
     void rejectAdminVenue_whenVenueIsPending_thenRejectVenueWithReason() {
         final Venue venue = pendingVenue();
-        final AdminModerationDecision decision = new AdminModerationDecision()
-                .reason("Address does not match coordinates");
         given(venueRepository.findById(VENUE_ID)).willReturn(Optional.of(venue));
         given(venueRepository.save(venue)).willReturn(venue);
 
-        final AdminVenueModerationResponse response = venueModerationService.rejectAdminVenue(VENUE_ID, decision);
+        final Venue response = venueModerationService.rejectAdminVenue(VENUE_ID, "Address does not match coordinates");
 
         assertThat(venue.getStatus()).isEqualTo(VenueStatus.REJECTED);
         assertThat(venue.getRejectReason()).isEqualTo("Address does not match coordinates");
-        assertThat(response.getModerationStatus()).isEqualTo(VenueModerationStatus.REJECTED);
+        assertThat(response.getStatus()).isEqualTo(VenueStatus.REJECTED);
         assertThat(response.getRejectReason()).isEqualTo("Address does not match coordinates");
         verify(venueRepository).save(venue);
     }
@@ -81,8 +74,8 @@ class VenueModerationServiceTest {
         given(venueRepository.findById(VENUE_ID)).willReturn(Optional.of(venue));
 
         assertThatThrownBy(() -> venueModerationService.verifyAdminVenue(VENUE_ID))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("409 CONFLICT");
+                .isInstanceOf(VenueModerationStateException.class)
+                .hasMessage("Only PENDING venues can be moderated");
     }
 
     @Test
@@ -92,15 +85,22 @@ class VenueModerationServiceTest {
         given(venueRepository.findById(VENUE_ID)).willReturn(Optional.of(venue));
 
         assertThatThrownBy(() -> venueModerationService.verifyAdminVenue(VENUE_ID))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("409 CONFLICT");
+                .isInstanceOf(VenueModerationStateException.class)
+                .hasMessage("Only PENDING venues can be moderated");
+    }
+
+    @Test
+    void verifyAdminVenue_whenVenueDoesNotExist_thenReturnNotFound() {
+        given(venueRepository.findById(VENUE_ID)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> venueModerationService.verifyAdminVenue(VENUE_ID))
+                .isInstanceOf(VenueNotFoundException.class)
+                .hasMessage("Venue not found");
     }
 
     @Test
     void rejectAdminVenue_whenReasonIsBlank_thenReturnValidationError() {
-        final AdminModerationDecision decision = new AdminModerationDecision().reason(" ");
-
-        assertThatThrownBy(() -> venueModerationService.rejectAdminVenue(VENUE_ID, decision))
+        assertThatThrownBy(() -> venueModerationService.rejectAdminVenue(VENUE_ID, " "))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Reject reason must not be blank");
     }

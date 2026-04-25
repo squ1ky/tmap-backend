@@ -5,25 +5,26 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import org.openapitools.model.ClusterDTO;
-import org.openapitools.model.ClusterDetailsResponse;
-import org.openapitools.model.HeatmapResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
+import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 
 @WebMvcTest(controllers = HeatmapController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, HeatmapMapper.class})
 class HeatmapControllerTest {
 
     @Autowired
@@ -38,14 +39,20 @@ class HeatmapControllerTest {
                         H3Resolution.RES_8,
                         null,
                         60))
-                .willReturn(new HeatmapResponse()
-                        .aggregationWindowMinutes(60)
-                        .refreshIntervalMinutes(5)
-                        .clusters(List.of(new ClusterDTO(
-                                "89115b22b0bffff",
+                .willReturn(new HeatmapClusters(
+                        OffsetDateTime.parse("2026-04-17T10:20:00Z"),
+                        5,
+                        60,
+                        List.of(new HeatmapClusterAggregate(
+                                Long.parseUnsignedLong("89115b22b0bffff", 16),
+                                55.796127,
+                                49.106414,
                                 128,
-                                742.50
-                        ))));
+                                new BigDecimal("742.50"),
+                                new BigDecimal("95040.00"),
+                                Instant.parse("2026-04-17T10:15:00Z")
+                        ))
+                ));
 
         mockMvc.perform(get("/api/v1/heatmap/clusters")
                         .param("swLat", "55.7481")
@@ -64,17 +71,18 @@ class HeatmapControllerTest {
     @Test
     void getClusterDetails_whenClusterExists_thenReturnClusterDetails() throws Exception {
         given(heatmapService.getClusterDetails("89115b22b0bffff", H3Resolution.RES_9))
-                .willReturn(Optional.of(new ClusterDetailsResponse()
-                        .h3Index("89115b22b0bffff")
-                        .resolution(9)
-                        .districtName("Вахитовский район")
-                        .districtImageUrl("")
-                        .category(ClusterDetailsResponse.CategoryEnum.FOOD)
-                        .hourBucket(java.time.Instant.parse("2026-04-17T10:00:00Z")
-                                .atOffset(java.time.ZoneOffset.UTC))
-                        .txCount(128)
-                        .avgCheck(742.50)
-                        .sumAmount(95040.00)));
+                .willReturn(Optional.of(new ClusterDetailsAggregate(
+                        Long.parseUnsignedLong("89115b22b0bffff", 16),
+                        H3Resolution.RES_9,
+                        "Вахитовский район",
+                        "",
+                        "FOOD",
+                        Instant.parse("2026-04-17T10:00:00Z"),
+                        128,
+                        new BigDecimal("742.50"),
+                        new BigDecimal("95040.00"),
+                        Instant.parse("2026-04-17T10:15:00Z")
+                )));
 
         mockMvc.perform(get("/api/v1/heatmap/clusters/89115b22b0bffff")
                         .param("resolution", "9"))

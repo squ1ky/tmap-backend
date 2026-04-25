@@ -14,6 +14,8 @@ import ru.tbank.tmap.auth.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.auth.exception.InvalidCredentialsException;
 import ru.tbank.tmap.auth.exception.InvalidRefreshTokenException;
 import ru.tbank.tmap.heatmap.cluster.ClusterNotFoundException;
+import ru.tbank.tmap.venue.domain.VenueModerationStateException;
+import ru.tbank.tmap.venue.domain.VenueNotFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -24,6 +26,20 @@ public class GlobalExceptionHandler {
         log.warn("Cluster not found: h3Index={}", ex.getH3Index());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(ErrorCode.NOT_FOUND, ex.getMessage()));
+    }
+
+    @ExceptionHandler(VenueNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleVenueNotFound(final VenueNotFoundException ex) {
+        log.warn("Venue not found: venueId={}", ex.getVenueId());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(ErrorCode.NOT_FOUND, ex.getMessage()));
+    }
+
+    @ExceptionHandler(VenueModerationStateException.class)
+    public ResponseEntity<ErrorResponse> handleVenueModerationState(final VenueModerationStateException ex) {
+        log.warn("Venue moderation conflict: venueId={}, status={}", ex.getVenueId(), ex.getStatus());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(ErrorCode.CONFLICT, ex.getMessage()));
     }
 
     @ExceptionHandler(ResponseStatusException.class)

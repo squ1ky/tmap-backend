@@ -13,8 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.openapitools.model.ClusterDetailsResponse;
-import org.openapitools.model.HeatmapResponse;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 import ru.tbank.tmap.heatmap.repository.HeatmapQueryRepository;
@@ -56,19 +54,19 @@ class H3HeatmapServiceTest {
                 Instant.parse("2026-04-17T10:15:00Z")
         )));
 
-        final HeatmapResponse response = heatmapService.getHeatmapClusters(
+        final HeatmapClusters response = heatmapService.getHeatmapClusters(
                 KAZAN_BOUNDING_BOX,
                 H3Resolution.RES_8,
                 null,
                 60
         );
 
-        assertThat(response.getAggregationWindowMinutes()).isEqualTo(60);
-        assertThat(response.getRefreshIntervalMinutes()).isEqualTo(5);
-        assertThat(response.getClusters()).hasSize(1);
-        assertThat(response.getClusters().getFirst().getH3Index()).isEqualTo("89115b22b0bffff");
-        assertThat(response.getClusters().getFirst().getTxCount()).isEqualTo(128);
-        assertThat(response.getClusters().getFirst().getAvgCheck()).isEqualTo(742.50);
+        assertThat(response.aggregationWindowMinutes()).isEqualTo(60);
+        assertThat(response.refreshIntervalMinutes()).isEqualTo(5);
+        assertThat(response.clusters()).hasSize(1);
+        assertThat(Long.toHexString(response.clusters().getFirst().h3Index())).isEqualTo("89115b22b0bffff");
+        assertThat(response.clusters().getFirst().txCount()).isEqualTo(128);
+        assertThat(response.clusters().getFirst().avgCheck()).isEqualByComparingTo("742.50");
     }
 
     @Test
@@ -90,19 +88,19 @@ class H3HeatmapServiceTest {
                 Instant.parse("2026-04-17T10:15:00Z")
         )));
 
-        final Optional<ClusterDetailsResponse> response =
+        final Optional<ClusterDetailsAggregate> response =
                 heatmapService.getClusterDetails("89115b22b0bffff", H3Resolution.RES_9);
 
         assertThat(response).isPresent();
-        assertThat(response.orElseThrow().getH3Index()).isEqualTo("89115b22b0bffff");
-        assertThat(response.orElseThrow().getResolution()).isEqualTo(9);
-        assertThat(response.orElseThrow().getDistrictName()).isEqualTo("Вахитовский район");
-        assertThat(response.orElseThrow().getDistrictImageUrl()).isEmpty();
-        assertThat(response.orElseThrow().getCategory().getValue()).isEqualTo("food");
-        assertThat(response.orElseThrow().getHourBucket().toInstant())
+        assertThat(Long.toHexString(response.orElseThrow().h3Index())).isEqualTo("89115b22b0bffff");
+        assertThat(response.orElseThrow().resolution()).isEqualTo(H3Resolution.RES_9);
+        assertThat(response.orElseThrow().districtName()).isEqualTo("Вахитовский район");
+        assertThat(response.orElseThrow().districtImageUrl()).isEmpty();
+        assertThat(response.orElseThrow().category()).isEqualTo("FOOD");
+        assertThat(response.orElseThrow().hourBucket())
                 .isEqualTo(Instant.parse("2026-04-17T10:00:00Z"));
-        assertThat(response.orElseThrow().getTxCount()).isEqualTo(128);
-        assertThat(response.orElseThrow().getAvgCheck()).isEqualTo(742.50);
-        assertThat(response.orElseThrow().getSumAmount()).isEqualTo(95040.00);
+        assertThat(response.orElseThrow().txCount()).isEqualTo(128);
+        assertThat(response.orElseThrow().avgCheck()).isEqualByComparingTo("742.50");
+        assertThat(response.orElseThrow().sumAmount()).isEqualByComparingTo("95040.00");
     }
 }

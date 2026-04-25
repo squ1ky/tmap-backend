@@ -19,6 +19,7 @@ import ru.tbank.tmap.venue.domain.VenueCategory;
 public class HeatmapController implements MapHeatmapApi {
 
     private final HeatmapService heatmapService;
+    private final HeatmapMapper heatmapMapper;
 
     @Override
     public ResponseEntity<HeatmapResponse> getHeatmapClusters(
@@ -39,7 +40,9 @@ public class HeatmapController implements MapHeatmapApi {
                     .toList();
         }
 
-        return ResponseEntity.ok(heatmapService.getHeatmapClusters(boundingBox, enumResolution, categories, window));
+        return ResponseEntity.ok(heatmapMapper.toResponse(
+                heatmapService.getHeatmapClusters(boundingBox, enumResolution, categories, window)
+        ));
     }
 
     @Override
@@ -50,6 +53,7 @@ public class HeatmapController implements MapHeatmapApi {
         H3Resolution enumResolution = H3Resolution.of(resolution);
 
         return heatmapService.getClusterDetails(h3Index, enumResolution)
+                .map(heatmapMapper::toResponse)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new ClusterNotFoundException(h3Index));
     }

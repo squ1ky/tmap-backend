@@ -12,14 +12,13 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.openapitools.model.AdminModerationDecision;
-import org.openapitools.model.AdminVenueModerationPage;
-import org.openapitools.model.AdminVenueModerationResponse;
-import org.openapitools.model.VenueModerationStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -30,12 +29,24 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import ru.tbank.tmap.auth.jwt.JwtService;
 import ru.tbank.tmap.infrastructure.security.SecurityConfig;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
+import ru.tbank.tmap.shared.geo.GeoPoint;
+import ru.tbank.tmap.user.User;
+import ru.tbank.tmap.user.UserRole;
+import ru.tbank.tmap.venue.domain.Venue;
+import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenueStatus;
 
 @WebMvcTest(VenueAdminController.class)
-@Import({SecurityConfig.class, GlobalExceptionHandler.class, VenueAdminControllerTest.TestBeans.class})
+@Import({
+        SecurityConfig.class,
+        GlobalExceptionHandler.class,
+        VenueModerationMapper.class,
+        VenueAdminControllerTest.TestBeans.class
+})
 class VenueAdminControllerTest {
 
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
+    private static final UUID OWNER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     @Autowired
     private MockMvc mockMvc;
@@ -55,13 +66,8 @@ class VenueAdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void getAdminVenues_whenUserIsAdmin_thenReturnPendingVenues() throws Exception {
-        given(venueModerationService.getAdminVenues(null, 0, 20))
-                .willReturn(new AdminVenueModerationPage()
-                        .items(List.of(response(VenueModerationStatus.PENDING, null)))
-                        .page(0)
-                        .size(20)
-                        .totalPages(1)
-                        .totalElements(1));
+        given(venueModerationService.getAdminVenues(VenueStatus.PENDING, 0, 20))
+                .willReturn(new PageImpl<>(List.of(venue(VenueStatus.PENDING, null)), PageRequest.of(0, 20), 1));
 
         mockMvc.perform(get("/api/v1/admin/venues"))
                 .andExpect(status().isOk())
@@ -80,7 +86,7 @@ class VenueAdminControllerTest {
     @WithMockUser(roles = "ADMIN")
     void verifyAdminVenue_whenUserIsAdmin_thenReturnActivatedVenue() throws Exception {
         given(venueModerationService.verifyAdminVenue(VENUE_ID))
-                .willReturn(response(VenueModerationStatus.ACTIVE, null));
+                .willReturn(venue(VenueStatus.ACTIVE, null));
 
         mockMvc.perform(patch("/api/v1/admin/venues/{id}/verify", VENUE_ID)
                         .with(csrf()))
@@ -93,8 +99,8 @@ class VenueAdminControllerTest {
     void rejectAdminVenue_whenUserIsAdmin_thenReturnRejectedVenue() throws Exception {
         final AdminModerationDecision decision = new AdminModerationDecision()
                 .reason("Address does not match coordinates");
-        given(venueModerationService.rejectAdminVenue(VENUE_ID, decision))
-                .willReturn(response(VenueModerationStatus.REJECTED, "Address does not match coordinates"));
+        given(venueModerationService.rejectAdminVenue(VENUE_ID, "Address does not match coordinates"))
+                .willReturn(venue(VenueStatus.REJECTED, "Address does not match coordinates"));
 
         mockMvc.perform(patch("/api/v1/admin/venues/{id}/reject", VENUE_ID)
                         .with(csrf())
@@ -105,19 +111,29 @@ class VenueAdminControllerTest {
                 .andExpect(jsonPath("$.rejectReason").value("Address does not match coordinates"));
     }
 
-    private AdminVenueModerationResponse response(
-            final VenueModerationStatus status,
+    private Venue venue(
+            final VenueStatus status,
             final String rejectReason
     ) {
-        return new AdminVenueModerationResponse()
-                .id(VENUE_ID)
-                .name("Bar One")
-                .address("Kazan Center, 2")
-                .lat(55.7905)
-                .lng(49.1140)
-                .category(AdminVenueModerationResponse.CategoryEnum.ENTERTAINMENT)
-                .moderationStatus(status)
-                .rejectReason(rejectReason);
+        final User owner = new User(
+                OWNER_ID,
+                "owner@example.com",
+                "password-hash",
+                "Owner",
+                UserRole.BUSINESS_OWNER
+        );
+        final Venue venue = new Venue(
+                VENUE_ID,
+                owner,
+                "Bar One",
+                "Kazan Center, 2",
+                GeoPoint.of(55.7905, 49.1140),
+                617422037122678783L,
+                VenueCategory.ENTERTAINMENT
+        );
+        venue.setStatus(status);
+        venue.setRejectReason(rejectReason);
+        return venue;
     }
 
     @TestConfiguration

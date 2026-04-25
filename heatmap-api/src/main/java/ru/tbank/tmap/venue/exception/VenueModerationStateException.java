@@ -1,6 +1,7 @@
-package ru.tbank.tmap.venue.domain;
+package ru.tbank.tmap.venue.exception;
 
 import java.util.UUID;
+import ru.tbank.tmap.venue.domain.VenueStatus;
 
 public class VenueModerationStateException extends RuntimeException {
 

@@ -8,9 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.venue.domain.Venue;
-import ru.tbank.tmap.venue.domain.VenueModerationStateException;
-import ru.tbank.tmap.venue.domain.VenueNotFoundException;
 import ru.tbank.tmap.venue.domain.VenueStatus;
+import ru.tbank.tmap.venue.exception.VenueModerationStateException;
+import ru.tbank.tmap.venue.exception.VenueNotFoundException;
 import ru.tbank.tmap.venue.repository.VenueRepository;
 
 @Service

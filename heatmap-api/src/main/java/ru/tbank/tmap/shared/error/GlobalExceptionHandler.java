@@ -14,8 +14,8 @@ import ru.tbank.tmap.auth.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.auth.exception.InvalidCredentialsException;
 import ru.tbank.tmap.auth.exception.InvalidRefreshTokenException;
 import ru.tbank.tmap.heatmap.cluster.ClusterNotFoundException;
-import ru.tbank.tmap.venue.domain.VenueModerationStateException;
-import ru.tbank.tmap.venue.domain.VenueNotFoundException;
+import ru.tbank.tmap.venue.exception.VenueModerationStateException;
+import ru.tbank.tmap.venue.exception.VenueNotFoundException;
 
 @Slf4j
 @RestControllerAdvice

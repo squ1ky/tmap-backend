@@ -17,9 +17,9 @@ import ru.tbank.tmap.user.User;
 import ru.tbank.tmap.user.UserRole;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
-import ru.tbank.tmap.venue.domain.VenueModerationStateException;
-import ru.tbank.tmap.venue.domain.VenueNotFoundException;
 import ru.tbank.tmap.venue.domain.VenueStatus;
+import ru.tbank.tmap.venue.exception.VenueModerationStateException;
+import ru.tbank.tmap.venue.exception.VenueNotFoundException;
 import ru.tbank.tmap.venue.repository.VenueRepository;
 
 @ExtendWith(MockitoExtension.class)

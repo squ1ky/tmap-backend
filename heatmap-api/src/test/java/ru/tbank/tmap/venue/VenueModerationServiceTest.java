@@ -88,6 +88,17 @@ class VenueModerationServiceTest {
     }
 
     @Test
+    void verifyAdminVenue_whenVenueIsAlreadyRejected_thenReturnConflict() {
+        final Venue venue = pendingVenue();
+        venue.setStatus(VenueStatus.REJECTED);
+        given(venueRepository.findById(VENUE_ID)).willReturn(Optional.of(venue));
+
+        assertThatThrownBy(() -> venueModerationService.verifyAdminVenue(VENUE_ID))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("409 CONFLICT");
+    }
+
+    @Test
     void rejectAdminVenue_whenReasonIsBlank_thenReturnValidationError() {
         final AdminModerationDecision decision = new AdminModerationDecision().reason(" ");
 

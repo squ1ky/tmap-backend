@@ -2,7 +2,7 @@ package ru.tbank.tmap.heatmap;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.openapitools.api.HeatmapApi;
+import org.openapitools.api.MapHeatmapApi;
 import org.openapitools.model.ClusterDetailsResponse;
 import org.openapitools.model.HeatmapResponse;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +16,10 @@ import ru.tbank.tmap.venue.domain.VenueCategory;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-public class HeatmapController implements HeatmapApi {
+public class HeatmapController implements MapHeatmapApi {
 
     private final HeatmapService heatmapService;
+    private final HeatmapMapper heatmapMapper;
 
     @Override
     public ResponseEntity<HeatmapResponse> getHeatmapClusters(
@@ -39,7 +40,9 @@ public class HeatmapController implements HeatmapApi {
                     .toList();
         }
 
-        return ResponseEntity.ok(heatmapService.getHeatmapClusters(boundingBox, enumResolution, categories, window));
+        return ResponseEntity.ok(heatmapMapper.toResponse(
+                heatmapService.getHeatmapClusters(boundingBox, enumResolution, categories, window)
+        ));
     }
 
     @Override
@@ -50,6 +53,7 @@ public class HeatmapController implements HeatmapApi {
         H3Resolution enumResolution = H3Resolution.of(resolution);
 
         return heatmapService.getClusterDetails(h3Index, enumResolution)
+                .map(heatmapMapper::toResponse)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new ClusterNotFoundException(h3Index));
     }

@@ -4,6 +4,7 @@ on:
   workflow_run:
     workflows: ["CI"]
     types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -43,6 +44,7 @@ jobs:
       - name: Sync project to VM
         run: |
           rsync -az \
+            --delete \
             --exclude ".git" \
             --exclude ".github" \
             --exclude ".idea" \

@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.openapitools.model.VenuePublicResponse;
-import org.openapitools.model.VenueSearchResultResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -20,11 +18,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
+import ru.tbank.tmap.venue.repository.VenuePublicRow;
+import ru.tbank.tmap.venue.search.VenueSearchResult;
 import ru.tbank.tmap.venue.search.VenueSearchService;
 
 @WebMvcTest(VenueController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, VenuePublicMapper.class})
 class VenueControllerTest {
 
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
@@ -33,14 +33,14 @@ class VenueControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private VenueService venueService;
+    private PublicVenueService publicVenueService;
 
     @MockitoBean
     private VenueSearchService venueSearchService;
 
     @Test
     void getVenuesInViewport_whenRequestIsValid_thenReturnVenues() throws Exception {
-        given(venueService.getVenuesInViewport(
+        given(publicVenueService.getVenuesInViewport(
                 new BoundingBox(55.7801, 49.1102, 55.7995, 49.1355),
                 List.of()))
                 .willReturn(List.of(venueResponse()));
@@ -58,7 +58,7 @@ class VenueControllerTest {
 
     @Test
     void getVenuesInViewport_whenCategoryIsProvided_thenPassCategoryFilter() throws Exception {
-        given(venueService.getVenuesInViewport(
+        given(publicVenueService.getVenuesInViewport(
                 new BoundingBox(55.7801, 49.1102, 55.7995, 49.1355),
                 List.of(VenueCategory.FOOD)))
                 .willReturn(List.of());
@@ -88,7 +88,7 @@ class VenueControllerTest {
 
     @Test
     void getVenueById_whenVenueExists_thenReturnVenue() throws Exception {
-        given(venueService.getVenueById(VENUE_ID))
+        given(publicVenueService.getVenueById(VENUE_ID))
                 .willReturn(Optional.of(venueResponse()));
 
         mockMvc.perform(get("/api/v1/venues/{id}", VENUE_ID))
@@ -100,7 +100,7 @@ class VenueControllerTest {
 
     @Test
     void getVenueById_whenVenueIsMissing_thenReturnNotFound() throws Exception {
-        given(venueService.getVenueById(VENUE_ID))
+        given(publicVenueService.getVenueById(VENUE_ID))
                 .willReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/venues/{id}", VENUE_ID))
@@ -112,13 +112,15 @@ class VenueControllerTest {
     @Test
     void searchVenues_whenRequestIsValid_thenReturnsMatchingVenues() throws Exception {
         given(venueSearchService.searchByName("bar"))
-                .willReturn(List.of(new VenueSearchResultResponse()
-                        .id(VENUE_ID)
-                        .name("Bar One")
-                        .address("Kazan Center, 2")
-                        .lat(55.7905)
-                        .lng(49.1140)
-                        .category(VenueSearchResultResponse.CategoryEnum.ENTERTAINMENT)));
+                .willReturn(List.of(new VenueSearchResult(
+                        VENUE_ID,
+                        "Bar One",
+                        "Kazan Center, 2",
+                        55.7905,
+                        49.1140,
+                        VenueCategory.ENTERTAINMENT,
+                        null
+                )));
 
         mockMvc.perform(get("/api/v1/venues/search")
                         .param("q", "bar"))
@@ -142,15 +144,20 @@ class VenueControllerTest {
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
-    private VenuePublicResponse venueResponse() {
-        return new VenuePublicResponse()
-                .id(VENUE_ID)
-                .name("Bar One")
-                .address("Kazan Center, 2")
-                .lat(55.7905)
-                .lng(49.1140)
-                .category(VenuePublicResponse.CategoryEnum.ENTERTAINMENT)
-                .peopleNow(0)
-                .promotions(List.of());
+    private VenuePublicRow venueResponse() {
+        return new VenuePublicRow(
+                VENUE_ID,
+                "Bar One",
+                "Kazan Center, 2",
+                55.7905,
+                49.1140,
+                null,
+                VenueCategory.ENTERTAINMENT,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
     }
 }

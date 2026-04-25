@@ -20,7 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
-import ru.tbank.tmap.venue.controller.VenueController;
 import ru.tbank.tmap.venue.search.VenueSearchService;
 
 @WebMvcTest(VenueController.class)
@@ -34,14 +33,14 @@ class VenueControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private VenueService venueService;
+    private PublicVenueService publicVenueService;
 
     @MockitoBean
     private VenueSearchService venueSearchService;
 
     @Test
     void getVenuesInViewport_whenRequestIsValid_thenReturnVenues() throws Exception {
-        given(venueService.getVenuesInViewport(
+        given(publicVenueService.getVenuesInViewport(
                 new BoundingBox(55.7801, 49.1102, 55.7995, 49.1355),
                 List.of()))
                 .willReturn(List.of(venueResponse()));
@@ -59,7 +58,7 @@ class VenueControllerTest {
 
     @Test
     void getVenuesInViewport_whenCategoryIsProvided_thenPassCategoryFilter() throws Exception {
-        given(venueService.getVenuesInViewport(
+        given(publicVenueService.getVenuesInViewport(
                 new BoundingBox(55.7801, 49.1102, 55.7995, 49.1355),
                 List.of(VenueCategory.FOOD)))
                 .willReturn(List.of());
@@ -89,7 +88,7 @@ class VenueControllerTest {
 
     @Test
     void getVenueById_whenVenueExists_thenReturnVenue() throws Exception {
-        given(venueService.getVenueById(VENUE_ID))
+        given(publicVenueService.getVenueById(VENUE_ID))
                 .willReturn(Optional.of(venueResponse()));
 
         mockMvc.perform(get("/api/v1/venues/{id}", VENUE_ID))
@@ -101,7 +100,7 @@ class VenueControllerTest {
 
     @Test
     void getVenueById_whenVenueIsMissing_thenReturnNotFound() throws Exception {
-        given(venueService.getVenueById(VENUE_ID))
+        given(publicVenueService.getVenueById(VENUE_ID))
                 .willReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/venues/{id}", VENUE_ID))

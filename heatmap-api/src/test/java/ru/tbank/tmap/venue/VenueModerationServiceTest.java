@@ -10,6 +10,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.openapitools.model.AdminModerationDecision;
 import org.openapitools.model.AdminVenueModerationResponse;
 import org.openapitools.model.VenueModerationStatus;
@@ -20,14 +22,12 @@ import ru.tbank.tmap.user.UserRole;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
-import ru.tbank.tmap.venue.repository.VenueQueryRepository;
 import ru.tbank.tmap.venue.repository.VenueRepository;
-
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import ru.tbank.tmap.venue.admin.VenueModerationMapper;
+import ru.tbank.tmap.venue.admin.VenueModerationService;
 
 @ExtendWith(MockitoExtension.class)
-class VenueServiceTest {
+class VenueModerationServiceTest {
 
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
     private static final UUID OWNER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
@@ -35,17 +35,13 @@ class VenueServiceTest {
     @Mock
     private VenueRepository venueRepository;
 
-    @Mock
-    private VenueQueryRepository venueQueryRepository;
-
-    private VenueService venueService;
+    private VenueModerationService venueModerationService;
 
     @BeforeEach
     void setUp() {
-        venueService = new VenueService(
+        venueModerationService = new VenueModerationService(
                 venueRepository,
-                venueQueryRepository,
-                new VenuePublicMapper()
+                new VenueModerationMapper()
         );
     }
 
@@ -55,7 +51,7 @@ class VenueServiceTest {
         given(venueRepository.findById(VENUE_ID)).willReturn(Optional.of(venue));
         given(venueRepository.save(venue)).willReturn(venue);
 
-        final AdminVenueModerationResponse response = venueService.verifyAdminVenue(VENUE_ID);
+        final AdminVenueModerationResponse response = venueModerationService.verifyAdminVenue(VENUE_ID);
 
         assertThat(venue.getStatus()).isEqualTo(VenueStatus.ACTIVE);
         assertThat(venue.getRejectReason()).isNull();
@@ -71,7 +67,7 @@ class VenueServiceTest {
         given(venueRepository.findById(VENUE_ID)).willReturn(Optional.of(venue));
         given(venueRepository.save(venue)).willReturn(venue);
 
-        final AdminVenueModerationResponse response = venueService.rejectAdminVenue(VENUE_ID, decision);
+        final AdminVenueModerationResponse response = venueModerationService.rejectAdminVenue(VENUE_ID, decision);
 
         assertThat(venue.getStatus()).isEqualTo(VenueStatus.REJECTED);
         assertThat(venue.getRejectReason()).isEqualTo("Address does not match coordinates");
@@ -86,7 +82,7 @@ class VenueServiceTest {
         venue.setStatus(VenueStatus.ACTIVE);
         given(venueRepository.findById(VENUE_ID)).willReturn(Optional.of(venue));
 
-        assertThatThrownBy(() -> venueService.verifyAdminVenue(VENUE_ID))
+        assertThatThrownBy(() -> venueModerationService.verifyAdminVenue(VENUE_ID))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("409 CONFLICT");
     }
@@ -95,7 +91,7 @@ class VenueServiceTest {
     void rejectAdminVenue_whenReasonIsBlank_thenReturnValidationError() {
         final AdminModerationDecision decision = new AdminModerationDecision().reason(" ");
 
-        assertThatThrownBy(() -> venueService.rejectAdminVenue(VENUE_ID, decision))
+        assertThatThrownBy(() -> venueModerationService.rejectAdminVenue(VENUE_ID, decision))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Reject reason must not be blank");
     }

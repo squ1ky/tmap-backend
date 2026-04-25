@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.controller;
+package ru.tbank.tmap.venue;
 
 import java.util.List;
 import java.util.UUID;
@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import ru.tbank.tmap.shared.geo.BoundingBox;
-import ru.tbank.tmap.venue.VenueService;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.search.VenueSearchService;
 
@@ -23,7 +22,7 @@ import ru.tbank.tmap.venue.search.VenueSearchService;
 @Validated
 public class VenueController implements VenuesPublicApi {
 
-    private final VenueService venueService;
+    private final PublicVenueService publicVenueService;
     private final VenueSearchService venueSearchService;
 
     @Override
@@ -33,14 +32,14 @@ public class VenueController implements VenuesPublicApi {
             final Double neLat,
             final Double neLng,
             final List<String> category) {
-        return ResponseEntity.ok(venueService.getVenuesInViewport(
+        return ResponseEntity.ok(publicVenueService.getVenuesInViewport(
                 new BoundingBox(swLat, swLng, neLat, neLng),
                 toCategories(category)));
     }
 
     @Override
     public ResponseEntity<VenuePublicResponse> getVenueById(final UUID id) {
-        return venueService.getVenueById(id)
+        return publicVenueService.getVenueById(id)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venue not found"));
     }

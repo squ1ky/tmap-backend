@@ -30,7 +30,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import ru.tbank.tmap.auth.jwt.JwtService;
 import ru.tbank.tmap.infrastructure.security.SecurityConfig;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
-import ru.tbank.tmap.venue.controller.VenueAdminController;
+import ru.tbank.tmap.venue.admin.VenueAdminController;
+import ru.tbank.tmap.venue.admin.VenueModerationService;
 
 @WebMvcTest(VenueAdminController.class)
 @Import({SecurityConfig.class, GlobalExceptionHandler.class, VenueAdminControllerTest.TestBeans.class})
@@ -45,7 +46,7 @@ class VenueAdminControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private VenueService venueService;
+    private VenueModerationService venueModerationService;
 
     @MockitoBean
     private JwtService jwtService;
@@ -56,7 +57,7 @@ class VenueAdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void getAdminVenues_whenUserIsAdmin_thenReturnPendingVenues() throws Exception {
-        given(venueService.getAdminVenues(null, 0, 20))
+        given(venueModerationService.getAdminVenues(null, 0, 20))
                 .willReturn(new AdminVenueModerationPage()
                         .items(List.of(response(VenueModerationStatus.PENDING, null)))
                         .page(0)
@@ -80,7 +81,7 @@ class VenueAdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void verifyAdminVenue_whenUserIsAdmin_thenReturnActivatedVenue() throws Exception {
-        given(venueService.verifyAdminVenue(VENUE_ID))
+        given(venueModerationService.verifyAdminVenue(VENUE_ID))
                 .willReturn(response(VenueModerationStatus.ACTIVE, null));
 
         mockMvc.perform(patch("/api/v1/admin/venues/{id}/verify", VENUE_ID)
@@ -94,7 +95,7 @@ class VenueAdminControllerTest {
     void rejectAdminVenue_whenUserIsAdmin_thenReturnRejectedVenue() throws Exception {
         final AdminModerationDecision decision = new AdminModerationDecision()
                 .reason("Address does not match coordinates");
-        given(venueService.rejectAdminVenue(VENUE_ID, decision))
+        given(venueModerationService.rejectAdminVenue(VENUE_ID, decision))
                 .willReturn(response(VenueModerationStatus.REJECTED, "Address does not match coordinates"));
 
         mockMvc.perform(patch("/api/v1/admin/venues/{id}/reject", VENUE_ID)

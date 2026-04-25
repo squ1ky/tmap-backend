@@ -1,59 +1,37 @@
-package ru.tbank.tmap.venue;
+package ru.tbank.tmap.venue.admin;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.openapitools.model.AdminModerationDecision;
 import org.openapitools.model.AdminVenueModerationPage;
 import org.openapitools.model.AdminVenueModerationResponse;
-import org.openapitools.model.VenuePublicResponse;
 import org.openapitools.model.VenueModerationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
-import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.venue.domain.Venue;
-import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
-import ru.tbank.tmap.venue.repository.VenueQueryRepository;
 import ru.tbank.tmap.venue.repository.VenueRepository;
 
 @Service
 @Transactional(readOnly = true)
-public class VenueService {
+public class VenueModerationService {
 
     private static final int MAX_TOTAL_ELEMENTS = Integer.MAX_VALUE;
 
     private final VenueRepository venueRepository;
-    private final VenueQueryRepository venueQueryRepository;
-    private final VenuePublicMapper venuePublicMapper;
+    private final VenueModerationMapper venueModerationMapper;
 
-    public VenueService(
+    public VenueModerationService(
             final VenueRepository venueRepository,
-            final VenueQueryRepository venueQueryRepository,
-            final VenuePublicMapper venuePublicMapper
+            final VenueModerationMapper venueModerationMapper
     ) {
         this.venueRepository = venueRepository;
-        this.venueQueryRepository = venueQueryRepository;
-        this.venuePublicMapper = venuePublicMapper;
-    }
-
-    public List<VenuePublicResponse> getVenuesInViewport(
-            final BoundingBox boundingBox,
-            final List<VenueCategory> categories
-    ) {
-        return venueQueryRepository.findActiveInViewport(boundingBox, categories).stream()
-                .map(venuePublicMapper::toResponse)
-                .toList();
-    }
-
-    public Optional<VenuePublicResponse> getVenueById(final UUID id) {
-        return venueQueryRepository.findActiveById(id)
-                .map(venuePublicMapper::toResponse);
+        this.venueModerationMapper = venueModerationMapper;
     }
 
     public AdminVenueModerationPage getAdminVenues(
@@ -67,7 +45,7 @@ public class VenueService {
 
         return new AdminVenueModerationPage()
                 .items(venues.stream()
-                        .map(venuePublicMapper::toAdminModerationResponse)
+                        .map(venueModerationMapper::toResponse)
                         .toList())
                 .page(venues.getNumber())
                 .size(venues.getSize())
@@ -77,7 +55,7 @@ public class VenueService {
 
     public Optional<AdminVenueModerationResponse> getAdminVenueById(final UUID id) {
         return venueRepository.findById(id)
-                .map(venuePublicMapper::toAdminModerationResponse);
+                .map(venueModerationMapper::toResponse);
     }
 
     @Transactional
@@ -85,7 +63,7 @@ public class VenueService {
         final Venue venue = findPendingVenue(id);
         venue.setStatus(VenueStatus.ACTIVE);
         venue.setRejectReason(null);
-        return venuePublicMapper.toAdminModerationResponse(venueRepository.save(venue));
+        return venueModerationMapper.toResponse(venueRepository.save(venue));
     }
 
     @Transactional
@@ -98,7 +76,7 @@ public class VenueService {
         final Venue venue = findPendingVenue(id);
         venue.setStatus(VenueStatus.REJECTED);
         venue.setRejectReason(reason.trim());
-        return venuePublicMapper.toAdminModerationResponse(venueRepository.save(venue));
+        return venueModerationMapper.toResponse(venueRepository.save(venue));
     }
 
     private Venue findPendingVenue(final UUID id) {

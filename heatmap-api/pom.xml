@@ -167,6 +167,7 @@
                                 <useSpringBoot3>true</useSpringBoot3>
                                 <interfaceOnly>true</interfaceOnly>
                                 <useResponseEntity>true</useResponseEntity>
+                                <useTags>true</useTags>
                             </configOptions>
                         </configuration>
                     </execution>

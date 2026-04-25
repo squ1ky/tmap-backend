@@ -2,7 +2,7 @@ package ru.tbank.tmap.venue.controller;
 
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.openapitools.api.AdminApi;
+import org.openapitools.api.AdminVenuesApi;
 import org.openapitools.model.AdminModerationDecision;
 import org.openapitools.model.AdminVenueModerationPage;
 import org.openapitools.model.AdminVenueModerationResponse;
@@ -17,7 +17,7 @@ import ru.tbank.tmap.venue.VenueService;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-public class VenueAdminController implements AdminApi {
+public class VenueAdminController implements AdminVenuesApi {
 
     private final VenueService venueService;
 

@@ -23,8 +23,10 @@ tags:
     description: Venue, content, promotion and loyalty management for owners
   - name: Profile
     description: Current user profile and loyalty history
-  - name: Admin
-    description: Administrative moderation for venues and users
+  - name: AdminVenues
+    description: Administrative moderation for venues
+  - name: AdminUsers
+    description: Administrative moderation for users
 
 paths:
   # ── Auth ────────────────────────────────────
@@ -901,7 +903,7 @@ paths:
   # ── Admin ───────────────────────────────────
   /admin/venues:
     get:
-      tags: [Admin]
+      tags: [AdminVenues]
       summary: Get venue moderation queue
       operationId: getAdminVenues
       x-required-roles: [ADMIN]
@@ -928,7 +930,7 @@ paths:
 
   /admin/venues/{id}:
     get:
-      tags: [Admin]
+      tags: [AdminVenues]
       summary: Get venue moderation details
       operationId: getAdminVenueById
       x-required-roles: [ADMIN]
@@ -957,7 +959,7 @@ paths:
 
   /admin/venues/{id}/verify:
     patch:
-      tags: [Admin]
+      tags: [AdminVenues]
       summary: Verify venue
       operationId: verifyAdminVenue
       x-required-roles: [ADMIN]
@@ -988,7 +990,7 @@ paths:
 
   /admin/venues/{id}/reject:
     patch:
-      tags: [Admin]
+      tags: [AdminVenues]
       summary: Reject venue
       operationId: rejectAdminVenue
       x-required-roles: [ADMIN]
@@ -1027,7 +1029,7 @@ paths:
 
   /admin/users:
     get:
-      tags: [Admin]
+      tags: [AdminUsers]
       summary: Get users for moderation
       operationId: getAdminUsers
       x-required-roles: [ADMIN]
@@ -1054,7 +1056,7 @@ paths:
 
   /admin/users/{id}/block:
     patch:
-      tags: [Admin]
+      tags: [AdminUsers]
       summary: Block user
       operationId: blockAdminUser
       x-required-roles: [ADMIN]
@@ -1093,7 +1095,7 @@ paths:
 
   /admin/users/{id}/unblock:
     patch:
-      tags: [Admin]
+      tags: [AdminUsers]
       summary: Unblock user
       operationId: unblockAdminUser
       x-required-roles: [ADMIN]

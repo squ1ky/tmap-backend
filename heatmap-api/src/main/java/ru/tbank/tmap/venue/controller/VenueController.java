@@ -3,7 +3,7 @@ package ru.tbank.tmap.venue.controller;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.openapitools.api.VenuesApi;
+import org.openapitools.api.VenuesPublicApi;
 import org.openapitools.model.VenuePublicResponse;
 import org.openapitools.model.VenueSearchResultResponse;
 import org.springframework.http.HttpStatus;
@@ -21,7 +21,7 @@ import ru.tbank.tmap.venue.search.VenueSearchService;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 @Validated
-public class VenueController implements VenuesApi {
+public class VenueController implements VenuesPublicApi {
 
     private final VenueService venueService;
     private final VenueSearchService venueSearchService;

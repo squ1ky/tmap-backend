@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
+import ru.tbank.tmap.venue.controller.VenueController;
 import ru.tbank.tmap.venue.search.VenueSearchService;
 
 @WebMvcTest(VenueController.class)

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue;
+package ru.tbank.tmap.venue.admin;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -30,8 +30,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import ru.tbank.tmap.auth.jwt.JwtService;
 import ru.tbank.tmap.infrastructure.security.SecurityConfig;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
-import ru.tbank.tmap.venue.admin.VenueAdminController;
-import ru.tbank.tmap.venue.admin.VenueModerationService;
 
 @WebMvcTest(VenueAdminController.class)
 @Import({SecurityConfig.class, GlobalExceptionHandler.class, VenueAdminControllerTest.TestBeans.class})

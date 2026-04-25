@@ -21,8 +21,6 @@ import ru.tbank.tmap.venue.repository.VenueRepository;
 @Transactional(readOnly = true)
 public class VenueModerationService {
 
-    private static final int MAX_TOTAL_ELEMENTS = Integer.MAX_VALUE;
-
     private final VenueRepository venueRepository;
     private final VenueModerationMapper venueModerationMapper;
 
@@ -43,14 +41,7 @@ public class VenueModerationService {
         final Pageable pageable = PageRequest.of(page, size);
         final Page<Venue> venues = venueRepository.findByStatus(venueStatus, pageable);
 
-        return new AdminVenueModerationPage()
-                .items(venues.stream()
-                        .map(venueModerationMapper::toResponse)
-                        .toList())
-                .page(venues.getNumber())
-                .size(venues.getSize())
-                .totalPages(venues.getTotalPages())
-                .totalElements(toIntTotalElements(venues.getTotalElements()));
+        return venueModerationMapper.toPage(venues);
     }
 
     public Optional<AdminVenueModerationResponse> getAdminVenueById(final UUID id) {
@@ -93,12 +84,5 @@ public class VenueModerationService {
 
     private VenueStatus toVenueStatus(final VenueModerationStatus status) {
         return VenueStatus.valueOf(status.getValue());
-    }
-
-    private int toIntTotalElements(final long totalElements) {
-        if (totalElements > MAX_TOTAL_ELEMENTS) {
-            return MAX_TOTAL_ELEMENTS;
-        }
-        return (int) totalElements;
     }
 }

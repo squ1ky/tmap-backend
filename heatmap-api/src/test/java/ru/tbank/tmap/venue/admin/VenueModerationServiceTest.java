@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue;
+package ru.tbank.tmap.venue.admin;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -23,8 +23,6 @@ import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.repository.VenueRepository;
-import ru.tbank.tmap.venue.admin.VenueModerationMapper;
-import ru.tbank.tmap.venue.admin.VenueModerationService;
 
 @ExtendWith(MockitoExtension.class)
 class VenueModerationServiceTest {

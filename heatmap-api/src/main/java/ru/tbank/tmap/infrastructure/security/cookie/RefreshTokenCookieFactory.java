@@ -5,6 +5,8 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.auth.jwt.JwtProperties;
 
+import java.time.Duration;
+
 @Component
 @RequiredArgsConstructor
 public class RefreshTokenCookieFactory {
@@ -18,6 +20,12 @@ public class RefreshTokenCookieFactory {
     public ResponseCookie create(final String plainRefreshToken) {
         return baseBuilder(plainRefreshToken)
                 .maxAge(jwtProperties.refreshExpiration())
+                .build();
+    }
+
+    public ResponseCookie createExpired() {
+        return baseBuilder("")
+                .maxAge(Duration.ZERO)
                 .build();
     }
 

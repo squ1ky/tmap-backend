@@ -13,10 +13,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.tbank.tmap.auth.userdetails.CustomUserDetails;
 import ru.tbank.tmap.infrastructure.security.cookie.RefreshTokenCookieFactory;
 import ru.tbank.tmap.user.UserRole;
 import ru.tbank.tmap.auth.exception.EmailAlreadyExistsException;
@@ -24,6 +26,7 @@ import ru.tbank.tmap.auth.exception.InvalidCredentialsException;
 import ru.tbank.tmap.auth.exception.InvalidRefreshTokenException;
 import ru.tbank.tmap.auth.jwt.JwtService;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
@@ -33,7 +36,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.anonymous;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -48,6 +53,7 @@ class AuthControllerTest {
     private static final String REGISTER_URL = "/api/v1/auth/register";
     private static final String LOGIN_URL = "/api/v1/auth/login";
     private static final String REFRESH_URL = "/api/v1/auth/refresh";
+    private static final String LOGOUT_URL = "/api/v1/auth/logout";
 
     private static final String VALID_EMAIL = "kazan_guest@example.com";
     private static final String VALID_PASSWORD = "Echak123!";
@@ -271,6 +277,48 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
                 .andExpect(header().doesNotExist("Set-Cookie"));
+    }
+
+    @Test
+    void logoutUser_whenAuthenticated_thenReturnNoContentAndExpiredCookie() throws Exception {
+        final ResponseCookie expiredCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/api/v1/auth/refresh")
+                .sameSite("Strict")
+                .maxAge(0)
+                .build();
+        given(refreshTokenCookieFactory.createExpired()).willReturn(expiredCookie);
+
+        final CustomUserDetails principal = new CustomUserDetails(
+                USER_ID,
+                VALID_EMAIL,
+                "ignored",
+                true, true, true, true,
+                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+
+        mockMvc.perform(post(LOGOUT_URL)
+                        .with(csrf())
+                        .with(user(principal)))
+                .andExpect(status().isNoContent())
+                .andExpect(cookie().exists(REFRESH_TOKEN_COOKIE_NAME))
+                .andExpect(cookie().value(REFRESH_TOKEN_COOKIE_NAME, ""))
+                .andExpect(cookie().maxAge(REFRESH_TOKEN_COOKIE_NAME, 0))
+                .andExpect(cookie().path(REFRESH_TOKEN_COOKIE_NAME, "/api/v1/auth/refresh"));
+
+        verify(authService).logout(USER_ID);
+        verify(refreshTokenCookieFactory).createExpired();
+    }
+
+    @Test
+    void logoutUser_whenAnonymous_thenReturnUnauthorized() throws Exception {
+        mockMvc.perform(post(LOGOUT_URL)
+                        .with(csrf())
+                        .with(anonymous()))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(authService);
     }
 
     @TestConfiguration

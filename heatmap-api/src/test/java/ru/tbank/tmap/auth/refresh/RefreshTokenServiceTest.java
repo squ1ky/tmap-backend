@@ -178,4 +178,15 @@ class RefreshTokenServiceTest {
         verify(refreshTokenRepository, never()).save(any());
         verify(jwtService, never()).generateAccessToken(user);
     }
+
+    @Test
+    @DisplayName("revokeAllForUser: должен вызвать массовый revoke в репозитории")
+    void revokeAllForUser_whenCalled_thenDelegateToRepository() {
+        final UUID userId = UUID.randomUUID();
+        given(refreshTokenRepository.revokeAllActiveByUserId(userId)).willReturn(2);
+
+        refreshTokenService.revokeAllForUser(userId);
+
+        verify(refreshTokenRepository).revokeAllActiveByUserId(userId);
+    }
 }

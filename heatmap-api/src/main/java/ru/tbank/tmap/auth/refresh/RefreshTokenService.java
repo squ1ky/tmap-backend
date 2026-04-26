@@ -72,6 +72,12 @@ public class RefreshTokenService {
         );
     }
 
+    @Transactional
+    public void revokeAllForUser(final UUID userId) {
+        final int count = refreshTokenRepository.revokeAllActiveByUserId(userId);
+        log.info("Revoked {} refresh token(s) for user {}", count, userId);
+    }
+
     public String generatePlainToken() {
         final byte[] bytes = new byte[REFRESH_TOKEN_BYTE_LENGTH];
         secureRandom.nextBytes(bytes);

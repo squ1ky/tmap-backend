@@ -11,6 +11,8 @@ import ru.tbank.tmap.user.UserRepository;
 import ru.tbank.tmap.auth.refresh.RefreshTokenService;
 import ru.tbank.tmap.auth.jwt.JwtService;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -45,6 +47,10 @@ public class AuthService {
 
     public AuthResult refresh(final String plainRefreshToken) {
         return refreshTokenService.rotate(plainRefreshToken);
+    }
+
+    public void logout(final UUID userId) {
+        refreshTokenService.revokeAllForUser(userId);
     }
 
     private AuthResult issueTokens(User user) {

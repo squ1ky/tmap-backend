@@ -26,8 +26,10 @@ public class JdbcClusterHistoryWriteRepository implements ClusterHistoryWriteRep
                 avg(t.amount)                         AS avg_check,
                 sum(t.amount)                         AS sum_amount
             FROM transactions t
+            JOIN venues v ON v.id = t.venue_id
             WHERE t.occurred_at >= :fromTs
               AND t.occurred_at <  :toTs
+              AND v.status = 'ACTIVE'
             GROUP BY %s, t.category, date_trunc('hour', t.occurred_at)
             ON CONFLICT (h3_index, resolution, category, hour_bucket) DO UPDATE
             SET tx_count   = EXCLUDED.tx_count,

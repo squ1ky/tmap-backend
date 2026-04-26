@@ -49,8 +49,8 @@ public class AuthService {
         return refreshTokenService.rotate(plainRefreshToken);
     }
 
-    public void logout(final UUID userId) {
-        refreshTokenService.revokeAllForUser(userId);
+    public void logout(final UUID userId, final String plainRefreshToken) {
+        refreshTokenService.revokeSpecificToken(userId, plainRefreshToken);
     }
 
     private AuthResult issueTokens(User user) {

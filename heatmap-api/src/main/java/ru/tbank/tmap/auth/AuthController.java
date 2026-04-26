@@ -47,10 +47,10 @@ public class AuthController implements AuthApi {
     }
 
     @Override
-    public ResponseEntity<Void> logoutUser() {
+    public ResponseEntity<Void> logoutUser(final String refreshToken) {
         CustomUserDetails principal = SecurityUtils.getPrincipal();
 
-        authService.logout(principal.getUserId());
+        authService.logout(principal.getUserId(), refreshToken);
 
         final ResponseCookie cookie = refreshTokenCookieFactory.createExpired();
         return ResponseEntity.noContent()

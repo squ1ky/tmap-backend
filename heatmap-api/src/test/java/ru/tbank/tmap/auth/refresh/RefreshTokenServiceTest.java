@@ -180,13 +180,27 @@ class RefreshTokenServiceTest {
     }
 
     @Test
-    @DisplayName("revokeAllForUser: должен вызвать массовый revoke в репозитории")
-    void revokeAllForUser_whenCalled_thenDelegateToRepository() {
+    @DisplayName("revokeSpecificToken: должен хэшировать токен и отзывать конкретную сессию в БД")
+    void revokeSpecificToken_whenValidToken_thenDelegateToRepository() {
         final UUID userId = UUID.randomUUID();
-        given(refreshTokenRepository.revokeAllActiveByUserId(userId)).willReturn(2);
+        given(tokenHasher.hash(PLAIN_TOKEN)).willReturn(TOKEN_HASH);
+        given(refreshTokenRepository.revokeByTokenHashAndUserId(TOKEN_HASH, userId)).willReturn(1);
 
-        refreshTokenService.revokeAllForUser(userId);
+        refreshTokenService.revokeSpecificToken(userId, PLAIN_TOKEN);
 
-        verify(refreshTokenRepository).revokeAllActiveByUserId(userId);
+        verify(tokenHasher).hash(PLAIN_TOKEN);
+        verify(refreshTokenRepository).revokeByTokenHashAndUserId(TOKEN_HASH, userId);
+    }
+
+    @Test
+    @DisplayName("revokeSpecificToken: должен ничего не делать, если токен пустой")
+    void revokeSpecificToken_whenBlankToken_thenDoNothing() {
+        final UUID userId = UUID.randomUUID();
+
+        refreshTokenService.revokeSpecificToken(userId, "   ");
+        refreshTokenService.revokeSpecificToken(userId, null);
+
+        verify(tokenHasher, never()).hash(anyString());
+        verify(refreshTokenRepository, never()).revokeByTokenHashAndUserId(anyString(), any(UUID.class));
     }
 }

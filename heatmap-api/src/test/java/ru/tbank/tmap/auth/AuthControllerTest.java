@@ -55,14 +55,16 @@ class AuthControllerTest {
     private static final String REFRESH_URL = "/api/v1/auth/refresh";
     private static final String LOGOUT_URL = "/api/v1/auth/logout";
 
+    private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
+    private static final String COOKIE_PATH = "/api/v1/auth";
+
     private static final String VALID_EMAIL = "kazan_guest@example.com";
     private static final String VALID_PASSWORD = "Echak123!";
     private static final String VALID_NICKNAME = "Tatarin116";
     private static final String ACCESS_TOKEN = "access-token-value";
     private static final String REFRESH_TOKEN = "refresh-token-value";
     private static final UUID USER_ID = UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
-    private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
-    
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -90,7 +92,7 @@ class AuthControllerTest {
         final ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, REFRESH_TOKEN)
                 .httpOnly(true)
                 .secure(true)
-                .path("/api/v1/auth/refresh")
+                .path(COOKIE_PATH)
                 .sameSite("Strict")
                 .maxAge(604_800)
                 .build();
@@ -116,7 +118,7 @@ class AuthControllerTest {
                 .andExpect(cookie().exists(REFRESH_TOKEN_COOKIE_NAME))
                 .andExpect(cookie().httpOnly(REFRESH_TOKEN_COOKIE_NAME, true))
                 .andExpect(cookie().secure(REFRESH_TOKEN_COOKIE_NAME, true))
-                .andExpect(cookie().path(REFRESH_TOKEN_COOKIE_NAME, "/api/v1/auth/refresh"))
+                .andExpect(cookie().path(REFRESH_TOKEN_COOKIE_NAME, COOKIE_PATH))
                 .andExpect(cookie().value(REFRESH_TOKEN_COOKIE_NAME, REFRESH_TOKEN));
 
         verify(authService).register(VALID_EMAIL, VALID_PASSWORD, VALID_NICKNAME);
@@ -259,7 +261,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.accessToken").value(ACCESS_TOKEN))
                 .andExpect(cookie().exists(REFRESH_TOKEN_COOKIE_NAME))
                 .andExpect(cookie().httpOnly(REFRESH_TOKEN_COOKIE_NAME, true))
-                .andExpect(cookie().path(REFRESH_TOKEN_COOKIE_NAME, "/api/v1/auth/refresh"))
+                .andExpect(cookie().path(REFRESH_TOKEN_COOKIE_NAME, COOKIE_PATH))
                 .andExpect(cookie().value(REFRESH_TOKEN_COOKIE_NAME, REFRESH_TOKEN));
 
         verify(authService).refresh(oldRefreshToken);
@@ -284,7 +286,7 @@ class AuthControllerTest {
         final ResponseCookie expiredCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
                 .secure(true)
-                .path("/api/v1/auth/refresh")
+                .path(COOKIE_PATH)
                 .sameSite("Strict")
                 .maxAge(0)
                 .build();
@@ -300,14 +302,15 @@ class AuthControllerTest {
 
         mockMvc.perform(post(LOGOUT_URL)
                         .with(csrf())
-                        .with(user(principal)))
+                        .with(user(principal))
+                        .cookie(new Cookie(REFRESH_TOKEN_COOKIE_NAME, REFRESH_TOKEN)))
                 .andExpect(status().isNoContent())
                 .andExpect(cookie().exists(REFRESH_TOKEN_COOKIE_NAME))
                 .andExpect(cookie().value(REFRESH_TOKEN_COOKIE_NAME, ""))
                 .andExpect(cookie().maxAge(REFRESH_TOKEN_COOKIE_NAME, 0))
-                .andExpect(cookie().path(REFRESH_TOKEN_COOKIE_NAME, "/api/v1/auth/refresh"));
+                .andExpect(cookie().path(REFRESH_TOKEN_COOKIE_NAME, COOKIE_PATH));
 
-        verify(authService).logout(USER_ID);
+        verify(authService).logout(USER_ID, REFRESH_TOKEN);
         verify(refreshTokenCookieFactory).createExpired();
     }
 

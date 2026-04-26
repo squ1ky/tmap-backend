@@ -59,8 +59,11 @@ jobs:
 
       - name: Deploy with Docker Compose
         run: |
-          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "cd '${{ secrets.DEPLOY_PATH }}' && docker compose up -d --build --remove-orphans"
+          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "
+            cd '${{ secrets.DEPLOY_PATH }}' && \
+            docker compose down && \
+            docker compose build --no-cache && \
+            docker compose up -d --remove-orphans"
 
       - name: Health check (actuator)
         run: |

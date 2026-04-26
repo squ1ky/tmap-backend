@@ -2,12 +2,13 @@ package ru.tbank.tmap.heatmap.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.uber.h3core.H3Core;
+import com.uber.h3core.util.LatLng;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -29,17 +30,21 @@ import ru.tbank.tmap.heatmap.HeatmapClusterAggregate;
 @ActiveProfiles("test")
 class JdbcHeatmapQueryRepositoryTest {
 
+    private static final String RES_8_CLUSTER = "88115b22b1fffff";
+
     @Autowired
     private HeatmapQueryRepository heatmapQueryRepository;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private H3Core h3Core;
+
     @Test
-    @Disabled("Temporarily disabled until cluster_history-based cluster projection is finalized")
     void findClusters_whenClusterHistoryContainsViewportData_thenReturnsAggregatedClusters() {
         insertClusterHistory(
-                "88115b22b1fffff",
+                RES_8_CLUSTER,
                 8,
                 VenueCategory.FOOD,
                 Instant.parse("2026-04-17T10:00:00Z"),
@@ -48,7 +53,7 @@ class JdbcHeatmapQueryRepositoryTest {
                 new BigDecimal("500.00")
         );
         insertClusterHistory(
-                "88115b22b1fffff",
+                RES_8_CLUSTER,
                 8,
                 VenueCategory.FOOD,
                 Instant.parse("2026-04-17T10:15:00Z"),
@@ -57,21 +62,22 @@ class JdbcHeatmapQueryRepositoryTest {
                 new BigDecimal("700.00")
         );
 
+        final BoundingBox boundingBox = boundingBoxAround(RES_8_CLUSTER);
+
         final List<HeatmapClusterAggregate> result = heatmapQueryRepository.findClusters(
-                new BoundingBox(55.7481, 49.0664, 55.8402, 49.1912),
+                boundingBox,
                 H3Resolution.RES_8,
                 List.of(VenueCategory.FOOD),
                 Instant.parse("2026-04-17T09:20:00Z")
         );
 
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst().h3Index()).isEqualTo(Long.parseUnsignedLong("88115b22b1fffff", 16));
+        assertThat(result.getFirst().h3Index()).isEqualTo(Long.parseUnsignedLong(RES_8_CLUSTER, 16));
         assertThat(result.getFirst().txCount()).isEqualTo(2);
         assertThat(result.getFirst().avgCheck()).isEqualByComparingTo("600.00");
         assertThat(result.getFirst().sumAmount()).isEqualByComparingTo("1200.00");
         assertThat(result.getFirst().updatedAt()).isEqualTo(Instant.parse("2026-04-17T10:15:00Z"));
-        assertThat(result.getFirst().centerLat()).isBetween(55.7481, 55.8402);
-        assertThat(result.getFirst().centerLng()).isBetween(49.0664, 49.1912);
+        assertThat(boundingBox.contains(result.getFirst().centerLat(), result.getFirst().centerLng())).isTrue();
     }
 
     @Test
@@ -159,6 +165,16 @@ class JdbcHeatmapQueryRepositoryTest {
                 avgCheck,
                 sumAmount,
                 java.sql.Timestamp.from(hourBucket)
+        );
+    }
+
+    private BoundingBox boundingBoxAround(final String h3Index) {
+        final LatLng center = h3Core.cellToLatLng(Long.parseUnsignedLong(h3Index, 16));
+        return new BoundingBox(
+                center.lat - 0.01,
+                center.lng - 0.01,
+                center.lat + 0.01,
+                center.lng + 0.01
         );
     }
 }

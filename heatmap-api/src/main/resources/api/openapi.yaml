@@ -1211,7 +1211,7 @@ components:
 
     VenueModerationStatus:
       type: string
-      enum: [PENDING, ACTIVE, REJECTED]
+      enum: [PENDING, PENDING_UPDATE, ACTIVE, REJECTED]
 
     # ── Map / Heatmap DTOs ────────────────────
     HeatmapResponse:

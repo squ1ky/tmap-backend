@@ -13,4 +13,8 @@ public class SecurityUtils {
                 .getAuthentication()
                 .getPrincipal();
     }
+
+    public static String currentUserEmail() {
+        return getPrincipal().getUsername();
+    }
 }

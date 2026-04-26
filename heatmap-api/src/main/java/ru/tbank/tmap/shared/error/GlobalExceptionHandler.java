@@ -14,6 +14,7 @@ import ru.tbank.tmap.auth.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.auth.exception.InvalidCredentialsException;
 import ru.tbank.tmap.auth.exception.InvalidRefreshTokenException;
 import ru.tbank.tmap.heatmap.cluster.ClusterNotFoundException;
+import ru.tbank.tmap.user.UserNotFoundException;
 import ru.tbank.tmap.venue.exception.VenueModerationStateException;
 import ru.tbank.tmap.venue.exception.VenueNotFoundException;
 
@@ -105,6 +106,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleInvalidCredentials(final InvalidCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponse(ErrorCode.UNAUTHORIZED, ex.getMessage()));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(final UserNotFoundException ex) {
+        log.warn("User not found: email={}", ex.getEmail());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponse(ErrorCode.UNAUTHORIZED, ex.getMessage()));
     }

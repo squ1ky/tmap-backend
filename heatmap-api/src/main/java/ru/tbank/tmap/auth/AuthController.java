@@ -12,7 +12,9 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.tbank.tmap.auth.userdetails.CustomUserDetails;
 import ru.tbank.tmap.infrastructure.security.cookie.RefreshTokenCookieFactory;
+import ru.tbank.tmap.shared.utils.SecurityUtils;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -42,6 +44,18 @@ public class AuthController implements AuthApi {
     public ResponseEntity<AuthResponse> refreshAuthToken(final String refreshToken) {
         final AuthResult result = authService.refresh(refreshToken);
         return buildAuthResponse(result, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<Void> logoutUser(final String refreshToken) {
+        CustomUserDetails principal = SecurityUtils.getPrincipal();
+
+        authService.logout(principal.getUserId(), refreshToken);
+
+        final ResponseCookie cookie = refreshTokenCookieFactory.createExpired();
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .build();
     }
 
     private ResponseEntity<AuthResponse> buildAuthResponse(final AuthResult result, final HttpStatus status) {

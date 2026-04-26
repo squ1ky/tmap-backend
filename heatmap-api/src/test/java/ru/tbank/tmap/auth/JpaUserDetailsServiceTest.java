@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import ru.tbank.tmap.auth.userdetails.JpaUserDetailsService;
 import ru.tbank.tmap.user.User;
 import ru.tbank.tmap.user.UserRole;
 import ru.tbank.tmap.user.UserRepository;

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.auth;
+package ru.tbank.tmap.auth.userdetails;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -24,7 +24,8 @@ public class JpaUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(final String email) {
         return userRepository.findByEmail(email)
-                .map(user -> new org.springframework.security.core.userdetails.User(
+                .map(user -> new CustomUserDetails(
+                        user.getId(),
                         user.getEmail(),
                         user.getPasswordHash(),
                         !user.isBlocked(),

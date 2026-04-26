@@ -5,12 +5,14 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.auth.jwt.JwtProperties;
 
+import java.time.Duration;
+
 @Component
 @RequiredArgsConstructor
 public class RefreshTokenCookieFactory {
 
     private static final String COOKIE_NAME = "refreshToken";
-    private static final String COOKIE_PATH = "/api/v1/auth/refresh";
+    private static final String COOKIE_PATH = "/api/v1/auth";
 
     private final JwtProperties jwtProperties;
     private final CookieSecurityProperties cookieSecurityProperties;
@@ -18,6 +20,12 @@ public class RefreshTokenCookieFactory {
     public ResponseCookie create(final String plainRefreshToken) {
         return baseBuilder(plainRefreshToken)
                 .maxAge(jwtProperties.refreshExpiration())
+                .build();
+    }
+
+    public ResponseCookie createExpired() {
+        return baseBuilder("")
+                .maxAge(Duration.ZERO)
                 .build();
     }
 

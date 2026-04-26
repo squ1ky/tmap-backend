@@ -98,7 +98,6 @@ app:
     secret-key: ${MINIO_SECRET_KEY}
     bucket: ${MINIO_BUCKET}
     region: ${MINIO_REGION:us-east-1}
-    presigned-url-expiry: 1h
 
 # ===== Swagger =====
 springdoc:

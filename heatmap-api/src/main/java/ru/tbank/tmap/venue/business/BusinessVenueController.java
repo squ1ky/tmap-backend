@@ -19,13 +19,17 @@ import ru.tbank.tmap.venue.exception.VenueNotFoundException;
 public class BusinessVenueController implements BusinessOwnerApi {
 
     private final BusinessVenueService businessVenueService;
+    private final BusinessVenueMapper businessVenueMapper;
     private final VenueOwnerMapper venueOwnerMapper;
 
     @Override
     public ResponseEntity<VenueOwnerResponse> createVenue(final VenueCreateRequest venueCreateRequest) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(venueOwnerMapper.toResponse(
-                        businessVenueService.createVenue(currentUserEmail(), venueCreateRequest)
+                        businessVenueService.createVenue(
+                                currentUserEmail(),
+                                businessVenueMapper.toCommand(venueCreateRequest)
+                        )
                 ));
     }
 

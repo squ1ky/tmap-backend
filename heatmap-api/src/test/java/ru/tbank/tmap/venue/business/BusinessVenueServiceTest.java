@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.openapitools.model.VenueCreateRequest;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 import ru.tbank.tmap.shared.h3.H3IndexService;
@@ -21,6 +20,7 @@ import ru.tbank.tmap.user.UserRepository;
 import ru.tbank.tmap.user.UserRole;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenueCreateCommand;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.repository.VenueRepository;
 
@@ -94,19 +94,22 @@ class BusinessVenueServiceTest {
     @Test
     void createVenue_whenRequestIsValid_thenCreatesPendingVenueForCurrentUser() {
         final User owner = owner();
-        final VenueCreateRequest request = new VenueCreateRequest(
+        final VenueCreateCommand command = new VenueCreateCommand(
                 "Cafe Pending",
                 "Kazan Center, 1",
-                55.7905,
-                49.1140,
-                VenueCreateRequest.CategoryEnum.FOOD
-        ).description("Fresh coffee");
+                GeoPoint.of(55.7905, 49.1140),
+                VenueCategory.FOOD,
+                "Fresh coffee",
+                null,
+                null,
+                null
+        );
         given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner));
         given(h3IndexService.toH3(55.7905, 49.1140, H3Resolution.RES_9)).willReturn(H3_RES_9);
         given(venueRepository.save(org.mockito.ArgumentMatchers.any(Venue.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
 
-        final Venue result = businessVenueService.createVenue(OWNER_EMAIL, request);
+        final Venue result = businessVenueService.createVenue(OWNER_EMAIL, command);
 
         assertThat(result.getOwner()).isEqualTo(owner);
         assertThat(result.getStatus()).isEqualTo(VenueStatus.PENDING);

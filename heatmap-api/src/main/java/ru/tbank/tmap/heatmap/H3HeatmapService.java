@@ -7,15 +7,19 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
+import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.heatmap.repository.HeatmapQueryRepository;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class H3HeatmapService implements HeatmapService {
 
@@ -23,12 +27,8 @@ public class H3HeatmapService implements HeatmapService {
     private static final int REFRESH_INTERVAL_MINUTES = 5;
 
     private final HeatmapQueryRepository heatmapQueryRepository;
+    private final MinioUrlBuilder minioUrlBuilder;
     private final Clock clock;
-
-    public H3HeatmapService(final HeatmapQueryRepository heatmapQueryRepository, final Clock clock) {
-        this.heatmapQueryRepository = heatmapQueryRepository;
-        this.clock = clock;
-    }
 
     @Override
     public HeatmapClusters getHeatmapClusters(
@@ -55,7 +55,13 @@ public class H3HeatmapService implements HeatmapService {
     public Optional<ClusterDetailsAggregate> getClusterDetails(final String h3Index, final H3Resolution resolution) {
         final Instant from = Instant.now(clock).minus(DEFAULT_WINDOW_MINUTES, ChronoUnit.MINUTES);
         final long dbH3Index = parseH3Index(h3Index);
-        return heatmapQueryRepository.findClusterDetails(dbH3Index, resolution, from);
+        return heatmapQueryRepository.findClusterDetails(dbH3Index, resolution, from)
+                .map(this::resolveDistrictImageUrl);
+    }
+
+    private ClusterDetailsAggregate resolveDistrictImageUrl(final ClusterDetailsAggregate aggregate) {
+        String districtImageUrl = minioUrlBuilder.buildPublicUrl(aggregate.districtImageUrl());
+        return aggregate.withDistrictImageUrl(districtImageUrl);
     }
 
     private long parseH3Index(final String h3Index) {

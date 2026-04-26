@@ -106,7 +106,7 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
                 )
                 SELECT
                     d.name AS district_name,
-                    COALESCE(d.photo_url, '') AS district_image_url,
+                    d.photo_url AS district_image_url,
                     lb.category AS category,
                     lb.hour_bucket AS hour_bucket,
                     a.tx_count AS tx_count,

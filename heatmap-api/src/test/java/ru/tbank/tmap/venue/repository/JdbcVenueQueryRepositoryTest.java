@@ -25,6 +25,7 @@ class JdbcVenueQueryRepositoryTest {
     private static final UUID ACTIVE_FOOD_ID = UUID.fromString("33333333-3333-3333-3333-333333333331");
     private static final UUID ACTIVE_SHOPPING_ID = UUID.fromString("33333333-3333-3333-3333-333333333332");
     private static final UUID PENDING_FOOD_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
+    private static final UUID REJECTED_FOOD_ID = UUID.fromString("33333333-3333-3333-3333-333333333335");
     private static final UUID OUTSIDE_VIEWPORT_ID = UUID.fromString("33333333-3333-3333-3333-333333333334");
     private static final UUID OWNER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
@@ -39,6 +40,7 @@ class JdbcVenueQueryRepositoryTest {
         insertVenue(ACTIVE_FOOD_ID, "Active Food", 55.7900, 49.1200, VenueCategory.FOOD, "ACTIVE");
         insertVenue(ACTIVE_SHOPPING_ID, "Active Shop", 55.7910, 49.1210, VenueCategory.SHOPPING, "ACTIVE");
         insertVenue(PENDING_FOOD_ID, "Pending Food", 55.7920, 49.1220, VenueCategory.FOOD, "PENDING");
+        insertVenue(REJECTED_FOOD_ID, "Rejected Food", 55.7930, 49.1230, VenueCategory.FOOD, "REJECTED");
         insertVenue(OUTSIDE_VIEWPORT_ID, "Outside Food", 55.9000, 49.3000, VenueCategory.FOOD, "ACTIVE");
 
         final List<VenuePublicRow> result = venueQueryRepository.findActiveInViewport(
@@ -49,7 +51,7 @@ class JdbcVenueQueryRepositoryTest {
         assertThat(result)
                 .extracting(VenuePublicRow::id)
                 .contains(ACTIVE_FOOD_ID, ACTIVE_SHOPPING_ID)
-                .doesNotContain(PENDING_FOOD_ID, OUTSIDE_VIEWPORT_ID);
+                .doesNotContain(PENDING_FOOD_ID, REJECTED_FOOD_ID, OUTSIDE_VIEWPORT_ID);
     }
 
     @Test
@@ -82,10 +84,13 @@ class JdbcVenueQueryRepositoryTest {
     @Test
     void findActiveById_whenVenueIsNotActive_thenReturnsEmpty() {
         insertVenue(PENDING_FOOD_ID, "Pending Food", 55.7920, 49.1220, VenueCategory.FOOD, "PENDING");
+        insertVenue(REJECTED_FOOD_ID, "Rejected Food", 55.7930, 49.1230, VenueCategory.FOOD, "REJECTED");
 
-        final Optional<VenuePublicRow> result = venueQueryRepository.findActiveById(PENDING_FOOD_ID);
+        final Optional<VenuePublicRow> pendingResult = venueQueryRepository.findActiveById(PENDING_FOOD_ID);
+        final Optional<VenuePublicRow> rejectedResult = venueQueryRepository.findActiveById(REJECTED_FOOD_ID);
 
-        assertThat(result).isEmpty();
+        assertThat(pendingResult).isEmpty();
+        assertThat(rejectedResult).isEmpty();
     }
 
     private void insertVenue(

@@ -112,13 +112,18 @@ paths:
   /auth/logout:
     post:
       tags: [Auth]
-      summary: Sign out
+      summary: Sign out from current device
       operationId: logoutUser
       description: >
-        Invalidates the current session for the authenticated user logged in
-        with a bearer JWT.
+        Invalidates the current session by revoking the provided refresh token.
       security:
         - bearerAuth: []
+      parameters:
+        - in: cookie
+          name: refreshToken
+          required: false
+          schema:
+            type: string
       responses:
         '204':
           description: Logged out successfully

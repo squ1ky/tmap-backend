@@ -1,12 +1,20 @@
 package ru.tbank.tmap.shared.utils;
 
-import lombok.experimental.UtilityClass;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
+import ru.tbank.tmap.auth.userdetails.CustomUserDetails;
 
-@UtilityClass
+@NoArgsConstructor
 public class SecurityUtils {
 
+    public static CustomUserDetails getPrincipal() {
+        return (CustomUserDetails) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+    }
+
     public static String currentUserEmail() {
-        return SecurityContextHolder.getContext().getAuthentication().getName();
+        return getPrincipal().getUsername();
     }
 }

@@ -72,6 +72,20 @@ public class RefreshTokenService {
         );
     }
 
+    @Transactional
+    public void revokeSpecificToken(final UUID userId, final String plainToken) {
+        if (plainToken == null || plainToken.isBlank()) {
+            return;
+        }
+
+        final String hash = tokenHasher.hash(plainToken);
+        final int count = refreshTokenRepository.revokeByTokenHashAndUserId(hash, userId);
+
+        if (count > 0) {
+            log.info("Revoked specific refresh token for user {}", userId);
+        }
+    }
+
     public String generatePlainToken() {
         final byte[] bytes = new byte[REFRESH_TOKEN_BYTE_LENGTH];
         secureRandom.nextBytes(bytes);

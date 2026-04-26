@@ -178,4 +178,29 @@ class RefreshTokenServiceTest {
         verify(refreshTokenRepository, never()).save(any());
         verify(jwtService, never()).generateAccessToken(user);
     }
+
+    @Test
+    @DisplayName("revokeSpecificToken: должен хэшировать токен и отзывать конкретную сессию в БД")
+    void revokeSpecificToken_whenValidToken_thenDelegateToRepository() {
+        final UUID userId = UUID.randomUUID();
+        given(tokenHasher.hash(PLAIN_TOKEN)).willReturn(TOKEN_HASH);
+        given(refreshTokenRepository.revokeByTokenHashAndUserId(TOKEN_HASH, userId)).willReturn(1);
+
+        refreshTokenService.revokeSpecificToken(userId, PLAIN_TOKEN);
+
+        verify(tokenHasher).hash(PLAIN_TOKEN);
+        verify(refreshTokenRepository).revokeByTokenHashAndUserId(TOKEN_HASH, userId);
+    }
+
+    @Test
+    @DisplayName("revokeSpecificToken: должен ничего не делать, если токен пустой")
+    void revokeSpecificToken_whenBlankToken_thenDoNothing() {
+        final UUID userId = UUID.randomUUID();
+
+        refreshTokenService.revokeSpecificToken(userId, "   ");
+        refreshTokenService.revokeSpecificToken(userId, null);
+
+        verify(tokenHasher, never()).hash(anyString());
+        verify(refreshTokenRepository, never()).revokeByTokenHashAndUserId(anyString(), any(UUID.class));
+    }
 }

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.loyalty;
+package ru.tbank.tmap.loyalty.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

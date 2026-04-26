@@ -43,7 +43,7 @@ public class VenuePublicMapper {
                 .photoUrl(toUri(venue.photoUrl()));
     }
 
-    private URI toUri(final String value) {
+    public URI toUri(final String value) {
         if (value == null || value.isBlank()) {
             return null;
         }

@@ -5,6 +5,11 @@ spring:
   profiles:
     default: prod
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   # ===== Database =====
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable
@@ -54,7 +59,6 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
 
-# ===== JWT =====
 app:
   security:
     cookie:
@@ -87,6 +91,14 @@ app:
     interval-ms: 60000
   kafka:
     transactions-topic: ${KAFKA_TRANSACTIONS_TOPIC}
+  minio:
+    endpoint: ${MINIO_ENDPOINT}
+    public-endpoint: ${MINIO_PUBLIC_ENDPOINT:${MINIO_ENDPOINT}}
+    access-key: ${MINIO_ACCESS_KEY}
+    secret-key: ${MINIO_SECRET_KEY}
+    bucket: ${MINIO_BUCKET}
+    region: ${MINIO_REGION:us-east-1}
+    presigned-url-expiry: 1h
 
 # ===== Swagger =====
 springdoc:
@@ -105,7 +117,10 @@ management:
     health:
       probes:
         enabled: true
-      show-details: never
+      show-details: when_authorized
+      group:
+        readiness:
+          include: db, minio, kafka
 
 # ===== Logging =====
 logging:

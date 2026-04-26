@@ -8,7 +8,7 @@ DC = docker compose
 API_MODULE = heatmap-api
 GEN_MODULE = data-generator
 
-.PHONY: up down dev-api dev-gen infra db run logs build migrate
+.PHONY: up down dev-api dev-gen infra db run minio minio-console logs build migrate
 
 # ===== Продакшн: всё в докере =====
 up:
@@ -18,21 +18,23 @@ down:
 	$(DC) --profile prod down
 
 # ===== Локальная разработка =====
-# Запуск API локально (нужна поднятая БД)
 dev-api: infra
 	./mvnw spring-boot:run -pl $(API_MODULE) -Dspring-boot.run.profiles=local
 
-# Запуск Генератора локально
 dev-gen: infra
 	./mvnw spring-boot:run -pl $(GEN_MODULE) -Dspring-boot.run.profiles=local
 
-# Поднять инфраструктуру (БД + Kafka)
+# Поднять инфраструктуру (БД + Kafka + MinIO)
 infra:
-	$(DC) up -d db kafka kafka-init
+	$(DC) up -d db kafka kafka-init minio minio-init
 
 # Поднять только БД
 db:
 	$(DC) up -d db
+
+# Поднять только MinIO
+minio:
+	$(DC) up -d minio minio-init
 
 # Логи приложения
 logs:

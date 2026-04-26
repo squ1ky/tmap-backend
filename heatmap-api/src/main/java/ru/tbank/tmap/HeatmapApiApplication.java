@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import ru.tbank.tmap.infrastructure.minio.MinioProperties;
 import ru.tbank.tmap.infrastructure.security.cors.CorsProperties;
 import ru.tbank.tmap.infrastructure.security.cookie.CookieSecurityProperties;
 import ru.tbank.tmap.auth.jwt.JwtProperties;
@@ -15,7 +16,8 @@ import ru.tbank.tmap.auth.jwt.JwtProperties;
 @EnableConfigurationProperties({
         JwtProperties.class,
         CookieSecurityProperties.class,
-        CorsProperties.class
+        CorsProperties.class,
+        MinioProperties.class
 })
 public class HeatmapApiApplication {
 

@@ -8,9 +8,9 @@ DC = docker compose
 API_MODULE = heatmap-api
 GEN_MODULE = data-generator
 
-.PHONY: up down dev-api dev-gen infra db run minio minio-console logs build migrate
-
 # ===== Продакшн: всё в докере =====
+.PHONY: up down
+
 up:
 	$(DC) --profile prod up -d --build
 
@@ -18,6 +18,8 @@ down:
 	$(DC) --profile prod down
 
 # ===== Локальная разработка =====
+.PHONY: dev-api dev-gen
+
 dev-api: infra
 	./mvnw spring-boot:run -pl $(API_MODULE) -Dspring-boot.run.profiles=local
 
@@ -25,6 +27,8 @@ dev-gen: infra
 	./mvnw spring-boot:run -pl $(GEN_MODULE) -Dspring-boot.run.profiles=local
 
 # Поднять инфраструктуру (БД + Kafka + MinIO)
+.PHONY: infra db minio minio-console
+
 infra:
 	$(DC) up -d db kafka kafka-init minio minio-init
 
@@ -36,11 +40,12 @@ db:
 minio:
 	$(DC) up -d minio minio-init
 
-# Логи приложения
+# Утилиты и сборка
+.PHONY: logs build
+
 logs:
 	$(DC) logs -f app
 
-# Собрать jar
 build:
 	./mvnw clean package -DskipTests
 

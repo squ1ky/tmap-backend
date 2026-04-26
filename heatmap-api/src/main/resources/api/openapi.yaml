@@ -488,7 +488,6 @@ paths:
       tags: [Business (Owner)]
       summary: Register a venue
       operationId: createVenue
-      x-required-roles: [BUSINESS_OWNER]
       security:
         - bearerAuth: []
       requestBody:

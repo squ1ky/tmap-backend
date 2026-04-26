@@ -20,7 +20,6 @@ import ru.tbank.tmap.user.UserRepository;
 import ru.tbank.tmap.user.UserRole;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
-import ru.tbank.tmap.venue.domain.VenueCreateCommand;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.repository.VenueRepository;
 

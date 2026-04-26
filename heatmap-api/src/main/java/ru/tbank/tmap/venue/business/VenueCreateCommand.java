@@ -1,6 +1,7 @@
-package ru.tbank.tmap.venue.domain;
+package ru.tbank.tmap.venue.business;
 
 import ru.tbank.tmap.shared.geo.GeoPoint;
+import ru.tbank.tmap.venue.domain.VenueCategory;
 
 public record VenueCreateCommand(
         String name,

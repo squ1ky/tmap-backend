@@ -8,9 +8,10 @@ import org.openapitools.model.VenueCreateRequest;
 import org.openapitools.model.VenueOwnerResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.tbank.tmap.shared.utils.SecurityUtils;
+import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.exception.VenueNotFoundException;
 
 @RestController
@@ -24,31 +25,26 @@ public class BusinessVenueController implements BusinessOwnerApi {
 
     @Override
     public ResponseEntity<VenueOwnerResponse> createVenue(final VenueCreateRequest venueCreateRequest) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(venueOwnerMapper.toResponse(
-                        businessVenueService.createVenue(
-                                currentUserEmail(),
-                                businessVenueMapper.toCommand(venueCreateRequest)
-                        )
-                ));
+        final String ownerEmail = SecurityUtils.currentUserEmail();
+        final VenueCreateCommand command = businessVenueMapper.toCommand(venueCreateRequest);
+        final Venue venue = businessVenueService.createVenue(ownerEmail, command);
+        final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Override
     public ResponseEntity<List<VenueOwnerResponse>> getMyVenues() {
-        return ResponseEntity.ok(businessVenueService.getMyVenues(currentUserEmail()).stream()
+        return ResponseEntity.ok(businessVenueService.getMyVenues(SecurityUtils.currentUserEmail()).stream()
                 .map(venueOwnerMapper::toResponse)
                 .toList());
     }
 
     @Override
     public ResponseEntity<VenueOwnerResponse> getMyVenueById(final UUID id) {
-        return businessVenueService.getMyVenueById(currentUserEmail(), id)
+        return businessVenueService.getMyVenueById(SecurityUtils.currentUserEmail(), id)
                 .map(venueOwnerMapper::toResponse)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new VenueNotFoundException(id));
-    }
-
-    private String currentUserEmail() {
-        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }

@@ -7,7 +7,6 @@ import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.User;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
-import ru.tbank.tmap.venue.domain.VenueCreateCommand;
 
 @Component
 public class BusinessVenueMapper {

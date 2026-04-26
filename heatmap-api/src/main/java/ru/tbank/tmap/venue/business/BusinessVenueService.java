@@ -12,7 +12,6 @@ import ru.tbank.tmap.user.User;
 import ru.tbank.tmap.user.UserNotFoundException;
 import ru.tbank.tmap.user.UserRepository;
 import ru.tbank.tmap.venue.domain.Venue;
-import ru.tbank.tmap.venue.domain.VenueCreateCommand;
 import ru.tbank.tmap.venue.repository.VenueRepository;
 
 @Service

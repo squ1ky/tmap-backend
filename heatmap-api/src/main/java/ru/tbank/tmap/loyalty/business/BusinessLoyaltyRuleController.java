@@ -1,0 +1,70 @@
+package ru.tbank.tmap.loyalty.business;
+
+import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.openapitools.api.BusinessOwnerApi;
+import org.openapitools.model.LoyaltyRuleCreateRequest;
+import org.openapitools.model.LoyaltyRuleResponse;
+import org.openapitools.model.LoyaltyRuleUpdateRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import ru.tbank.tmap.loyalty.domain.LoyaltyRuleDetails;
+import ru.tbank.tmap.loyalty.exception.LoyaltyRuleNotFoundException;
+import ru.tbank.tmap.shared.utils.SecurityUtils;
+
+@RestController
+@RequestMapping("/api/v1")
+@RequiredArgsConstructor
+public class BusinessLoyaltyRuleController implements BusinessOwnerApi {
+
+    private final BusinessLoyaltyRuleService businessLoyaltyRuleService;
+    private final BusinessLoyaltyRuleMapper businessLoyaltyRuleMapper;
+
+    @Override
+    public ResponseEntity<List<LoyaltyRuleResponse>> getBusinessVenueLoyaltyRules(final UUID id) {
+        final String ownerEmail = SecurityUtils.currentUserEmail();
+        final List<LoyaltyRuleDetails> loyaltyRules = businessLoyaltyRuleService.getVenueRules(ownerEmail, id);
+        return ResponseEntity.ok(loyaltyRules.stream()
+                .map(businessLoyaltyRuleMapper::toResponse)
+                .toList());
+    }
+
+    @Override
+    public ResponseEntity<LoyaltyRuleResponse> createBusinessVenueLoyaltyRule(
+            final UUID id,
+            @Valid final LoyaltyRuleCreateRequest loyaltyRuleCreateRequest
+    ) {
+        final String ownerEmail = SecurityUtils.currentUserEmail();
+        final BusinessLoyaltyRuleCreateCommand command =
+                businessLoyaltyRuleMapper.toCreateCommand(loyaltyRuleCreateRequest);
+        final LoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.createRule(ownerEmail, id, command);
+        final LoyaltyRuleResponse response = businessLoyaltyRuleMapper.toResponse(loyaltyRule);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Override
+    public ResponseEntity<LoyaltyRuleResponse> updateBusinessLoyaltyRule(
+            final UUID id,
+            @Valid final LoyaltyRuleUpdateRequest loyaltyRuleUpdateRequest
+    ) {
+        final String ownerEmail = SecurityUtils.currentUserEmail();
+        final BusinessLoyaltyRuleUpdateCommand command =
+                businessLoyaltyRuleMapper.toUpdateCommand(loyaltyRuleUpdateRequest);
+        final LoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.updateRule(ownerEmail, id, command);
+        final LoyaltyRuleResponse response = businessLoyaltyRuleMapper.toResponse(loyaltyRule);
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
+    public ResponseEntity<LoyaltyRuleResponse> getBusinessLoyaltyRuleById(final UUID id) {
+        final String ownerEmail = SecurityUtils.currentUserEmail();
+        final LoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.getRuleById(ownerEmail, id)
+                .orElseThrow(() -> new LoyaltyRuleNotFoundException(id));
+        final LoyaltyRuleResponse response = businessLoyaltyRuleMapper.toResponse(loyaltyRule);
+        return ResponseEntity.ok(response);
+    }
+}

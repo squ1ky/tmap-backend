@@ -36,6 +36,13 @@ app:
     interval-ms: 60000
   kafka:
     transactions-topic: test-transactions-topic
+  minio:
+    endpoint: http://localhost:9000
+    public-endpoint: http://localhost:9000
+    access-key: test-access-key
+    secret-key: test-secret-key
+    bucket: test-bucket
+    region: us-east-1
 
 logging:
   level:

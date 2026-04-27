@@ -2,7 +2,6 @@ package ru.tbank.tmap.infrastructure.minio;
 
 import io.minio.BucketExistsArgs;
 import io.minio.MinioClient;
-import io.minio.errors.MinioException;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +9,10 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class MinioConfig {
+
+    private static final String DETAIL_BUCKET = "bucket";
+    private static final String DETAIL_ENDPOINT = "endpoint";
+    private static final String DETAIL_REASON = "reason";
 
     @Bean
     public MinioClient minioClient(MinioProperties properties) {
@@ -20,6 +23,7 @@ public class MinioConfig {
     }
 
     @Bean
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     public HealthIndicator minioHealthIndicator(
             MinioClient minioClient,
             MinioProperties properties
@@ -34,19 +38,19 @@ public class MinioConfig {
 
                 if (!bucketExists) {
                     return Health.down()
-                            .withDetail("bucket", properties.bucket())
-                            .withDetail("reason", "Configured bucket does not exist")
+                            .withDetail(DETAIL_BUCKET, properties.bucket())
+                            .withDetail(DETAIL_REASON, "Configured bucket does not exist")
                             .build();
                 }
 
                 return Health.up()
-                        .withDetail("bucket", properties.bucket())
-                        .withDetail("endpoint", properties.endpoint())
+                        .withDetail(DETAIL_BUCKET, properties.bucket())
+                        .withDetail(DETAIL_ENDPOINT, properties.endpoint())
                         .build();
-            } catch (MinioException exception) {
+            } catch (Exception exception) {
                 return Health.down(exception)
-                        .withDetail("bucket", properties.bucket())
-                        .withDetail("endpoint", properties.endpoint())
+                        .withDetail(DETAIL_BUCKET, properties.bucket())
+                        .withDetail(DETAIL_ENDPOINT, properties.endpoint())
                         .build();
             }
         };

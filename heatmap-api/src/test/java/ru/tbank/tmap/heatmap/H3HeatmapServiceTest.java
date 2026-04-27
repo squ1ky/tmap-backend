@@ -84,7 +84,7 @@ class H3HeatmapServiceTest {
                 Long.parseUnsignedLong("89115b22b0bffff", 16),
                 H3Resolution.RES_9,
                 "Вахитовский район",
-                "",
+                "districts/kazan/vahitovsky.jpg",
                 "FOOD",
                 Instant.parse("2026-04-17T10:00:00Z"),
                 128,

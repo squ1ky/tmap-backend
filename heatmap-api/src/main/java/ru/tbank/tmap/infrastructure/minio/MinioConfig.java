@@ -2,13 +2,16 @@ package ru.tbank.tmap.infrastructure.minio;
 
 import io.minio.BucketExistsArgs;
 import io.minio.MinioClient;
+import io.minio.SetBucketPolicyArgs;
 import io.minio.errors.MinioException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@Slf4j
 public class MinioConfig {
 
     private static final String DETAIL_BUCKET = "bucket";
@@ -17,10 +20,14 @@ public class MinioConfig {
 
     @Bean
     public MinioClient minioClient(MinioProperties properties) {
-        return MinioClient.builder()
+        MinioClient client = MinioClient.builder()
                 .endpoint(properties.endpoint())
                 .credentials(properties.accessKey(), properties.secretKey())
                 .build();
+
+        initBucketPolicy(client, properties.bucket());
+
+        return client;
     }
 
     @Bean
@@ -61,5 +68,32 @@ public class MinioConfig {
                         .build();
             }
         };
+    }
+
+    private void initBucketPolicy(MinioClient client, String bucket) {
+        String policy = """
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {"AWS": "*"},
+                        "Action": ["s3:GetObject"],
+                        "Resource": ["arn:aws:s3:::%s/*"]
+                    }
+                ]
+            }
+            """.formatted(bucket);
+
+        try {
+            client.setBucketPolicy(
+                    SetBucketPolicyArgs.builder()
+                            .bucket(bucket)
+                            .config(policy)
+                            .build()
+            );
+        } catch (Exception e) {
+            log.warn("Failed to set bucket policy for '{}': {}", bucket, e.getMessage());
+        }
     }
 }

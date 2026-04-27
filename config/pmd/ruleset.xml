@@ -39,6 +39,7 @@
         <exclude name="LawOfDemeter"/>
         <exclude name="DataClass"/>
         <exclude name="UseUtilityClass"/>
+        <exclude name="AvoidCatchingGenericException"/>
     </rule>
 
     <rule ref="category/java/errorprone.xml">

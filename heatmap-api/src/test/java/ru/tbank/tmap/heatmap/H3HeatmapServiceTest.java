@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 import ru.tbank.tmap.heatmap.repository.HeatmapQueryRepository;
@@ -22,6 +23,9 @@ class H3HeatmapServiceTest {
 
     @Mock
     private HeatmapQueryRepository heatmapQueryRepository;
+
+    @Mock
+    private MinioUrlBuilder minioUrlBuilder;
 
     private H3HeatmapService heatmapService;
 
@@ -33,6 +37,7 @@ class H3HeatmapServiceTest {
         MockitoAnnotations.openMocks(this);
         heatmapService = new H3HeatmapService(
                 heatmapQueryRepository,
+                minioUrlBuilder,
                 Clock.fixed(Instant.parse("2026-04-17T10:20:00Z"), ZoneOffset.UTC)
         );
     }
@@ -79,7 +84,7 @@ class H3HeatmapServiceTest {
                 Long.parseUnsignedLong("89115b22b0bffff", 16),
                 H3Resolution.RES_9,
                 "Вахитовский район",
-                "",
+                "districts/kazan/vahitovsky.jpg",
                 "FOOD",
                 Instant.parse("2026-04-17T10:00:00Z"),
                 128,
@@ -87,6 +92,8 @@ class H3HeatmapServiceTest {
                 new BigDecimal("95040.00"),
                 Instant.parse("2026-04-17T10:15:00Z")
         )));
+        given(minioUrlBuilder.buildPublicUrl("districts/kazan/vahitovsky.jpg"))
+                .willReturn("http://localhost:9000/tmap/districts/kazan/vahitovsky.jpg");
 
         final Optional<ClusterDetailsAggregate> response =
                 heatmapService.getClusterDetails("89115b22b0bffff", H3Resolution.RES_9);
@@ -95,12 +102,40 @@ class H3HeatmapServiceTest {
         assertThat(Long.toHexString(response.orElseThrow().h3Index())).isEqualTo("89115b22b0bffff");
         assertThat(response.orElseThrow().resolution()).isEqualTo(H3Resolution.RES_9);
         assertThat(response.orElseThrow().districtName()).isEqualTo("Вахитовский район");
-        assertThat(response.orElseThrow().districtImageUrl()).isEmpty();
+        assertThat(response.orElseThrow().districtImageUrl())
+                .isEqualTo("http://localhost:9000/tmap/districts/kazan/vahitovsky.jpg");
         assertThat(response.orElseThrow().category()).isEqualTo("FOOD");
         assertThat(response.orElseThrow().hourBucket())
                 .isEqualTo(Instant.parse("2026-04-17T10:00:00Z"));
         assertThat(response.orElseThrow().txCount()).isEqualTo(128);
         assertThat(response.orElseThrow().avgCheck()).isEqualByComparingTo("742.50");
         assertThat(response.orElseThrow().sumAmount()).isEqualByComparingTo("95040.00");
+    }
+
+    @Test
+    void getClusterDetails_whenDistrictHasNoPhoto_thenDistrictImageUrlIsNull() {
+        given(heatmapQueryRepository.findClusterDetails(
+                Long.parseUnsignedLong("89115b22b0bffff", 16),
+                H3Resolution.RES_9,
+                Instant.parse("2026-04-17T09:20:00Z")
+        )).willReturn(Optional.of(new ClusterDetailsAggregate(
+                Long.parseUnsignedLong("89115b22b0bffff", 16),
+                H3Resolution.RES_9,
+                "Вахитовский район",
+                null,
+                "FOOD",
+                Instant.parse("2026-04-17T10:00:00Z"),
+                128,
+                new BigDecimal("742.50"),
+                new BigDecimal("95040.00"),
+                Instant.parse("2026-04-17T10:15:00Z")
+        )));
+        given(minioUrlBuilder.buildPublicUrl(null)).willReturn(null);
+
+        final Optional<ClusterDetailsAggregate> response =
+                heatmapService.getClusterDetails("89115b22b0bffff", H3Resolution.RES_9);
+
+        assertThat(response).isPresent();
+        assertThat(response.orElseThrow().districtImageUrl()).isNull();
     }
 }

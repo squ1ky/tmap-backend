@@ -31,6 +31,7 @@ import ru.tbank.tmap.heatmap.HeatmapClusterAggregate;
 class JdbcHeatmapQueryRepositoryTest {
 
     private static final String RES_8_CLUSTER = "88115b22b1fffff";
+    private static final String PHOTO_URL = "districts/kazan/vahitovsky.jpg";
 
     @Autowired
     private HeatmapQueryRepository heatmapQueryRepository;
@@ -86,7 +87,7 @@ class JdbcHeatmapQueryRepositoryTest {
                 "89115b22b0bffff",
                 9,
                 "Вахитовский район",
-                ""
+                PHOTO_URL
         );
         insertClusterHistory(
                 "89115b22b0bffff",
@@ -106,7 +107,7 @@ class JdbcHeatmapQueryRepositoryTest {
 
         assertThat(result).isPresent();
         assertThat(result.orElseThrow().districtName()).isEqualTo("Вахитовский район");
-        assertThat(result.orElseThrow().districtImageUrl()).isEmpty();
+        assertThat(result.orElseThrow().districtImageUrl()).isEqualTo(PHOTO_URL);
         assertThat(result.orElseThrow().category()).isEqualTo(VenueCategory.FOOD.name());
         assertThat(result.orElseThrow().hourBucket()).isEqualTo(Instant.parse("2026-04-17T10:00:00Z"));
         assertThat(result.orElseThrow().txCount()).isEqualTo(3);

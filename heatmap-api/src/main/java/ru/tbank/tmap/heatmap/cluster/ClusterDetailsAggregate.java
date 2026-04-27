@@ -17,4 +17,18 @@ public record ClusterDetailsAggregate(
         BigDecimal sumAmount,
         Instant updatedAt
 ) {
+    public ClusterDetailsAggregate withDistrictImageUrl(final String newDistrictImageUrl) {
+        return new ClusterDetailsAggregate(
+                h3Index,
+                resolution,
+                districtName,
+                newDistrictImageUrl,
+                category,
+                hourBucket,
+                txCount,
+                avgCheck,
+                sumAmount,
+                updatedAt
+        );
+    }
 }

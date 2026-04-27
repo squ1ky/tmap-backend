@@ -20,7 +20,9 @@ tags:
   - name: Venues (Public)
     description: Public venue pages
   - name: Business (Owner)
-    description: Venue, content, promotion and loyalty management for owners
+    description: Venue and promotion management for owners
+  - name: Business Owner Loyalty
+    description: Loyalty rule management for owners
   - name: Profile
     description: Current user profile and loyalty history
   - name: AdminVenues
@@ -602,72 +604,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /business/venues/{id}/loyalty-rules:
-    get:
-      tags: [Business (Owner)]
-      summary: Get venue loyalty rules (owner view)
-      operationId: getBusinessVenueLoyaltyRules
-      x-required-roles: [BUSINESS_OWNER]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Venue loyalty rules
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LoyaltyRuleResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    post:
-      tags: [Business (Owner)]
-      summary: Create loyalty rule
-      operationId: createBusinessVenueLoyaltyRule
-      x-required-roles: [BUSINESS_OWNER]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoyaltyRuleCreateRequest'
-      responses:
-        '201':
-          description: Loyalty rule created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LoyaltyRuleResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
   /business/venues/{id}/promos:
     post:
       tags: [Business (Owner)]
@@ -792,9 +728,76 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  # ── Business Owner Loyalty ──────────────────
+  /business/venues/{id}/loyalty-rules:
+    get:
+      tags: [Business Owner Loyalty]
+      summary: Get venue loyalty rules (owner view)
+      operationId: getBusinessVenueLoyaltyRules
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Venue loyalty rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoyaltyRuleResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Business Owner Loyalty]
+      summary: Create loyalty rule
+      operationId: createBusinessVenueLoyaltyRule
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoyaltyRuleCreateRequest'
+      responses:
+        '201':
+          description: Loyalty rule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoyaltyRuleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /business/loyalty-rules/{id}:
     get:
-      tags: [Business (Owner)]
+      tags: [Business Owner Loyalty]
       summary: Get loyalty rule by id
       operationId: getBusinessLoyaltyRuleById
       x-required-roles: [BUSINESS_OWNER]
@@ -821,7 +824,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     patch:
-      tags: [Business (Owner)]
+      tags: [Business Owner Loyalty]
       summary: Update or deactivate loyalty rule
       operationId: updateBusinessLoyaltyRule
       x-required-roles: [BUSINESS_OWNER]
@@ -860,7 +863,7 @@ paths:
 
   /business/loyalty-rules/{ruleId}/activate:
     post:
-      tags: [Business (Owner)]
+      tags: [Business Owner Loyalty]
       summary: Activate guest loyalty QR code
       description: >
         Allows the authenticated owner of the venue linked to the selected
@@ -902,7 +905,7 @@ paths:
 
   /business/loyalty-rules/{id}/history:
     get:
-      tags: [Business (Owner)]
+      tags: [Business Owner Loyalty]
       summary: Get loyalty rule usage history
       operationId: getBusinessLoyaltyRuleHistory
       x-required-roles: [BUSINESS_OWNER]

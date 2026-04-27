@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.openapitools.api.BusinessOwnerApi;
+import org.openapitools.api.BusinessOwnerLoyaltyApi;
 import org.openapitools.model.LoyaltyRuleCreateRequest;
 import org.openapitools.model.LoyaltyRuleResponse;
 import org.openapitools.model.LoyaltyRuleUpdateRequest;
@@ -19,7 +19,7 @@ import ru.tbank.tmap.shared.utils.SecurityUtils;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-public class BusinessLoyaltyRuleController implements BusinessOwnerApi {
+public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
 
     private final BusinessLoyaltyRuleService businessLoyaltyRuleService;
     private final BusinessLoyaltyRuleMapper businessLoyaltyRuleMapper;

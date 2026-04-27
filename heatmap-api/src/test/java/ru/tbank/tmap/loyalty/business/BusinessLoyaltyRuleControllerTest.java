@@ -33,12 +33,16 @@ import ru.tbank.tmap.infrastructure.security.SecurityConfig;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRuleDetails;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
+import ru.tbank.tmap.shared.geo.GeoPoint;
+import ru.tbank.tmap.user.User;
+import ru.tbank.tmap.user.UserRole;
+import ru.tbank.tmap.venue.domain.Venue;
+import ru.tbank.tmap.venue.domain.VenueCategory;
 
 @WebMvcTest(BusinessLoyaltyRuleController.class)
 @Import({
         SecurityConfig.class,
         GlobalExceptionHandler.class,
-        BusinessLoyaltyRuleMapper.class,
         BusinessLoyaltyRuleControllerTest.TestBeans.class
 })
 class BusinessLoyaltyRuleControllerTest {
@@ -152,19 +156,41 @@ class BusinessLoyaltyRuleControllerTest {
     }
 
     private LoyaltyRuleDetails ruleView(final boolean active, final int currentUsages) {
-        final LoyaltyRule rule = org.mockito.Mockito.mock(LoyaltyRule.class, org.mockito.Mockito.RETURNS_DEEP_STUBS);
-        given(rule.getId()).willReturn(RULE_ID);
-        given(rule.getVenue().getId()).willReturn(VENUE_ID);
-        given(rule.getDescription()).willReturn("Discount 15%");
-        given(rule.getDiscountPercent()).willReturn(java.math.BigDecimal.valueOf(15));
-        given(rule.getMaxUsages()).willReturn(100);
-        given(rule.isActive()).willReturn(active);
-        given(rule.getCreatedAt()).willReturn(OffsetDateTime.parse("2026-04-27T08:30:00+03:00"));
+        final User owner = new User(
+                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                "owner@example.com",
+                "password-hash",
+                "owner",
+                UserRole.BUSINESS_OWNER
+        );
+        final Venue venue = new Venue(
+                VENUE_ID,
+                owner,
+                "Venue",
+                "Address",
+                GeoPoint.of(55.75, 37.62),
+                123L,
+                VenueCategory.FOOD
+        );
+        final LoyaltyRule rule = new LoyaltyRule(
+                RULE_ID,
+                venue,
+                "Discount 15%",
+                java.math.BigDecimal.valueOf(15),
+                100
+        );
+        rule.setActive(active);
+        rule.setCreatedAt(OffsetDateTime.parse("2026-04-27T08:30:00+03:00"));
         return new LoyaltyRuleDetails(rule, currentUsages);
     }
 
     @TestConfiguration
     static class TestBeans {
+
+        @Bean
+        BusinessLoyaltyRuleMapper businessLoyaltyRuleMapper() {
+            return new BusinessLoyaltyRuleMapper();
+        }
 
         @Bean
         CorsConfigurationSource corsConfigurationSource() {

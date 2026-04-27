@@ -44,7 +44,7 @@ spring:
       properties:
         spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
-        spring.json.value.default.type: ru.tbank.tmap.kafka.event.TransactionEvent
+        spring.json.value.default.type: ru.tbank.tmap.transaction.TransactionEvent
         spring.json.use.type.headers: false
         spring.json.trusted.packages: "ru.tbank.tmap.*"
     producer:

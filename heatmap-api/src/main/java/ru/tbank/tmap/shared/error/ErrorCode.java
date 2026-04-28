@@ -6,5 +6,6 @@ public enum ErrorCode {
     CONFLICT,
     INTERNAL_ERROR,
     UNAUTHORIZED,
-    FORBIDDEN
+    FORBIDDEN,
+    INVALID_FILE
 }

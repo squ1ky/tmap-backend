@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.shared.geo.H3Resolution;
@@ -14,6 +15,7 @@ import ru.tbank.tmap.user.UserRepository;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.repository.VenueRepository;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

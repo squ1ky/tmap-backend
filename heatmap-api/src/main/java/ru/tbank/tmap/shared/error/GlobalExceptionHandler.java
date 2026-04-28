@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 import ru.tbank.tmap.auth.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.auth.exception.InvalidCredentialsException;
@@ -18,6 +19,7 @@ import ru.tbank.tmap.loyalty.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.exception.LoyaltyRuleStateException;
 import ru.tbank.tmap.loyalty.exception.LoyaltyRuleUpdateValidationException;
 import ru.tbank.tmap.user.UserNotFoundException;
+import ru.tbank.tmap.venue.exception.InvalidVenuePhotoException;
 import ru.tbank.tmap.venue.exception.VenueModerationStateException;
 import ru.tbank.tmap.venue.exception.VenueNotFoundException;
 
@@ -44,6 +46,22 @@ public class GlobalExceptionHandler {
         log.warn("Venue moderation conflict: venueId={}, status={}", ex.getVenueId(), ex.getStatus());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(ErrorCode.CONFLICT, ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidVenuePhotoException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidVenuePhoto(final InvalidVenuePhotoException ex) {
+        log.warn("Invalid venue photo: {}", ex.getMessage());
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse(ErrorCode.INVALID_FILE, ex.getMessage()));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSize(final MaxUploadSizeExceededException ex) {
+        log.warn("Upload exceeds maximum allowed size");
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(new ErrorResponse(
+                        ErrorCode.INVALID_FILE,
+                        "File too large. Maximum size is 10 MB."));
     }
 
     @ExceptionHandler(LoyaltyRuleNotFoundException.class)

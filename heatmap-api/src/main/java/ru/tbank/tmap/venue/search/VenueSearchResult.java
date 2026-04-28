@@ -11,6 +11,6 @@ public record VenueSearchResult(
         double lat,
         double lng,
         VenueCategory category,
-        String photoUrl
+        String photoObjectKey
 ) {
 }

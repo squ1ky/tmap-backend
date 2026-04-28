@@ -3,14 +3,20 @@ package ru.tbank.tmap.venue;
 import java.net.URI;
 import java.util.List;
 import java.util.Locale;
+
+import lombok.RequiredArgsConstructor;
 import org.openapitools.model.VenuePublicResponse;
 import org.openapitools.model.VenueSearchResultResponse;
 import org.springframework.stereotype.Component;
+import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.venue.repository.VenuePublicRow;
 import ru.tbank.tmap.venue.search.VenueSearchResult;
 
 @Component
+@RequiredArgsConstructor
 public class VenuePublicMapper {
+
+    private final MinioUrlBuilder minioUrlBuilder;
 
     public VenuePublicResponse toResponse(final VenuePublicRow venue) {
         return new VenuePublicResponse()
@@ -22,7 +28,7 @@ public class VenuePublicMapper {
                 .description(venue.description())
                 .category(VenuePublicResponse.CategoryEnum.fromValue(
                         venue.category().name().toLowerCase(Locale.ROOT)))
-                .photoUrl(toUri(venue.photoUrl()))
+                .photoUrl(toPublicPhotoUri(venue.photoObjectKey()))
                 .dishOfDay(venue.dishOfDay())
                 .music(venue.music())
                 .peopleNow(0)
@@ -40,13 +46,14 @@ public class VenuePublicMapper {
                 .lng(venue.lng())
                 .category(VenueSearchResultResponse.CategoryEnum.fromValue(
                         venue.category().name().toLowerCase(Locale.ROOT)))
-                .photoUrl(toUri(venue.photoUrl()));
+                .photoUrl(toPublicPhotoUri(venue.photoObjectKey()));
     }
 
-    public URI toUri(final String value) {
-        if (value == null || value.isBlank()) {
+    public URI toPublicPhotoUri(final String objectKey) {
+        final String publicUrl = minioUrlBuilder.buildPublicUrl(objectKey);
+        if (publicUrl == null || publicUrl.isBlank()) {
             return null;
         }
-        return URI.create(value);
+        return URI.create(publicUrl);
     }
 }

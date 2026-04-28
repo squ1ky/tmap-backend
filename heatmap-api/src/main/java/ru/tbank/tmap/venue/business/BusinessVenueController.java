@@ -10,7 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import ru.tbank.tmap.shared.utils.SecurityUtils;
+import ru.tbank.tmap.venue.business.photo.BusinessVenuePhotoService;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.exception.VenueNotFoundException;
 
@@ -20,6 +22,7 @@ import ru.tbank.tmap.venue.exception.VenueNotFoundException;
 public class BusinessVenueController implements BusinessOwnerApi {
 
     private final BusinessVenueService businessVenueService;
+    private final BusinessVenuePhotoService businessVenuePhotoService;
     private final BusinessVenueMapper businessVenueMapper;
     private final VenueOwnerMapper venueOwnerMapper;
 
@@ -49,5 +52,19 @@ public class BusinessVenueController implements BusinessOwnerApi {
                 .orElseThrow(() -> new VenueNotFoundException(id));
         final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
         return ResponseEntity.ok(response);
+    }
+
+    @Override
+    public ResponseEntity<VenueOwnerResponse> uploadVenuePhoto(UUID id, MultipartFile file) {
+        final String ownerEmail = SecurityUtils.currentUserEmail();
+        final Venue venue = businessVenuePhotoService.uploadVenuePhoto(ownerEmail, id, file);
+        return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
+    }
+
+    @Override
+    public ResponseEntity<VenueOwnerResponse> deleteVenuePhoto(UUID id) {
+        final String ownerEmail = SecurityUtils.currentUserEmail();
+        final Venue venue = businessVenuePhotoService.deleteVenuePhoto(ownerEmail, id);
+        return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
     }
 }

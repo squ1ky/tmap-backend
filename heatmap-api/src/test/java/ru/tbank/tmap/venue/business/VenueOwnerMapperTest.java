@@ -6,6 +6,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.openapitools.model.VenueModerationStatus;
 import org.openapitools.model.VenueOwnerResponse;
+import ru.tbank.tmap.infrastructure.minio.MinioProperties;
+import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.User;
 import ru.tbank.tmap.user.UserRole;
@@ -19,7 +21,18 @@ class VenueOwnerMapperTest {
     private static final UUID OWNER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
 
-    private final VenueOwnerMapper venueOwnerMapper = new VenueOwnerMapper(new VenuePublicMapper());
+    private final MinioUrlBuilder minioUrlBuilder = new MinioUrlBuilder(
+            new MinioProperties(
+                    "http://localhost:9000",
+                    null,
+                    "test-access-key",
+                    "test-secret-key",
+                    "tmap-test",
+                    "us-east-1"
+            )
+    );
+
+    private final VenueOwnerMapper venueOwnerMapper = new VenueOwnerMapper(new VenuePublicMapper(minioUrlBuilder));
 
     @Test
     void toResponse_whenVenueIsRejected_thenIncludesModerationStatusAndRejectReason() {
@@ -41,6 +54,26 @@ class VenueOwnerMapperTest {
 
         assertThat(response.getModerationStatus()).isEqualTo(VenueModerationStatus.PENDING_UPDATE);
         assertThat(response.getRejectReason()).isNull();
+    }
+
+    @Test
+    void toResponse_whenVenueHasPhoto_thenBuildsPublicUrlFromObjectKey() {
+        final Venue venue = venue(VenueStatus.ACTIVE, null);
+        venue.setPhotoObjectKey("venues/" + VENUE_ID + "/photo.jpg");
+
+        final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
+
+        assertThat(response.getPhotoUrl())
+                .hasToString("http://localhost:9000/tmap-test/venues/" + VENUE_ID + "/photo.jpg");
+    }
+
+    @Test
+    void toResponse_whenVenueHasNoPhoto_thenPhotoUrlIsNull() {
+        final Venue venue = venue(VenueStatus.ACTIVE, null);
+
+        final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
+
+        assertThat(response.getPhotoUrl()).isNull();
     }
 
     private Venue venue(final VenueStatus status, final String rejectReason) {

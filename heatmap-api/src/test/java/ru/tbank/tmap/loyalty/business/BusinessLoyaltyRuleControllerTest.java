@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -31,7 +32,6 @@ import ru.tbank.tmap.auth.userdetails.CustomUserDetails;
 import ru.tbank.tmap.auth.jwt.JwtService;
 import ru.tbank.tmap.infrastructure.security.SecurityConfig;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
-import ru.tbank.tmap.loyalty.domain.LoyaltyRuleDetails;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.User;
@@ -99,7 +99,7 @@ class BusinessLoyaltyRuleControllerTest {
                 org.mockito.ArgumentMatchers.any()
         )).willReturn(ruleView(true, 0));
 
-        final LoyaltyRuleCreateRequest request = new LoyaltyRuleCreateRequest("Discount 15%", 15.0, 100);
+        final LoyaltyRuleCreateRequest request = new LoyaltyRuleCreateRequest("Discount 15%", 15, 100);
 
         mockMvc.perform(post("/api/v1/business/venues/{id}/loyalty-rules", VENUE_ID)
                         .with(user(ownerPrincipal()))
@@ -109,6 +109,21 @@ class BusinessLoyaltyRuleControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.description").value("Discount 15%"))
                 .andExpect(jsonPath("$.maxUsages").value(100));
+    }
+
+    @Test
+    void createBusinessVenueLoyaltyRule_whenRequestInvalid_thenReturnsValidationError() throws Exception {
+        mockMvc.perform(post("/api/v1/business/venues/{id}/loyalty-rules", VENUE_ID)
+                        .with(user(ownerPrincipal()))
+                        .with(csrf())
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "description", "",
+                                "discountPercent", 101,
+                                "maxUsages", 0
+                        ))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
 
     @Test
@@ -134,6 +149,21 @@ class BusinessLoyaltyRuleControllerTest {
     }
 
     @Test
+    void updateBusinessLoyaltyRule_whenRequestInvalid_thenReturnsValidationError() throws Exception {
+        mockMvc.perform(patch("/api/v1/business/loyalty-rules/{id}", RULE_ID)
+                        .with(user(ownerPrincipal()))
+                        .with(csrf())
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "description", "",
+                                "discountPercent", -1,
+                                "maxUsages", 0
+                        ))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
     @WithMockUser(roles = "USER")
     void getBusinessVenueLoyaltyRules_whenUserIsNotOwnerRole_thenReturnsForbidden() throws Exception {
         mockMvc.perform(get("/api/v1/business/venues/{id}/loyalty-rules", VENUE_ID))
@@ -155,7 +185,7 @@ class BusinessLoyaltyRuleControllerTest {
         );
     }
 
-    private LoyaltyRuleDetails ruleView(final boolean active, final int currentUsages) {
+    private BusinessLoyaltyRuleDetails ruleView(final boolean active, final int currentUsages) {
         final User owner = new User(
                 UUID.fromString("11111111-1111-1111-1111-111111111111"),
                 "owner@example.com",
@@ -176,12 +206,12 @@ class BusinessLoyaltyRuleControllerTest {
                 RULE_ID,
                 venue,
                 "Discount 15%",
-                java.math.BigDecimal.valueOf(15),
+                15,
                 100
         );
         rule.setActive(active);
         rule.setCreatedAt(OffsetDateTime.parse("2026-04-27T08:30:00+03:00"));
-        return new LoyaltyRuleDetails(rule, currentUsages);
+        return new BusinessLoyaltyRuleDetails(rule, currentUsages);
     }
 
     @TestConfiguration

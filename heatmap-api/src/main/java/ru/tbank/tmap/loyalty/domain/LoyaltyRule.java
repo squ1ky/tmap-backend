@@ -7,8 +7,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -21,7 +21,6 @@ import lombok.Setter;
 import lombok.ToString;
 import ru.tbank.tmap.venue.domain.Venue;
 
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
@@ -52,12 +51,11 @@ public class LoyaltyRule {
     @ToString.Include
     private String description;
 
-    @NotNull
-    @DecimalMin("0.0")
-    @DecimalMax("100.0")
-    @Column(name = "discount_percent", nullable = false, precision = 5, scale = 2)
+    @Min(0)
+    @Max(100)
+    @Column(name = "discount_percent", nullable = false)
     @ToString.Include
-    private BigDecimal discountPercent;
+    private int discountPercent;
 
     @Positive
     @Column(name = "max_usages", nullable = false)
@@ -74,13 +72,12 @@ public class LoyaltyRule {
     public LoyaltyRule(UUID id,
                        Venue venue,
                        String description,
-                       BigDecimal discountPercent,
+                       int discountPercent,
                        int maxUsages) {
         this.id = Objects.requireNonNull(id, "id");
         this.venue = Objects.requireNonNull(venue, "venue");
         this.description = Objects.requireNonNull(description, "description");
-        Objects.requireNonNull(discountPercent, "discountPercent");
-        if (discountPercent.signum() < 0 || discountPercent.compareTo(new BigDecimal("100")) > 0) {
+        if (discountPercent < 0 || discountPercent > 100) {
             throw new IllegalArgumentException("discountPercent must be in [0, 100], got " + discountPercent);
         }
         if (maxUsages <= 0) {

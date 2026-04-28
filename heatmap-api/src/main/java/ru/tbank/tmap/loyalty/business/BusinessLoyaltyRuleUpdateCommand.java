@@ -1,14 +1,12 @@
 package ru.tbank.tmap.loyalty.business;
 
-import java.math.BigDecimal;
+import ru.tbank.tmap.loyalty.business.validation.AtLeastOneFieldPresent;
 
+@AtLeastOneFieldPresent
 public record BusinessLoyaltyRuleUpdateCommand(
         String description,
-        BigDecimal discountPercent,
+        Integer discountPercent,
         Integer maxUsages,
         Boolean active
 ) {
-    public boolean hasChanges() {
-        return description != null || discountPercent != null || maxUsages != null || active != null;
-    }
 }

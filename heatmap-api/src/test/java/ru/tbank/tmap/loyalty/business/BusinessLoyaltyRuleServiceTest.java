@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
-import ru.tbank.tmap.loyalty.domain.LoyaltyRuleDetails;
 import ru.tbank.tmap.loyalty.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.exception.LoyaltyRuleStateException;
 import ru.tbank.tmap.loyalty.repository.LoyaltyRuleRepository;
@@ -66,21 +64,21 @@ class BusinessLoyaltyRuleServiceTest {
     @Test
     void createRule_whenVenueBelongsToOwner_thenCreatesRule() {
         final Venue venue = venue();
-        final LoyaltyRule unsavedRule = loyaltyRule("Discount 15%", BigDecimal.valueOf(15), 100, true);
+        final LoyaltyRule unsavedRule = loyaltyRule("Discount 15%", 15, 100, true);
         final BusinessLoyaltyRuleCreateCommand command = new BusinessLoyaltyRuleCreateCommand(
                 "Discount 15%",
-                BigDecimal.valueOf(15),
+                15,
                 100
         );
         given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(Optional.of(venue));
         given(loyaltyRuleRepository.save(org.mockito.ArgumentMatchers.any(LoyaltyRule.class))).willReturn(unsavedRule);
 
-        final LoyaltyRuleDetails result = businessLoyaltyRuleService.createRule(OWNER_EMAIL, VENUE_ID, command);
+        final BusinessLoyaltyRuleDetails result = businessLoyaltyRuleService.createRule(OWNER_EMAIL, VENUE_ID, command);
 
         assertThat(result.rule().getVenue().getId()).isEqualTo(VENUE_ID);
         assertThat(result.rule().getDescription()).isEqualTo("Discount 15%");
-        assertThat(result.rule().getDiscountPercent()).isEqualByComparingTo(BigDecimal.valueOf(15));
+        assertThat(result.rule().getDiscountPercent()).isEqualTo(15);
         assertThat(result.rule().getMaxUsages()).isEqualTo(100);
         assertThat(result.currentUsages()).isZero();
         assertThat(result.rule().isActive()).isTrue();
@@ -94,19 +92,19 @@ class BusinessLoyaltyRuleServiceTest {
         assertThatThrownBy(() -> businessLoyaltyRuleService.createRule(
                 OWNER_EMAIL,
                 VENUE_ID,
-                new BusinessLoyaltyRuleCreateCommand("Discount", BigDecimal.TEN, 10)
+                new BusinessLoyaltyRuleCreateCommand("Discount", 10, 10)
         )).isInstanceOf(VenueNotFoundException.class);
     }
 
     @Test
     void getVenueRules_whenVenueBelongsToOwner_thenReturnsRulesWithUsageCounts() {
-        final LoyaltyRule firstRule = loyaltyRule("Discount 15%", BigDecimal.valueOf(15), 100, true);
+        final LoyaltyRule firstRule = loyaltyRule("Discount 15%", 15, 100, true);
         firstRule.setCreatedAt(OffsetDateTime.parse("2026-04-27T09:00:00+03:00"));
         final LoyaltyRule secondRule = new LoyaltyRule(
                 UUID.fromString("44444444-4444-4444-4444-444444444444"),
                 venue(),
                 "Coffee 5%",
-                BigDecimal.valueOf(5),
+                5,
                 20
         );
         secondRule.setCreatedAt(OffsetDateTime.parse("2026-04-26T09:00:00+03:00"));
@@ -120,24 +118,24 @@ class BusinessLoyaltyRuleServiceTest {
                         usageCount(secondRule.getId(), 2L)
                 ));
 
-        final List<LoyaltyRuleDetails> result = businessLoyaltyRuleService.getVenueRules(OWNER_EMAIL, VENUE_ID);
+        final List<BusinessLoyaltyRuleDetails> result = businessLoyaltyRuleService.getVenueRules(OWNER_EMAIL, VENUE_ID);
 
         assertThat(result)
-                .extracting(details -> details.rule().getId(), LoyaltyRuleDetails::currentUsages)
+                .extracting(details -> details.rule().getId(), BusinessLoyaltyRuleDetails::currentUsages)
                 .containsExactly(
-                        org.assertj.core.groups.Tuple.tuple(RULE_ID, 7),
-                        org.assertj.core.groups.Tuple.tuple(secondRule.getId(), 2)
+                        org.assertj.core.groups.Tuple.tuple(RULE_ID, 7L),
+                        org.assertj.core.groups.Tuple.tuple(secondRule.getId(), 2L)
                 );
     }
 
     @Test
     void getRuleById_whenRuleBelongsToOwner_thenReturnsRule() {
-        final LoyaltyRule rule = loyaltyRule("Discount 15%", BigDecimal.valueOf(15), 100, true);
+        final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
         given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
         given(loyaltyRuleRepository.findByIdAndVenueOwnerId(RULE_ID, OWNER_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(9L);
 
-        final Optional<LoyaltyRuleDetails> result = businessLoyaltyRuleService.getRuleById(OWNER_EMAIL, RULE_ID);
+        final Optional<BusinessLoyaltyRuleDetails> result = businessLoyaltyRuleService.getRuleById(OWNER_EMAIL, RULE_ID);
 
         assertThat(result).isPresent();
         assertThat(result.orElseThrow().currentUsages()).isEqualTo(9);
@@ -156,22 +154,26 @@ class BusinessLoyaltyRuleServiceTest {
     }
 
     @Test
-    void updateRule_whenRuleIsInactive_thenThrowsConflict() {
-        final LoyaltyRule rule = loyaltyRule("Discount 15%", BigDecimal.valueOf(15), 100, false);
+    void updateRule_whenRuleIsInactive_thenAllowsEditing() {
+        final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, false);
         given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
         given(loyaltyRuleRepository.findByIdAndVenueOwnerId(RULE_ID, OWNER_ID)).willReturn(Optional.of(rule));
+        given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(4L);
 
-        assertThatThrownBy(() -> businessLoyaltyRuleService.updateRule(
+        final BusinessLoyaltyRuleDetails result = businessLoyaltyRuleService.updateRule(
                 OWNER_EMAIL,
                 RULE_ID,
                 new BusinessLoyaltyRuleUpdateCommand("New title", null, null, null)
-        )).isInstanceOf(LoyaltyRuleStateException.class)
-                .hasMessage("Inactive loyalty rule cannot be updated");
+        );
+
+        assertThat(result.rule().getDescription()).isEqualTo("New title");
+        assertThat(result.rule().isActive()).isFalse();
+        assertThat(result.currentUsages()).isEqualTo(4L);
     }
 
     @Test
     void updateRule_whenMaxUsagesBelowCurrentUsages_thenThrowsConflict() {
-        final LoyaltyRule rule = loyaltyRule("Discount 15%", BigDecimal.valueOf(15), 100, true);
+        final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, false);
         given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
         given(loyaltyRuleRepository.findByIdAndVenueOwnerId(RULE_ID, OWNER_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(6L);
@@ -185,20 +187,34 @@ class BusinessLoyaltyRuleServiceTest {
     }
 
     @Test
+    void updateRule_whenRuleIsActive_thenThrowsConflict() {
+        final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
+        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
+        given(loyaltyRuleRepository.findByIdAndVenueOwnerId(RULE_ID, OWNER_ID)).willReturn(Optional.of(rule));
+
+        assertThatThrownBy(() -> businessLoyaltyRuleService.updateRule(
+                OWNER_EMAIL,
+                RULE_ID,
+                new BusinessLoyaltyRuleUpdateCommand("Discount 20%", 20, 120, false)
+        )).isInstanceOf(LoyaltyRuleStateException.class)
+                .hasMessage("Active loyalty rule cannot be updated");
+    }
+
+    @Test
     void updateRule_whenRequestIsValid_thenUpdatesFields() {
-        final LoyaltyRule rule = loyaltyRule("Discount 15%", BigDecimal.valueOf(15), 100, true);
+        final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, false);
         given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
         given(loyaltyRuleRepository.findByIdAndVenueOwnerId(RULE_ID, OWNER_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(4L);
 
-        final LoyaltyRuleDetails result = businessLoyaltyRuleService.updateRule(
+        final BusinessLoyaltyRuleDetails result = businessLoyaltyRuleService.updateRule(
                 OWNER_EMAIL,
                 RULE_ID,
-                new BusinessLoyaltyRuleUpdateCommand("Discount 20%", BigDecimal.valueOf(20), 120, false)
+                new BusinessLoyaltyRuleUpdateCommand("Discount 20%", 20, 120, false)
         );
 
         assertThat(result.rule().getDescription()).isEqualTo("Discount 20%");
-        assertThat(result.rule().getDiscountPercent()).isEqualByComparingTo(BigDecimal.valueOf(20));
+        assertThat(result.rule().getDiscountPercent()).isEqualTo(20);
         assertThat(result.rule().getMaxUsages()).isEqualTo(120);
         assertThat(result.currentUsages()).isEqualTo(4);
         assertThat(result.rule().isActive()).isFalse();
@@ -224,7 +240,7 @@ class BusinessLoyaltyRuleServiceTest {
 
     private LoyaltyRule loyaltyRule(
             final String description,
-            final BigDecimal discountPercent,
+            final int discountPercent,
             final int maxUsages,
             final boolean active
     ) {
@@ -235,16 +251,6 @@ class BusinessLoyaltyRuleServiceTest {
     }
 
     private LoyaltyVerificationRepository.LoyaltyRuleUsageCount usageCount(final UUID ruleId, final long usages) {
-        return new LoyaltyVerificationRepository.LoyaltyRuleUsageCount() {
-            @Override
-            public UUID getRuleId() {
-                return ruleId;
-            }
-
-            @Override
-            public long getUsages() {
-                return usages;
-            }
-        };
+        return new LoyaltyVerificationRepository.LoyaltyRuleUsageCount(ruleId, usages);
     }
 }

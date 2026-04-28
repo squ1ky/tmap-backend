@@ -8,8 +8,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -20,7 +20,6 @@ import lombok.ToString;
 import ru.tbank.tmap.user.User;
 import ru.tbank.tmap.venue.domain.Venue;
 
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
@@ -59,11 +58,11 @@ public class LoyaltyVerification {
     private LoyaltyRule rule;
 
     @NotNull
-    @DecimalMin("0.0")
-    @DecimalMax("100.0")
-    @Column(name = "discount_applied", nullable = false, precision = 5, scale = 2)
+    @Min(0)
+    @Max(100)
+    @Column(name = "discount_applied", nullable = false)
     @ToString.Include
-    private BigDecimal discountApplied;
+    private int discountApplied;
 
     @Column(name = "verified_at", nullable = false, insertable = false, updatable = false)
     private OffsetDateTime verifiedAt;
@@ -72,13 +71,12 @@ public class LoyaltyVerification {
                                Venue venue,
                                User user,
                                LoyaltyRule rule,
-                               BigDecimal discountApplied) {
+                               int discountApplied) {
         this.id = Objects.requireNonNull(id, "id");
         this.venue = Objects.requireNonNull(venue, "venue");
         this.user = Objects.requireNonNull(user, "user");
         this.rule = Objects.requireNonNull(rule, "rule");
-        Objects.requireNonNull(discountApplied, "discountApplied");
-        if (discountApplied.signum() < 0 || discountApplied.compareTo(new BigDecimal("100")) > 0) {
+        if (discountApplied < 0 || discountApplied > 100) {
             throw new IllegalArgumentException("discountApplied must be in [0, 100]");
         }
         this.discountApplied = discountApplied;

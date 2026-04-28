@@ -1574,9 +1574,8 @@ components:
         status:
           $ref: '#/components/schemas/LoyaltyActivationStatus'
         discountApplied:
-          type: number
-          format: double
-          example: 15.0
+          type: integer
+          example: 15
         verifiedAt:
           type: string
           format: date-time
@@ -1610,14 +1609,14 @@ components:
           type: string
           example: "Скидка 15% на капучино"
         discountPercent:
-          type: number
-          format: double
-          example: 15.0
+          type: integer
+          example: 15
         maxUsages:
           type: integer
           example: 100
         currentUsages:
           type: integer
+          format: int64
           example: 45
         active:
           type: boolean
@@ -1632,13 +1631,14 @@ components:
       properties:
         description:
           type: string
+          minLength: 1
+          maxLength: 255
           example: "Скидка 15% на капучино"
         discountPercent:
-          type: number
-          format: double
+          type: integer
           minimum: 0
           maximum: 100
-          example: 15.0
+          example: 15
         maxUsages:
           type: integer
           minimum: 1
@@ -1649,9 +1649,10 @@ components:
       properties:
         description:
           type: string
+          minLength: 1
+          maxLength: 255
         discountPercent:
-          type: number
-          format: double
+          type: integer
           minimum: 0
           maximum: 100
         maxUsages:
@@ -1679,9 +1680,8 @@ components:
           type: string
           example: "Скидка 15% на капучино"
         discountApplied:
-          type: number
-          format: double
-          example: 15.0
+          type: integer
+          example: 15
         verifiedAt:
           type: string
           format: date-time
@@ -1712,9 +1712,8 @@ components:
           type: string
           example: "-20% на билеты в кино"
         discountPercent:
-          type: number
-          format: double
-          example: 20.0
+          type: integer
+          example: 20
         usedAt:
           type: string
           format: date-time
@@ -1752,9 +1751,8 @@ components:
           type: string
           format: uuid
         discountApplied:
-          type: number
-          format: double
-          example: 15.0
+          type: integer
+          example: 15
         verifiedAt:
           type: string
           format: date-time

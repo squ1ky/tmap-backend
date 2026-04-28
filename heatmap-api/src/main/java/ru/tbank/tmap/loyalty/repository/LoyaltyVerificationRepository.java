@@ -13,17 +13,16 @@ public interface LoyaltyVerificationRepository extends JpaRepository<LoyaltyVeri
     long countByRuleId(UUID ruleId);
 
     @Query("""
-            select lv.rule.id as ruleId, count(lv) as usages
+            select new ru.tbank.tmap.loyalty.repository.LoyaltyVerificationRepository.LoyaltyRuleUsageCount(
+                lv.rule.id,
+                count(lv)
+            )
             from LoyaltyVerification lv
             where lv.rule.id in :ruleIds
             group by lv.rule.id
             """)
     List<LoyaltyRuleUsageCount> countUsagesByRuleIds(@Param("ruleIds") Collection<UUID> ruleIds);
 
-    interface LoyaltyRuleUsageCount {
-
-        UUID getRuleId();
-
-        long getUsages();
+    record LoyaltyRuleUsageCount(UUID ruleId, long usages) {
     }
 }

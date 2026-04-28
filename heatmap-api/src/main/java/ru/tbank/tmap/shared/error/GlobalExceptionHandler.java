@@ -61,8 +61,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
                 .body(new ErrorResponse(
                         ErrorCode.INVALID_FILE,
-                        "File too large. Maximum size is 10 MB."
-                ));
+                        "File too large. Maximum size is 10 MB."));
+    }
+
     @ExceptionHandler(LoyaltyRuleNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleLoyaltyRuleNotFound(final LoyaltyRuleNotFoundException ex) {
         log.warn("Loyalty rule not found: ruleId={}", ex.getRuleId());

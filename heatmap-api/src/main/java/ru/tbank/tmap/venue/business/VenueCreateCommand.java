@@ -9,7 +9,6 @@ public record VenueCreateCommand(
         GeoPoint location,
         VenueCategory category,
         String description,
-        String photoUrl,
         String dishOfDay,
         String music
 ) {

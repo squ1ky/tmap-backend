@@ -602,6 +602,84 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /business/venues/{id}/photo:
+    post:
+      tags: [Business (Owner)]
+      summary: Upload venue photo
+      description: >
+        Uploads a photo for the venue. Allowed formats: jpeg, png, webp.
+        Maximum size: 10 MB. Replaces any existing photo.
+        If the venue is currently ACTIVE, its moderation status is moved to
+        PENDING_UPDATE and it disappears from public listings until re-approved.
+      operationId: uploadVenuePhoto
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VenuePhotoUploadRequest'
+      responses:
+        '200':
+          description: Photo uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenueOwnerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INVALID_FILE
+                message: "File too large. Maximum size is 10 MB."
+    delete:
+      tags: [Business (Owner)]
+      summary: Delete venue photo
+      operationId: deleteVenuePhoto
+      x-required-roles: [BUSINESS_OWNER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Photo removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenueOwnerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /business/venues/{id}/loyalty-rules:
     get:
       tags: [Business (Owner)]
@@ -1316,10 +1394,6 @@ components:
         description:
           type: string
           example: "Лучший кофе в центре Казани. Зерно свежей обжарки."
-        photoUrl:
-          type: string
-          format: uri
-          example: "https://s3.local/images/skuratov_kzn.jpg"
         dishOfDay:
           type: string
           example: "Нитро кофе + Круассан"
@@ -1345,9 +1419,6 @@ components:
         category:
           type: string
           enum: [food, entertainment, shopping]
-        photoUrl:
-          type: string
-          format: uri
         dishOfDay:
           type: string
         music:
@@ -1452,6 +1523,17 @@ components:
               type: string
               description: Reason for rejection (filled only if REJECTED)
               example: "Адрес не совпадает с координатами"
+
+    VenuePhotoUploadRequest:
+      type: object
+      required: [ file ]
+      properties:
+        file:
+          type: string
+          format: binary
+          description: >
+            Image file. Allowed formats: jpeg, png, webp.
+            Maximum size: 10 MB.
 
     # ── Promo DTOs ────────────────────────────
     VenuePromoResponse:

@@ -18,7 +18,6 @@ public class BusinessVenueMapper {
                 GeoPoint.of(request.getLat(), request.getLng()),
                 VenueCategory.fromString(request.getCategory().getValue()),
                 request.getDescription(),
-                request.getPhotoUrl() == null ? null : request.getPhotoUrl().toString(),
                 request.getDishOfDay(),
                 request.getMusic()
         );
@@ -39,7 +38,6 @@ public class BusinessVenueMapper {
                 command.category()
         );
         venue.setDescription(command.description());
-        venue.setPhotoUrl(command.photoUrl());
         venue.setDishOfDay(command.dishOfDay());
         venue.setMusic(command.music());
         return venue;

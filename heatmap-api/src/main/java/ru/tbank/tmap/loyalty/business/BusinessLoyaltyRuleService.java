@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
 import ru.tbank.tmap.loyalty.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.exception.LoyaltyRuleStateException;
+import ru.tbank.tmap.loyalty.repository.LoyaltyRuleUsageCount;
 import ru.tbank.tmap.loyalty.repository.LoyaltyRuleRepository;
 import ru.tbank.tmap.loyalty.repository.LoyaltyVerificationRepository;
 import ru.tbank.tmap.user.User;
@@ -93,8 +94,8 @@ public class BusinessLoyaltyRuleService {
                 .toList();
         return loyaltyVerificationRepository.countUsagesByRuleIds(ruleIds).stream()
                 .collect(java.util.stream.Collectors.toMap(
-                        LoyaltyVerificationRepository.LoyaltyRuleUsageCount::ruleId,
-                        LoyaltyVerificationRepository.LoyaltyRuleUsageCount::usages
+                        LoyaltyRuleUsageCount::ruleId,
+                        LoyaltyRuleUsageCount::usages
                 ));
     }
 

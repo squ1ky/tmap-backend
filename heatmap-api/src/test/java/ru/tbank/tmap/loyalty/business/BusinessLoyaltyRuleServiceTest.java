@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
 import ru.tbank.tmap.loyalty.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.exception.LoyaltyRuleStateException;
+import ru.tbank.tmap.loyalty.repository.LoyaltyRuleUsageCount;
 import ru.tbank.tmap.loyalty.repository.LoyaltyRuleRepository;
 import ru.tbank.tmap.loyalty.repository.LoyaltyVerificationRepository;
 import ru.tbank.tmap.shared.geo.GeoPoint;
@@ -250,7 +251,7 @@ class BusinessLoyaltyRuleServiceTest {
         return rule;
     }
 
-    private LoyaltyVerificationRepository.LoyaltyRuleUsageCount usageCount(final UUID ruleId, final long usages) {
-        return new LoyaltyVerificationRepository.LoyaltyRuleUsageCount(ruleId, usages);
+    private LoyaltyRuleUsageCount usageCount(final UUID ruleId, final long usages) {
+        return new LoyaltyRuleUsageCount(ruleId, usages);
     }
 }

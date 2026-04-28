@@ -38,17 +38,20 @@ public class BusinessVenueController implements BusinessOwnerApi {
 
     @Override
     public ResponseEntity<List<VenueOwnerResponse>> getMyVenues() {
-        return ResponseEntity.ok(businessVenueService.getMyVenues(SecurityUtils.currentUserEmail()).stream()
+        final String ownerEmail = SecurityUtils.currentUserEmail();
+        final List<Venue> venues = businessVenueService.getMyVenues(ownerEmail);
+        return ResponseEntity.ok(venues.stream()
                 .map(venueOwnerMapper::toResponse)
                 .toList());
     }
 
     @Override
     public ResponseEntity<VenueOwnerResponse> getMyVenueById(final UUID id) {
-        return businessVenueService.getMyVenueById(SecurityUtils.currentUserEmail(), id)
-                .map(venueOwnerMapper::toResponse)
-                .map(ResponseEntity::ok)
+        final String ownerEmail = SecurityUtils.currentUserEmail();
+        final Venue venue = businessVenueService.getMyVenueById(ownerEmail, id)
                 .orElseThrow(() -> new VenueNotFoundException(id));
+        final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
+        return ResponseEntity.ok(response);
     }
 
     @Override

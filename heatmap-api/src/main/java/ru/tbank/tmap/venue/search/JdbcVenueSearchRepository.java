@@ -21,7 +21,7 @@ public class JdbcVenueSearchRepository implements VenueSearchRepository {
     @Override
     public List<VenueSearchResult> searchByName(final String query) {
         final String sql = """
-                SELECT id, name, address, lat, lng, category, photo_url AS photoUrl
+                SELECT id, name, address, lat, lng, category, photo_object_key AS photoObjectKey
                 FROM venues
                 WHERE status = :status
                   AND LOWER(name) LIKE CONCAT('%', LOWER(:query), '%')

@@ -12,7 +12,7 @@ public record VenuePublicRow(
         double lng,
         String description,
         VenueCategory category,
-        String photoUrl,
+        String photoObjectKey,
         String dishOfDay,
         String music,
         OffsetDateTime createdAt,

@@ -68,7 +68,7 @@ public class JdbcVenueQueryRepository implements VenueQueryRepository {
                     lng,
                     description,
                     category,
-                    photo_url AS photoUrl,
+                    photo_object_key AS photoObjectKey,
                     dish_of_day AS dishOfDay,
                     music,
                     created_at AS createdAt,

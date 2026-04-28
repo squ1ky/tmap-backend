@@ -75,8 +75,8 @@ public class Venue {
     private String description;
 
     @Size(max = 255)
-    @Column(name = "photo_url", length = 255)
-    private String photoUrl;
+    @Column(name = "photo_object_key", length = 255)
+    private String photoObjectKey;
 
     @Size(max = 255)
     @Column(name = "dish_of_day", length = 255)
@@ -127,5 +127,11 @@ public class Venue {
     @PreUpdate
     /* default */ void onUpdate() {
         updatedAt = OffsetDateTime.now();
+    }
+
+    public void markEditedForReview() {
+        if (status == VenueStatus.ACTIVE) {
+            status = VenueStatus.PENDING_UPDATE;
+        }
     }
 }

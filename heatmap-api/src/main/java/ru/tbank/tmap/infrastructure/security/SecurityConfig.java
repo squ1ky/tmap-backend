@@ -45,7 +45,9 @@ public class SecurityConfig {
     };
 
     private static final String ADMIN_ENDPOINTS = "/api/v1/admin/**";
+    private static final String BUSINESS_OWNER_ENDPOINTS = "/api/v1/business/**";
     private static final String ROLE_ADMIN = "ADMIN";
+    private static final String ROLE_BUSINESS_OWNER = "BUSINESS_OWNER";
 
     private final UserDetailsService userDetailsService;
     private final CorsConfigurationSource corsConfigurationSource;
@@ -66,6 +68,7 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_READ_ENDPOINTS).permitAll()
                         .requestMatchers(PUBLIC_INFRA_ENDPOINTS).permitAll()
                         .requestMatchers(ADMIN_ENDPOINTS).hasRole(ROLE_ADMIN)
+                        .requestMatchers(BUSINESS_OWNER_ENDPOINTS).hasRole(ROLE_BUSINESS_OWNER)
                         .anyRequest().authenticated())
                 .build();
     }

@@ -14,6 +14,9 @@ import ru.tbank.tmap.auth.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.auth.exception.InvalidCredentialsException;
 import ru.tbank.tmap.auth.exception.InvalidRefreshTokenException;
 import ru.tbank.tmap.heatmap.cluster.ClusterNotFoundException;
+import ru.tbank.tmap.loyalty.exception.LoyaltyRuleNotFoundException;
+import ru.tbank.tmap.loyalty.exception.LoyaltyRuleStateException;
+import ru.tbank.tmap.loyalty.exception.LoyaltyRuleUpdateValidationException;
 import ru.tbank.tmap.user.UserNotFoundException;
 import ru.tbank.tmap.venue.exception.VenueModerationStateException;
 import ru.tbank.tmap.venue.exception.VenueNotFoundException;
@@ -41,6 +44,29 @@ public class GlobalExceptionHandler {
         log.warn("Venue moderation conflict: venueId={}, status={}", ex.getVenueId(), ex.getStatus());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(ErrorCode.CONFLICT, ex.getMessage()));
+    }
+
+    @ExceptionHandler(LoyaltyRuleNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleLoyaltyRuleNotFound(final LoyaltyRuleNotFoundException ex) {
+        log.warn("Loyalty rule not found: ruleId={}", ex.getRuleId());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(ErrorCode.NOT_FOUND, ex.getMessage()));
+    }
+
+    @ExceptionHandler(LoyaltyRuleStateException.class)
+    public ResponseEntity<ErrorResponse> handleLoyaltyRuleState(final LoyaltyRuleStateException ex) {
+        log.warn("Loyalty rule conflict: ruleId={}, message={}", ex.getRuleId(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(ErrorCode.CONFLICT, ex.getMessage()));
+    }
+
+    @ExceptionHandler(LoyaltyRuleUpdateValidationException.class)
+    public ResponseEntity<ErrorResponse> handleLoyaltyRuleUpdateValidation(
+            final LoyaltyRuleUpdateValidationException ex
+    ) {
+        log.warn("Loyalty rule update validation error: {}", ex.getMessage());
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse(ErrorCode.VALIDATION_ERROR, ex.getMessage()));
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -95,6 +121,16 @@ public class GlobalExceptionHandler {
         log.warn("Validation error: {}", ex.getMessage());
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse(ErrorCode.VALIDATION_ERROR, ex.getMessage()));
+    }
+
+    @ExceptionHandler(ArithmeticException.class)
+    public ResponseEntity<ErrorResponse> handleArithmeticException(final ArithmeticException ex) {
+        log.error("Numeric overflow or precision loss", ex);
+        return ResponseEntity.internalServerError()
+                .body(new ErrorResponse(
+                        ErrorCode.INTERNAL_ERROR,
+                        "Numeric value exceeds supported range"
+                ));
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)

@@ -65,8 +65,9 @@ app:
       secure: true
       same-site: None
     cors:
-      allowed-origins:
-        - http://localhost:5173 # заглушка пока у фронтендеров не появится VPS
+      allowed-origin-patterns:
+        - "https://deploy-preview-*--t-map-heatmap.netlify.app"
+        - "http://localhost:5173"
       allowed-methods:
         - GET
         - POST

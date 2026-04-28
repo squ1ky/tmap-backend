@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.tbank.tmap.loyalty.exception.LoyaltyRuleNotFoundException;
+import ru.tbank.tmap.loyalty.exception.LoyaltyRuleUpdateValidationException;
 import ru.tbank.tmap.shared.utils.SecurityUtils;
 
 @RestController
@@ -53,6 +54,9 @@ public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
         final String ownerEmail = SecurityUtils.currentUserEmail();
         final BusinessLoyaltyRuleUpdateCommand command =
                 businessLoyaltyRuleMapper.toUpdateCommand(loyaltyRuleUpdateRequest);
+        if (!command.hasChanges()) {
+            throw LoyaltyRuleUpdateValidationException.noFieldsForUpdate();
+        }
         final BusinessLoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.updateRule(ownerEmail, id, command);
         final LoyaltyRuleResponse response = businessLoyaltyRuleMapper.toResponse(loyaltyRule);
         return ResponseEntity.ok(response);

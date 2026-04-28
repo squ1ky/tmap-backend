@@ -1,6 +1,5 @@
 package ru.tbank.tmap.loyalty.business;
 
-import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -8,7 +7,6 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.annotation.Validated;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
 import ru.tbank.tmap.loyalty.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.exception.LoyaltyRuleStateException;
@@ -23,7 +21,6 @@ import ru.tbank.tmap.venue.exception.VenueNotFoundException;
 import ru.tbank.tmap.venue.repository.VenueRepository;
 
 @Service
-@Validated
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BusinessLoyaltyRuleService {
@@ -70,7 +67,7 @@ public class BusinessLoyaltyRuleService {
     public BusinessLoyaltyRuleDetails updateRule(
             final String ownerEmail,
             final UUID ruleId,
-            @Valid final BusinessLoyaltyRuleUpdateCommand command
+            final BusinessLoyaltyRuleUpdateCommand command
     ) {
         final User owner = findOwner(ownerEmail);
         final LoyaltyRule rule = loyaltyRuleRepository.findByIdAndVenueOwnerId(ruleId, owner.getId())

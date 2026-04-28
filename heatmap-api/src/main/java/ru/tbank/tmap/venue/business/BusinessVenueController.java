@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import ru.tbank.tmap.shared.utils.SecurityUtils;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.exception.VenueNotFoundException;
@@ -46,5 +47,19 @@ public class BusinessVenueController implements BusinessOwnerApi {
                 .map(venueOwnerMapper::toResponse)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new VenueNotFoundException(id));
+    }
+
+    @Override
+    public ResponseEntity<VenueOwnerResponse> uploadVenuePhoto(UUID id, MultipartFile file) {
+        final String ownerEmail = SecurityUtils.currentUserEmail();
+        final Venue venue = businessVenueService.uploadVenuePhoto(ownerEmail, id, file);
+        return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
+    }
+
+    @Override
+    public ResponseEntity<VenueOwnerResponse> deleteVenuePhoto(UUID id) {
+        final String ownerEmail = SecurityUtils.currentUserEmail();
+        final Venue venue = businessVenueService.deleteVenuePhoto(ownerEmail, id);
+        return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
     }
 }

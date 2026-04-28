@@ -25,7 +25,7 @@ public class VenueOwnerMapper {
                 .description(venue.getDescription())
                 .category(VenueOwnerResponse.CategoryEnum.fromValue(
                         venue.getCategory().name().toLowerCase(Locale.ROOT)))
-                .photoUrl(venuePublicMapper.toUri(venue.getPhotoUrl()))
+                .photoUrl(venuePublicMapper.toPublicPhotoUri(venue.getPhotoObjectKey()))
                 .dishOfDay(venue.getDishOfDay())
                 .music(venue.getMusic())
                 .peopleNow(0)

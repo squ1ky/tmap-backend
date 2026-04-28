@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
@@ -37,6 +38,9 @@ class VenueControllerTest {
 
     @MockitoBean
     private VenueSearchService venueSearchService;
+
+    @MockitoBean
+    private MinioUrlBuilder minioUrlBuilder;
 
     @Test
     void getVenuesInViewport_whenRequestIsValid_thenReturnVenues() throws Exception {

@@ -100,7 +100,6 @@ class BusinessVenueServiceTest {
                 VenueCategory.FOOD,
                 "Fresh coffee",
                 null,
-                null,
                 null
         );
         given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner));

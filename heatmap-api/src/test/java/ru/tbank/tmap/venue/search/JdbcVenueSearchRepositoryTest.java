@@ -22,6 +22,7 @@ import ru.tbank.tmap.venue.domain.VenueCategory;
 class JdbcVenueSearchRepositoryTest {
 
     private static final UUID OWNER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private static final String PHOTO_OBJECT_KEY = "/tmap/venues/photo.jpg";
 
     @Autowired
     private VenueSearchRepository venueSearchRepository;
@@ -97,16 +98,16 @@ class JdbcVenueSearchRepositoryTest {
         assertThat(result.lat()).isEqualTo(55.7961);
         assertThat(result.lng()).isEqualTo(49.1064);
         assertThat(result.category()).isEqualTo(VenueCategory.FOOD);
-        assertThat(result.photoUrl()).isEqualTo("https://example.com/photo.jpg");
+        assertThat(result.photoObjectKey()).isEqualTo(PHOTO_OBJECT_KEY);
     }
 
     private void insertVenue(final String id, final String name, final String status) {
         jdbcTemplate.update(
                 """
                 INSERT INTO venues (
-                    id, owner_id, name, address, lat, lng, h3_res9, category, photo_url, status
+                    id, owner_id, name, address, lat, lng, h3_res9, category, photo_object_key, status
                 ) VALUES (?, ?, ?, 'Search Street, 1', 55.7961, 49.1064, 617733123456789101, 'FOOD',
-                    'https://example.com/photo.jpg', ?)
+                    '/tmap/venues/photo.jpg', ?)
                 """,
                 UUID.fromString(id),
                 OWNER_ID,

@@ -2,7 +2,6 @@ package ru.tbank.tmap.heatmap;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Locale;
 import org.openapitools.model.ClusterDTO;
 import org.openapitools.model.ClusterDetailsResponse;
 import org.openapitools.model.HeatmapResponse;
@@ -28,8 +27,6 @@ public class HeatmapMapper {
                 .resolution(cluster.resolution().getValue())
                 .districtName(cluster.districtName())
                 .districtImageUrl(cluster.districtImageUrl())
-                .category(ClusterDetailsResponse.CategoryEnum.fromValue(
-                        cluster.category().toLowerCase(Locale.ROOT)))
                 .hourBucket(OffsetDateTime.ofInstant(cluster.hourBucket(), ZoneOffset.UTC))
                 .txCount(cluster.txCount())
                 .avgCheck(cluster.avgCheck().doubleValue())

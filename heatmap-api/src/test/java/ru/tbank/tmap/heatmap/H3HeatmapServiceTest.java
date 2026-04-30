@@ -47,7 +47,6 @@ class H3HeatmapServiceTest {
         given(heatmapQueryRepository.findClusters(
                 KAZAN_BOUNDING_BOX,
                 H3Resolution.RES_8,
-                null,
                 Instant.parse("2026-04-17T09:20:00Z")
         )).willReturn(List.of(new HeatmapClusterAggregate(
                 Long.parseUnsignedLong("89115b22b0bffff", 16),
@@ -62,7 +61,6 @@ class H3HeatmapServiceTest {
         final HeatmapClusters response = heatmapService.getHeatmapClusters(
                 KAZAN_BOUNDING_BOX,
                 H3Resolution.RES_8,
-                null,
                 60
         );
 
@@ -85,7 +83,6 @@ class H3HeatmapServiceTest {
                 H3Resolution.RES_9,
                 "Вахитовский район",
                 "districts/kazan/vahitovsky.jpg",
-                "FOOD",
                 Instant.parse("2026-04-17T10:00:00Z"),
                 128,
                 new BigDecimal("742.50"),
@@ -104,7 +101,6 @@ class H3HeatmapServiceTest {
         assertThat(response.orElseThrow().districtName()).isEqualTo("Вахитовский район");
         assertThat(response.orElseThrow().districtImageUrl())
                 .isEqualTo("http://localhost:9000/tmap/districts/kazan/vahitovsky.jpg");
-        assertThat(response.orElseThrow().category()).isEqualTo("FOOD");
         assertThat(response.orElseThrow().hourBucket())
                 .isEqualTo(Instant.parse("2026-04-17T10:00:00Z"));
         assertThat(response.orElseThrow().txCount()).isEqualTo(128);
@@ -123,7 +119,6 @@ class H3HeatmapServiceTest {
                 H3Resolution.RES_9,
                 "Вахитовский район",
                 null,
-                "FOOD",
                 Instant.parse("2026-04-17T10:00:00Z"),
                 128,
                 new BigDecimal("742.50"),

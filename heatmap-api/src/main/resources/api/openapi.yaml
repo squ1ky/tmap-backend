@@ -183,16 +183,6 @@ paths:
             minimum: 5
             maximum: 9
             example: 8
-        - name: category
-          in: query
-          description: Category filter. Can be repeated.
-          style: form
-          explode: true
-          schema:
-            type: array
-            items:
-              type: string
-              enum: [food, entertainment, shopping]
         - name: window
           in: query
           description: Aggregation window in minutes
@@ -1376,10 +1366,6 @@ components:
           type: string
           description: URL or path to district image for popup. Empty string if image is unavailable.
           example: ""
-        category:
-          type: string
-          enum: [food, entertainment, shopping]
-          example: "food"
         hourBucket:
           type: string
           format: date-time

@@ -37,7 +37,6 @@ class HeatmapControllerTest {
     void getHeatmapClusters_whenRequestIsValid_thenReturnHeatmapData() throws Exception {
         given(heatmapService.getHeatmapClusters(new BoundingBox(55.7481, 49.0664, 55.8402, 49.1912),
                         H3Resolution.RES_8,
-                        null,
                         60))
                 .willReturn(new HeatmapClusters(
                         OffsetDateTime.parse("2026-04-17T10:20:00Z"),
@@ -76,7 +75,6 @@ class HeatmapControllerTest {
                         H3Resolution.RES_9,
                         "Вахитовский район",
                         "",
-                        "FOOD",
                         Instant.parse("2026-04-17T10:00:00Z"),
                         128,
                         new BigDecimal("742.50"),
@@ -91,7 +89,6 @@ class HeatmapControllerTest {
                 .andExpect(jsonPath("$.resolution").value(9))
                 .andExpect(jsonPath("$.districtName").value("Вахитовский район"))
                 .andExpect(jsonPath("$.districtImageUrl").value(""))
-                .andExpect(jsonPath("$.category").value("food"))
                 .andExpect(jsonPath("$.hourBucket").value("2026-04-17T10:00:00Z"))
                 .andExpect(jsonPath("$.txCount").value(128))
                 .andExpect(jsonPath("$.avgCheck").value(742.50))

@@ -1,6 +1,5 @@
 package ru.tbank.tmap.heatmap;
 
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.openapitools.api.MapHeatmapApi;
 import org.openapitools.model.ClusterDetailsResponse;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 import ru.tbank.tmap.heatmap.cluster.ClusterNotFoundException;
-import ru.tbank.tmap.venue.domain.VenueCategory;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -28,20 +26,13 @@ public class HeatmapController implements MapHeatmapApi {
             final Double neLat,
             final Double neLng,
             final Integer resolution,
-            final List<String> category,
             final Integer window
     ) {
         BoundingBox boundingBox = new BoundingBox(swLat, swLng, neLat, neLng);
         H3Resolution enumResolution = H3Resolution.of(resolution);
-        List<VenueCategory> categories = null;
-        if (category != null) {
-            categories = category.stream()
-                    .map(VenueCategory::fromString)
-                    .toList();
-        }
 
         return ResponseEntity.ok(heatmapMapper.toResponse(
-                heatmapService.getHeatmapClusters(boundingBox, enumResolution, categories, window)
+                heatmapService.getHeatmapClusters(boundingBox, enumResolution, window)
         ));
     }
 

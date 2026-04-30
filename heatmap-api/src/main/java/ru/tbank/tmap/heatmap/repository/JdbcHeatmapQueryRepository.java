@@ -13,7 +13,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
 import ru.tbank.tmap.heatmap.HeatmapClusterAggregate;
 
@@ -32,9 +31,8 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
     public List<HeatmapClusterAggregate> findClusters(
             final BoundingBox boundingBox,
             final H3Resolution resolution,
-            final List<VenueCategory> category,
             final Instant from) {
-        final StringBuilder sql = new StringBuilder(640).append("""
+        final String sql = """
                 SELECT
                     ch.h3_index AS h3_index,
                     COALESCE(SUM(ch.tx_count), 0) AS tx_count,
@@ -47,27 +45,16 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
                 FROM cluster_history ch
                 WHERE ch.hour_bucket >= :from
                   AND ch.resolution = :resolution
-                """);
+                
+                GROUP BY ch.h3_index
+                ORDER BY SUM(ch.tx_count) DESC, SUM(ch.sum_amount) DESC, ch.h3_index
+                """;
 
         final MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("from", Timestamp.from(from))
                 .addValue("resolution", resolution.getValue());
 
-        if (category != null && !category.isEmpty()) {
-            sql.append("\n  AND ch.category IN (:categories)");
-            params.addValue("categories", category.stream()
-                    .map(Enum::name)
-                    .toList()
-            );
-        }
-
-        sql.append("""
-
-                GROUP BY ch.h3_index
-                ORDER BY SUM(ch.tx_count) DESC, SUM(ch.sum_amount) DESC, ch.h3_index
-                """);
-
-        return jdbcTemplate.query(sql.toString(), params, (rs, rowNum) -> toClusterAggregate(rs))
+        return jdbcTemplate.query(sql, params, (rs, rowNum) -> toClusterAggregate(rs))
                 .stream()
                 .filter(cluster -> boundingBox.contains(cluster.centerLat(), cluster.centerLng()))
                 .toList();
@@ -94,20 +81,17 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
                       AND ch.resolution = :resolution
                 ),
                 latest_bucket AS (
-                    SELECT
-                        ch.category AS category,
-                        ch.hour_bucket AS hour_bucket
+                    SELECT ch.hour_bucket AS hour_bucket
                     FROM cluster_history ch
                     WHERE ch.hour_bucket >= :from
                       AND ch.h3_index = :h3Index
                       AND ch.resolution = :resolution
-                    ORDER BY ch.hour_bucket DESC, ch.category ASC
+                    ORDER BY ch.hour_bucket DESC
                     LIMIT 1
                 )
                 SELECT
                     d.name AS district_name,
                     d.photo_url AS district_image_url,
-                    lb.category AS category,
                     lb.hour_bucket AS hour_bucket,
                     a.tx_count AS tx_count,
                     a.avg_check AS avg_check,
@@ -138,7 +122,6 @@ public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
                     resolution,
                     rs.getString("district_name"),
                     rs.getString("district_image_url"),
-                    rs.getString("category"),
                     rs.getTimestamp("hour_bucket").toInstant(),
                     rs.getInt("tx_count"),
                     rs.getBigDecimal("avg_check"),

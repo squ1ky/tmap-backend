@@ -84,7 +84,9 @@ public class LoyaltyRule {
     }
 
     public void updateMaxUsages(Integer newMaxUsages, long currentUsages) {
-        if (newMaxUsages == null) return;
+        if (newMaxUsages == null) {
+            return;
+        }
 
         if (newMaxUsages < currentUsages) {
             throw LoyaltyRuleStateException.maxUsagesCannotBeLessThanCurrentUsages(this.getId());

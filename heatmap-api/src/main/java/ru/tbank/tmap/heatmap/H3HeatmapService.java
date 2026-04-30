@@ -5,7 +5,6 @@ import java.time.temporal.ChronoUnit;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
@@ -15,7 +14,6 @@ import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.heatmap.repository.HeatmapQueryRepository;
 
 @Service
@@ -34,7 +32,6 @@ public class H3HeatmapService implements HeatmapService {
     public HeatmapClusters getHeatmapClusters(
             final BoundingBox boundingBox,
             final H3Resolution resolution,
-            final List<VenueCategory> category,
             final int window
     ) {
         final Instant from = Instant.now(clock).minus(window, ChronoUnit.MINUTES);
@@ -45,7 +42,6 @@ public class H3HeatmapService implements HeatmapService {
                 heatmapQueryRepository.findClusters(
                         boundingBox,
                         resolution,
-                        category,
                         from
                 )
         );

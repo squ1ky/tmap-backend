@@ -19,4 +19,6 @@ public interface VenueRepository extends JpaRepository<Venue, UUID> {
 
     @EntityGraph(attributePaths = "owner")
     Optional<Venue> findByIdAndOwnerId(UUID id, UUID ownerId);
+
+    boolean existsByIdAndOwnerId(UUID id, UUID ownerId);
 }

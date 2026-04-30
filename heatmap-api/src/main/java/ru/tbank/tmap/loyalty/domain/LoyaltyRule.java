@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleStateException;
 
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -80,5 +81,14 @@ public class LoyaltyRule {
         }
         this.discountPercent = discountPercent;
         this.maxUsages = maxUsages;
+    }
+
+    public void updateMaxUsages(Integer newMaxUsages, long currentUsages) {
+        if (newMaxUsages == null) return;
+
+        if (newMaxUsages < currentUsages) {
+            throw LoyaltyRuleStateException.maxUsagesCannotBeLessThanCurrentUsages(this.getId());
+        }
+        this.maxUsages = newMaxUsages;
     }
 }

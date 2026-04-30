@@ -1,4 +1,4 @@
-package ru.tbank.tmap.loyalty.business;
+package ru.tbank.tmap.loyalty.presentation;
 
 import jakarta.validation.Valid;
 import java.util.List;
@@ -12,6 +12,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.tbank.tmap.loyalty.application.BusinessLoyaltyRuleService;
+import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
+import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
+import ru.tbank.tmap.loyalty.presentation.dto.BusinessLoyaltyRuleDetails;
+import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleUpdateValidationException;
 import ru.tbank.tmap.shared.utils.SecurityUtils;

@@ -3,9 +3,9 @@ package ru.tbank.tmap.loyalty.infrastructure.db;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleUsageCount;
 import ru.tbank.tmap.loyalty.domain.LoyaltyVerification;
 import ru.tbank.tmap.loyalty.domain.LoyaltyVerificationRepository;
-import ru.tbank.tmap.loyalty.repository.LoyaltyRuleUsageCount;
 
 import java.util.Collection;
 import java.util.List;

@@ -1,21 +1,25 @@
-package ru.tbank.tmap.loyalty.business;
+package ru.tbank.tmap.loyalty.application;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
+import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
+import ru.tbank.tmap.loyalty.application.port.VenueOwnershipPort;
+import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleUsageCount;
+import ru.tbank.tmap.loyalty.presentation.dto.BusinessLoyaltyRuleDetails;
+import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
+import ru.tbank.tmap.loyalty.domain.LoyaltyRuleRepository;
+import ru.tbank.tmap.loyalty.domain.LoyaltyVerificationRepository;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleStateException;
-import ru.tbank.tmap.loyalty.repository.LoyaltyRuleUsageCount;
-import ru.tbank.tmap.loyalty.repository.LoyaltyRuleRepository;
-import ru.tbank.tmap.loyalty.repository.LoyaltyVerificationRepository;
-import ru.tbank.tmap.venue.domain.Venue;
-import ru.tbank.tmap.venue.exception.VenueNotFoundException;
-import ru.tbank.tmap.venue.repository.VenueRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +28,7 @@ public class BusinessLoyaltyRuleService {
 
     private final LoyaltyRuleRepository loyaltyRuleRepository;
     private final LoyaltyVerificationRepository loyaltyVerificationRepository;
-    private final VenueRepository venueRepository;
+    private final VenueOwnershipPort venueOwnershipPort;
     private final BusinessLoyaltyRuleMapper businessLoyaltyRuleMapper;
 
     @Transactional
@@ -33,27 +37,39 @@ public class BusinessLoyaltyRuleService {
             final UUID venueId,
             final BusinessLoyaltyRuleCreateCommand command
     ) {
-        final Venue venue = findOwnedVenue(ownerId, venueId);
-        final LoyaltyRule loyaltyRule = businessLoyaltyRuleMapper.toEntity(venue, command);
+        venueOwnershipPort.requireOwner(venueId, ownerId);
+
+        final int currentUsages = 0;
+        final LoyaltyRule loyaltyRule = new LoyaltyRule(
+                UUID.randomUUID(),
+                venueId,
+                command.description(),
+                command.discountPercent(),
+                command.maxUsages()
+        );
         final LoyaltyRule savedRule = loyaltyRuleRepository.save(loyaltyRule);
-        return new BusinessLoyaltyRuleDetails(savedRule, 0);
+
+        return new BusinessLoyaltyRuleDetails(savedRule, currentUsages);
     }
 
     public List<BusinessLoyaltyRuleDetails> getVenueRules(final UUID ownerId, final UUID venueId) {
-        findOwnedVenue(ownerId, venueId);
-        final List<LoyaltyRule> rules = loyaltyRuleRepository.findByVenueIdAndVenueOwnerIdOrderByCreatedAtDescIdDesc(
-                venueId,
-                ownerId
-        );
+        venueOwnershipPort.requireOwner(venueId, ownerId);
+
+        final List<LoyaltyRule> rules = loyaltyRuleRepository.findByVenueIdOrderByCreatedAtDescIdDesc(venueId);
+
         return businessLoyaltyRuleMapper.toDetails(rules, getUsagesMap(rules));
     }
 
     public Optional<BusinessLoyaltyRuleDetails> getRuleById(final UUID ownerId, final UUID ruleId) {
-        return loyaltyRuleRepository.findByIdAndVenueOwnerId(ruleId, ownerId)
-                .map(rule -> new BusinessLoyaltyRuleDetails(
-                        rule,
-                        loyaltyVerificationRepository.countByRuleId(rule.getId())
-                ));
+        return loyaltyRuleRepository.findById(ruleId)
+                .map(rule -> {
+                    venueOwnershipPort.requireOwner(rule.getVenueId(), ownerId);
+
+                    return new BusinessLoyaltyRuleDetails(
+                            rule,
+                            loyaltyVerificationRepository.countByRuleId(rule.getId())
+                    );
+                });
     }
 
     @Transactional
@@ -62,8 +78,10 @@ public class BusinessLoyaltyRuleService {
             final UUID ruleId,
             final BusinessLoyaltyRuleUpdateCommand command
     ) {
-        final LoyaltyRule rule = loyaltyRuleRepository.findByIdAndVenueOwnerId(ruleId, ownerId)
+        final LoyaltyRule rule = loyaltyRuleRepository.findById(ruleId)
                 .orElseThrow(() -> new LoyaltyRuleNotFoundException(ruleId));
+
+        venueOwnershipPort.requireOwner(rule.getVenueId(), ownerId);
 
         if (rule.isActive()) {
             throw LoyaltyRuleStateException.activeRuleCannotBeUpdated(ruleId);
@@ -71,6 +89,7 @@ public class BusinessLoyaltyRuleService {
 
         final long currentUsages = loyaltyVerificationRepository.countByRuleId(ruleId);
         applyUpdate(rule, command, currentUsages);
+
         return new BusinessLoyaltyRuleDetails(rule, currentUsages);
     }
 
@@ -78,11 +97,13 @@ public class BusinessLoyaltyRuleService {
         if (rules.isEmpty()) {
             return Map.of();
         }
+
         final List<UUID> ruleIds = rules.stream()
                 .map(LoyaltyRule::getId)
                 .toList();
+
         return loyaltyVerificationRepository.countUsagesByRuleIds(ruleIds).stream()
-                .collect(java.util.stream.Collectors.toMap(
+                .collect(Collectors.toMap(
                         LoyaltyRuleUsageCount::ruleId,
                         LoyaltyRuleUsageCount::usages
                 ));
@@ -99,19 +120,11 @@ public class BusinessLoyaltyRuleService {
         if (command.discountPercent() != null) {
             rule.setDiscountPercent(command.discountPercent());
         }
-        if (command.maxUsages() != null) {
-            if (command.maxUsages() < currentUsages) {
-                throw LoyaltyRuleStateException.maxUsagesCannotBeLessThanCurrentUsages(rule.getId());
-            }
-            rule.setMaxUsages(command.maxUsages());
-        }
+
+        rule.updateMaxUsages(command.maxUsages(), currentUsages);
+
         if (Boolean.FALSE.equals(command.active())) {
             rule.setActive(false);
         }
-    }
-
-    private Venue findOwnedVenue(final UUID ownerId, final UUID venueId) {
-        return venueRepository.findByIdAndOwnerId(venueId, ownerId)
-                .orElseThrow(() -> new VenueNotFoundException(venueId));
     }
 }

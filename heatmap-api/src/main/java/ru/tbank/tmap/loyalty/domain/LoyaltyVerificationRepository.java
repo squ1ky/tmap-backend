@@ -1,6 +1,6 @@
 package ru.tbank.tmap.loyalty.domain;
 
-import ru.tbank.tmap.loyalty.repository.LoyaltyRuleUsageCount;
+import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleUsageCount;
 
 import java.util.Collection;
 import java.util.List;

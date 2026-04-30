@@ -12,8 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.tbank.tmap.loyalty.exception.LoyaltyRuleNotFoundException;
-import ru.tbank.tmap.loyalty.exception.LoyaltyRuleUpdateValidationException;
+import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
+import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleUpdateValidationException;
 import ru.tbank.tmap.shared.utils.SecurityUtils;
 
 @RestController

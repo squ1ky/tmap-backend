@@ -20,7 +20,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.User;
-import ru.tbank.tmap.user.UserRepository;
 import ru.tbank.tmap.user.UserRole;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
@@ -43,9 +42,6 @@ class BusinessVenuePhotoServiceTest {
     private VenueRepository venueRepository;
 
     @Mock
-    private UserRepository userRepository;
-
-    @Mock
     private VenuePhotoValidator venuePhotoValidator;
 
     @Mock
@@ -60,7 +56,6 @@ class BusinessVenuePhotoServiceTest {
     void setUp() {
         businessVenuePhotoService = new BusinessVenuePhotoService(
                 venueRepository,
-                userRepository,
                 venuePhotoValidator,
                 venuePhotoStorage,
                 venuePhotoUpdater
@@ -69,14 +64,12 @@ class BusinessVenuePhotoServiceTest {
 
     @Test
     void uploadVenuePhoto_whenVenueHadNoPhoto_thenUploadsAndReturnsUpdatedVenue() {
-        final User owner = owner();
         final Venue existing = venue(VenueStatus.ACTIVE, null);
         final Venue updated = venue(VenueStatus.PENDING_UPDATE, null);
         updated.setPhotoObjectKey(NEW_KEY);
         final MultipartFile file = jpegFile();
 
         given(venuePhotoValidator.validateAndGetExtension(file)).willReturn("jpg");
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner));
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.of(existing), Optional.of(updated));
         given(venuePhotoStorage.upload(eq(VENUE_ID), any(), anyLong(), eq("image/jpeg"), eq("jpg")))
@@ -84,7 +77,7 @@ class BusinessVenuePhotoServiceTest {
         given(venuePhotoUpdater.swapPhotoKey(VENUE_ID, OWNER_ID, NEW_KEY))
                 .willReturn(null);
 
-        final Venue result = businessVenuePhotoService.uploadVenuePhoto(OWNER_EMAIL, VENUE_ID, file);
+        final Venue result = businessVenuePhotoService.uploadVenuePhoto(OWNER_ID, VENUE_ID, file);
 
         assertThat(result.getPhotoObjectKey()).isEqualTo(NEW_KEY);
         assertThat(result.getStatus()).isEqualTo(VenueStatus.PENDING_UPDATE);
@@ -93,7 +86,6 @@ class BusinessVenuePhotoServiceTest {
 
     @Test
     void uploadVenuePhoto_whenVenueHadPreviousPhoto_thenDeletesOldObject() {
-        final User owner = owner();
         final Venue existing = venue(VenueStatus.ACTIVE, null);
         existing.setPhotoObjectKey(OLD_KEY);
         final Venue updated = venue(VenueStatus.PENDING_UPDATE, null);
@@ -101,7 +93,6 @@ class BusinessVenuePhotoServiceTest {
         final MultipartFile file = jpegFile();
 
         given(venuePhotoValidator.validateAndGetExtension(file)).willReturn("jpg");
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner));
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.of(existing), Optional.of(updated));
         given(venuePhotoStorage.upload(eq(VENUE_ID), any(), anyLong(), eq("image/jpeg"), eq("jpg")))
@@ -109,19 +100,17 @@ class BusinessVenuePhotoServiceTest {
         given(venuePhotoUpdater.swapPhotoKey(VENUE_ID, OWNER_ID, NEW_KEY))
                 .willReturn(OLD_KEY);
 
-        businessVenuePhotoService.uploadVenuePhoto(OWNER_EMAIL, VENUE_ID, file);
+        businessVenuePhotoService.uploadVenuePhoto(OWNER_ID, VENUE_ID, file);
 
         verify(venuePhotoStorage).delete(OLD_KEY);
     }
 
     @Test
     void uploadVenuePhoto_whenDbUpdateFails_thenDeletesNewlyUploadedObject() {
-        final User owner = owner();
         final Venue existing = venue(VenueStatus.ACTIVE, null);
         final MultipartFile file = jpegFile();
 
         given(venuePhotoValidator.validateAndGetExtension(file)).willReturn("jpg");
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner));
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.of(existing));
         given(venuePhotoStorage.upload(eq(VENUE_ID), any(), anyLong(), eq("image/jpeg"), eq("jpg")))
@@ -129,7 +118,7 @@ class BusinessVenuePhotoServiceTest {
         given(venuePhotoUpdater.swapPhotoKey(VENUE_ID, OWNER_ID, NEW_KEY))
                 .willThrow(new RuntimeException("DB write failed"));
 
-        assertThatThrownBy(() -> businessVenuePhotoService.uploadVenuePhoto(OWNER_EMAIL, VENUE_ID, file))
+        assertThatThrownBy(() -> businessVenuePhotoService.uploadVenuePhoto(OWNER_ID, VENUE_ID, file))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("DB write failed");
         verify(venuePhotoStorage).delete(NEW_KEY);
@@ -137,15 +126,13 @@ class BusinessVenuePhotoServiceTest {
 
     @Test
     void uploadVenuePhoto_whenVenueDoesNotBelongToOwner_thenThrowsAndDoesNotTouchStorage() {
-        final User owner = owner();
         final MultipartFile file = jpegFile();
 
         given(venuePhotoValidator.validateAndGetExtension(file)).willReturn("jpg");
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner));
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> businessVenuePhotoService.uploadVenuePhoto(OWNER_EMAIL, VENUE_ID, file))
+        assertThatThrownBy(() -> businessVenuePhotoService.uploadVenuePhoto(OWNER_ID, VENUE_ID, file))
                 .isInstanceOf(VenueNotFoundException.class);
         verify(venuePhotoStorage, never()).upload(any(), any(), anyLong(), any(), any());
         verify(venuePhotoStorage, never()).delete(any());
@@ -153,15 +140,13 @@ class BusinessVenuePhotoServiceTest {
 
     @Test
     void deleteVenuePhoto_whenVenueHadPhoto_thenClearsKeyAndDeletesObject() {
-        final User owner = owner();
         final Venue updated = venue(VenueStatus.ACTIVE, null);
 
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner));
         given(venuePhotoUpdater.clearPhotoKey(VENUE_ID, OWNER_ID)).willReturn(OLD_KEY);
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.of(updated));
 
-        final Venue result = businessVenuePhotoService.deleteVenuePhoto(OWNER_EMAIL, VENUE_ID);
+        final Venue result = businessVenuePhotoService.deleteVenuePhoto(OWNER_ID, VENUE_ID);
 
         assertThat(result.getPhotoObjectKey()).isNull();
         verify(venuePhotoStorage).delete(OLD_KEY);
@@ -169,15 +154,13 @@ class BusinessVenuePhotoServiceTest {
 
     @Test
     void deleteVenuePhoto_whenVenueHadNoPhoto_thenDoesNotCallStorage() {
-        final User owner = owner();
         final Venue updated = venue(VenueStatus.ACTIVE, null);
 
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner));
         given(venuePhotoUpdater.clearPhotoKey(VENUE_ID, OWNER_ID)).willReturn(null);
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.of(updated));
 
-        businessVenuePhotoService.deleteVenuePhoto(OWNER_EMAIL, VENUE_ID);
+        businessVenuePhotoService.deleteVenuePhoto(OWNER_ID, VENUE_ID);
 
         verify(venuePhotoStorage, never()).delete(any());
     }

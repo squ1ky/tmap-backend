@@ -21,7 +21,6 @@ import ru.tbank.tmap.loyalty.repository.LoyaltyRuleRepository;
 import ru.tbank.tmap.loyalty.repository.LoyaltyVerificationRepository;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.User;
-import ru.tbank.tmap.user.UserRepository;
 import ru.tbank.tmap.user.UserRole;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
@@ -46,9 +45,6 @@ class BusinessLoyaltyRuleServiceTest {
     @Mock
     private VenueRepository venueRepository;
 
-    @Mock
-    private UserRepository userRepository;
-
     private BusinessLoyaltyRuleService businessLoyaltyRuleService;
 
     @BeforeEach
@@ -57,7 +53,6 @@ class BusinessLoyaltyRuleServiceTest {
                 loyaltyRuleRepository,
                 loyaltyVerificationRepository,
                 venueRepository,
-                userRepository,
                 new BusinessLoyaltyRuleMapper()
         );
     }
@@ -71,11 +66,10 @@ class BusinessLoyaltyRuleServiceTest {
                 15,
                 100
         );
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(Optional.of(venue));
         given(loyaltyRuleRepository.save(org.mockito.ArgumentMatchers.any(LoyaltyRule.class))).willReturn(unsavedRule);
 
-        final BusinessLoyaltyRuleDetails result = businessLoyaltyRuleService.createRule(OWNER_EMAIL, VENUE_ID, command);
+        final BusinessLoyaltyRuleDetails result = businessLoyaltyRuleService.createRule(OWNER_ID, VENUE_ID, command);
 
         assertThat(result.rule().getVenue().getId()).isEqualTo(VENUE_ID);
         assertThat(result.rule().getDescription()).isEqualTo("Discount 15%");
@@ -87,11 +81,10 @@ class BusinessLoyaltyRuleServiceTest {
 
     @Test
     void createRule_whenVenueDoesNotBelongToOwner_thenThrowsNotFound() {
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> businessLoyaltyRuleService.createRule(
-                OWNER_EMAIL,
+                OWNER_ID,
                 VENUE_ID,
                 new BusinessLoyaltyRuleCreateCommand("Discount", 10, 10)
         )).isInstanceOf(VenueNotFoundException.class);
@@ -109,7 +102,6 @@ class BusinessLoyaltyRuleServiceTest {
                 20
         );
         secondRule.setCreatedAt(OffsetDateTime.parse("2026-04-26T09:00:00+03:00"));
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(Optional.of(venue()));
         given(loyaltyRuleRepository.findByVenueIdAndVenueOwnerIdOrderByCreatedAtDescIdDesc(VENUE_ID, OWNER_ID))
                 .willReturn(List.of(firstRule, secondRule));
@@ -119,7 +111,7 @@ class BusinessLoyaltyRuleServiceTest {
                         usageCount(secondRule.getId(), 2L)
                 ));
 
-        final List<BusinessLoyaltyRuleDetails> result = businessLoyaltyRuleService.getVenueRules(OWNER_EMAIL, VENUE_ID);
+        final List<BusinessLoyaltyRuleDetails> result = businessLoyaltyRuleService.getVenueRules(OWNER_ID, VENUE_ID);
 
         assertThat(result)
                 .extracting(details -> details.rule().getId(), BusinessLoyaltyRuleDetails::currentUsages)
@@ -132,11 +124,10 @@ class BusinessLoyaltyRuleServiceTest {
     @Test
     void getRuleById_whenRuleBelongsToOwner_thenReturnsRule() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
         given(loyaltyRuleRepository.findByIdAndVenueOwnerId(RULE_ID, OWNER_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(9L);
 
-        final Optional<BusinessLoyaltyRuleDetails> result = businessLoyaltyRuleService.getRuleById(OWNER_EMAIL, RULE_ID);
+        final Optional<BusinessLoyaltyRuleDetails> result = businessLoyaltyRuleService.getRuleById(OWNER_ID, RULE_ID);
 
         assertThat(result).isPresent();
         assertThat(result.orElseThrow().currentUsages()).isEqualTo(9);
@@ -144,11 +135,10 @@ class BusinessLoyaltyRuleServiceTest {
 
     @Test
     void updateRule_whenRuleBelongsToAnotherOwner_thenThrowsNotFound() {
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
         given(loyaltyRuleRepository.findByIdAndVenueOwnerId(RULE_ID, OWNER_ID)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> businessLoyaltyRuleService.updateRule(
-                OWNER_EMAIL,
+                OWNER_ID,
                 RULE_ID,
                 new BusinessLoyaltyRuleUpdateCommand("New title", null, null, null)
         )).isInstanceOf(LoyaltyRuleNotFoundException.class);
@@ -157,12 +147,11 @@ class BusinessLoyaltyRuleServiceTest {
     @Test
     void updateRule_whenRuleIsInactive_thenAllowsEditing() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, false);
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
         given(loyaltyRuleRepository.findByIdAndVenueOwnerId(RULE_ID, OWNER_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(4L);
 
         final BusinessLoyaltyRuleDetails result = businessLoyaltyRuleService.updateRule(
-                OWNER_EMAIL,
+                OWNER_ID,
                 RULE_ID,
                 new BusinessLoyaltyRuleUpdateCommand("New title", null, null, null)
         );
@@ -175,12 +164,11 @@ class BusinessLoyaltyRuleServiceTest {
     @Test
     void updateRule_whenMaxUsagesBelowCurrentUsages_thenThrowsConflict() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, false);
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
         given(loyaltyRuleRepository.findByIdAndVenueOwnerId(RULE_ID, OWNER_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(6L);
 
         assertThatThrownBy(() -> businessLoyaltyRuleService.updateRule(
-                OWNER_EMAIL,
+                OWNER_ID,
                 RULE_ID,
                 new BusinessLoyaltyRuleUpdateCommand(null, null, 5, null)
         )).isInstanceOf(LoyaltyRuleStateException.class)
@@ -190,11 +178,10 @@ class BusinessLoyaltyRuleServiceTest {
     @Test
     void updateRule_whenRuleIsActive_thenThrowsConflict() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
         given(loyaltyRuleRepository.findByIdAndVenueOwnerId(RULE_ID, OWNER_ID)).willReturn(Optional.of(rule));
 
         assertThatThrownBy(() -> businessLoyaltyRuleService.updateRule(
-                OWNER_EMAIL,
+                OWNER_ID,
                 RULE_ID,
                 new BusinessLoyaltyRuleUpdateCommand("Discount 20%", 20, 120, false)
         )).isInstanceOf(LoyaltyRuleStateException.class)
@@ -204,12 +191,11 @@ class BusinessLoyaltyRuleServiceTest {
     @Test
     void updateRule_whenRequestIsValid_thenUpdatesFields() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, false);
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner()));
         given(loyaltyRuleRepository.findByIdAndVenueOwnerId(RULE_ID, OWNER_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(4L);
 
         final BusinessLoyaltyRuleDetails result = businessLoyaltyRuleService.updateRule(
-                OWNER_EMAIL,
+                OWNER_ID,
                 RULE_ID,
                 new BusinessLoyaltyRuleUpdateCommand("Discount 20%", 20, 120, false)
         );

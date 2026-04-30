@@ -27,8 +27,8 @@ public class BusinessVenueService {
     private final BusinessVenueMapper businessVenueMapper;
 
     @Transactional
-    public Venue createVenue(final String ownerEmail, final VenueCreateCommand command) {
-        final User owner = findOwner(ownerEmail);
+    public Venue createVenue(final UUID ownerId, final VenueCreateCommand command) {
+        final User owner = findOwner(ownerId);
         final long h3Res9 = h3IndexService.toH3(
                 command.location().getLat(),
                 command.location().getLng(),
@@ -37,18 +37,16 @@ public class BusinessVenueService {
         return venueRepository.save(businessVenueMapper.toEntity(command, owner, h3Res9));
     }
 
-    public List<Venue> getMyVenues(final String ownerEmail) {
-        final User owner = findOwner(ownerEmail);
-        return venueRepository.findByOwnerIdOrderByNameAscIdAsc(owner.getId());
+    public List<Venue> getMyVenues(final UUID ownerId) {
+        return venueRepository.findByOwnerIdOrderByNameAscIdAsc(ownerId);
     }
 
-    public Optional<Venue> getMyVenueById(final String ownerEmail, final UUID venueId) {
-        final User owner = findOwner(ownerEmail);
-        return venueRepository.findByIdAndOwnerId(venueId, owner.getId());
+    public Optional<Venue> getMyVenueById(final UUID ownerId, final UUID venueId) {
+        return venueRepository.findByIdAndOwnerId(venueId, ownerId);
     }
 
-    private User findOwner(final String ownerEmail) {
-        return userRepository.findByEmail(ownerEmail)
-                .orElseThrow(() -> new UserNotFoundException(ownerEmail));
+    private User findOwner(final UUID ownerId) {
+        return userRepository.findById(ownerId)
+                .orElseThrow(() -> new UserNotFoundException(ownerId.toString()));
     }
 }

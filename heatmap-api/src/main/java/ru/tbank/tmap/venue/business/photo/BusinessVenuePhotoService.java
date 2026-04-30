@@ -5,9 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.tbank.tmap.infrastructure.minio.ObjectStorageException;
-import ru.tbank.tmap.user.User;
-import ru.tbank.tmap.user.UserNotFoundException;
-import ru.tbank.tmap.user.UserRepository;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.exception.VenueNotFoundException;
 import ru.tbank.tmap.venue.repository.VenueRepository;
@@ -22,20 +19,18 @@ import java.util.UUID;
 public class BusinessVenuePhotoService {
 
     private final VenueRepository venueRepository;
-    private final UserRepository userRepository;
     private final VenuePhotoValidator venuePhotoValidator;
     private final VenuePhotoStorage venuePhotoStorage;
     private final VenuePhotoUpdater venuePhotoUpdater;
 
     public Venue uploadVenuePhoto(
-            final String ownerEmail,
+            final UUID ownerId,
             final UUID venueId,
             final MultipartFile file
     ) {
         final String extension = venuePhotoValidator.validateAndGetExtension(file);
-        final User owner = findOwner(ownerEmail);
 
-        venueRepository.findByIdAndOwnerId(venueId, owner.getId())
+        venueRepository.findByIdAndOwnerId(venueId, ownerId)
                 .orElseThrow(() -> new VenueNotFoundException(venueId));
 
         final String newObjectKey;
@@ -53,7 +48,7 @@ public class BusinessVenuePhotoService {
 
         final String oldObjectKey;
         try {
-            oldObjectKey = venuePhotoUpdater.swapPhotoKey(venueId, owner.getId(), newObjectKey);
+            oldObjectKey = venuePhotoUpdater.swapPhotoKey(venueId, ownerId, newObjectKey);
         } catch (RuntimeException e) {
             safePhotoDelete(newObjectKey);
             throw e;
@@ -63,19 +58,17 @@ public class BusinessVenuePhotoService {
             safePhotoDelete(oldObjectKey);
         }
 
-        return venueRepository.findByIdAndOwnerId(venueId, owner.getId())
+        return venueRepository.findByIdAndOwnerId(venueId, ownerId)
                 .orElseThrow(() -> new VenueNotFoundException(venueId));
     }
 
-    public Venue deleteVenuePhoto(final String ownerEmail, final UUID venueId) {
-        final User owner = findOwner(ownerEmail);
-
-        final String oldObjectKey = venuePhotoUpdater.clearPhotoKey(venueId, owner.getId());
+    public Venue deleteVenuePhoto(final UUID ownerId, final UUID venueId) {
+        final String oldObjectKey = venuePhotoUpdater.clearPhotoKey(venueId, ownerId);
         if (oldObjectKey != null) {
             safePhotoDelete(oldObjectKey);
         }
 
-        return venueRepository.findByIdAndOwnerId(venueId, owner.getId())
+        return venueRepository.findByIdAndOwnerId(venueId, ownerId)
                 .orElseThrow(() -> new VenueNotFoundException(venueId));
     }
 
@@ -85,10 +78,5 @@ public class BusinessVenuePhotoService {
         } catch (RuntimeException e) {
             log.warn("Failed to delete photo object: {}", objectKey, e);
         }
-    }
-
-    private User findOwner(final String ownerEmail) {
-        return userRepository.findByEmail(ownerEmail)
-                .orElseThrow(() -> new UserNotFoundException(ownerEmail));
     }
 }

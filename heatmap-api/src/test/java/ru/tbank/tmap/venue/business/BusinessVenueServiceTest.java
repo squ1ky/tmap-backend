@@ -54,17 +54,15 @@ class BusinessVenueServiceTest {
 
     @Test
     void getMyVenues_whenOwnerHasVenuesWithDifferentStatuses_thenReturnsAllOwnedVenues() {
-        final User owner = owner();
         final List<Venue> venues = List.of(
                 venue(VenueStatus.PENDING, null),
                 venue(VenueStatus.ACTIVE, null),
                 venue(VenueStatus.REJECTED, "Address does not match coordinates"),
                 venue(VenueStatus.PENDING_UPDATE, null)
         );
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner));
         given(venueRepository.findByOwnerIdOrderByNameAscIdAsc(OWNER_ID)).willReturn(venues);
 
-        final List<Venue> result = businessVenueService.getMyVenues(OWNER_EMAIL);
+        final List<Venue> result = businessVenueService.getMyVenues(OWNER_ID);
 
         assertThat(result)
                 .extracting(Venue::getStatus)
@@ -79,12 +77,10 @@ class BusinessVenueServiceTest {
 
     @Test
     void getMyVenueById_whenVenueBelongsToOwner_thenReturnsVenueRegardlessOfStatus() {
-        final User owner = owner();
         final Venue rejectedVenue = venue(VenueStatus.REJECTED, "Address does not match coordinates");
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner));
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(Optional.of(rejectedVenue));
 
-        final Optional<Venue> result = businessVenueService.getMyVenueById(OWNER_EMAIL, VENUE_ID);
+        final Optional<Venue> result = businessVenueService.getMyVenueById(OWNER_ID, VENUE_ID);
 
         assertThat(result).contains(rejectedVenue);
         assertThat(result.orElseThrow().getStatus()).isEqualTo(VenueStatus.REJECTED);
@@ -102,12 +98,12 @@ class BusinessVenueServiceTest {
                 null,
                 null
         );
-        given(userRepository.findByEmail(OWNER_EMAIL)).willReturn(Optional.of(owner));
+        given(userRepository.findById(OWNER_ID)).willReturn(Optional.of(owner));
         given(h3IndexService.toH3(55.7905, 49.1140, H3Resolution.RES_9)).willReturn(H3_RES_9);
         given(venueRepository.save(org.mockito.ArgumentMatchers.any(Venue.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
 
-        final Venue result = businessVenueService.createVenue(OWNER_EMAIL, command);
+        final Venue result = businessVenueService.createVenue(OWNER_ID, command);
 
         assertThat(result.getOwner()).isEqualTo(owner);
         assertThat(result.getStatus()).isEqualTo(VenueStatus.PENDING);

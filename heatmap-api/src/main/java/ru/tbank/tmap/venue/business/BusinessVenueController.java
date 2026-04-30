@@ -28,9 +28,9 @@ public class BusinessVenueController implements BusinessOwnerApi {
 
     @Override
     public ResponseEntity<VenueOwnerResponse> createVenue(final VenueCreateRequest venueCreateRequest) {
-        final String ownerEmail = SecurityUtils.currentUserEmail();
+        final UUID ownerId = SecurityUtils.currentUserId();
         final VenueCreateCommand command = businessVenueMapper.toCommand(venueCreateRequest);
-        final Venue venue = businessVenueService.createVenue(ownerEmail, command);
+        final Venue venue = businessVenueService.createVenue(ownerId, command);
         final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -38,8 +38,8 @@ public class BusinessVenueController implements BusinessOwnerApi {
 
     @Override
     public ResponseEntity<List<VenueOwnerResponse>> getMyVenues() {
-        final String ownerEmail = SecurityUtils.currentUserEmail();
-        final List<Venue> venues = businessVenueService.getMyVenues(ownerEmail);
+        final UUID ownerId = SecurityUtils.currentUserId();
+        final List<Venue> venues = businessVenueService.getMyVenues(ownerId);
         return ResponseEntity.ok(venues.stream()
                 .map(venueOwnerMapper::toResponse)
                 .toList());
@@ -47,8 +47,8 @@ public class BusinessVenueController implements BusinessOwnerApi {
 
     @Override
     public ResponseEntity<VenueOwnerResponse> getMyVenueById(final UUID id) {
-        final String ownerEmail = SecurityUtils.currentUserEmail();
-        final Venue venue = businessVenueService.getMyVenueById(ownerEmail, id)
+        final UUID ownerId = SecurityUtils.currentUserId();
+        final Venue venue = businessVenueService.getMyVenueById(ownerId, id)
                 .orElseThrow(() -> new VenueNotFoundException(id));
         final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
         return ResponseEntity.ok(response);
@@ -56,15 +56,15 @@ public class BusinessVenueController implements BusinessOwnerApi {
 
     @Override
     public ResponseEntity<VenueOwnerResponse> uploadVenuePhoto(UUID id, MultipartFile file) {
-        final String ownerEmail = SecurityUtils.currentUserEmail();
-        final Venue venue = businessVenuePhotoService.uploadVenuePhoto(ownerEmail, id, file);
+        final UUID ownerId = SecurityUtils.currentUserId();
+        final Venue venue = businessVenuePhotoService.uploadVenuePhoto(ownerId, id, file);
         return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
     }
 
     @Override
     public ResponseEntity<VenueOwnerResponse> deleteVenuePhoto(UUID id) {
-        final String ownerEmail = SecurityUtils.currentUserEmail();
-        final Venue venue = businessVenuePhotoService.deleteVenuePhoto(ownerEmail, id);
+        final UUID ownerId = SecurityUtils.currentUserId();
+        final Venue venue = businessVenuePhotoService.deleteVenuePhoto(ownerId, id);
         return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
     }
 }

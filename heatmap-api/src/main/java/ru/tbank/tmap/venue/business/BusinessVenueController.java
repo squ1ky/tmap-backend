@@ -56,15 +56,15 @@ public class BusinessVenueController implements BusinessOwnerApi {
 
     @Override
     public ResponseEntity<VenueOwnerResponse> uploadVenuePhoto(UUID id, MultipartFile file) {
-        final String ownerEmail = SecurityUtils.currentUserEmail();
-        final Venue venue = businessVenuePhotoService.uploadVenuePhoto(ownerEmail, id, file);
+        final UUID ownerId = SecurityUtils.currentUserId();
+        final Venue venue = businessVenuePhotoService.uploadVenuePhoto(ownerId, id, file);
         return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
     }
 
     @Override
     public ResponseEntity<VenueOwnerResponse> deleteVenuePhoto(UUID id) {
-        final String ownerEmail = SecurityUtils.currentUserEmail();
-        final Venue venue = businessVenuePhotoService.deleteVenuePhoto(ownerEmail, id);
+        final UUID ownerId = SecurityUtils.currentUserId();
+        final Venue venue = businessVenuePhotoService.deleteVenuePhoto(ownerId, id);
         return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
     }
 }

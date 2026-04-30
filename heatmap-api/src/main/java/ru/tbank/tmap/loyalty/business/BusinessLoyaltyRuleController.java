@@ -26,8 +26,8 @@ public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
 
     @Override
     public ResponseEntity<List<LoyaltyRuleResponse>> getBusinessVenueLoyaltyRules(final UUID id) {
-        final String ownerEmail = SecurityUtils.currentUserEmail();
-        final List<BusinessLoyaltyRuleDetails> loyaltyRules = businessLoyaltyRuleService.getVenueRules(ownerEmail, id);
+        final UUID ownerId = SecurityUtils.currentUserId();
+        final List<BusinessLoyaltyRuleDetails> loyaltyRules = businessLoyaltyRuleService.getVenueRules(ownerId, id);
         return ResponseEntity.ok(loyaltyRules.stream()
                 .map(businessLoyaltyRuleMapper::toResponse)
                 .toList());
@@ -38,10 +38,10 @@ public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
             final UUID id,
             @Valid final LoyaltyRuleCreateRequest loyaltyRuleCreateRequest
     ) {
-        final String ownerEmail = SecurityUtils.currentUserEmail();
+        final UUID ownerId = SecurityUtils.currentUserId();
         final BusinessLoyaltyRuleCreateCommand command =
                 businessLoyaltyRuleMapper.toCreateCommand(loyaltyRuleCreateRequest);
-        final BusinessLoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.createRule(ownerEmail, id, command);
+        final BusinessLoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.createRule(ownerId, id, command);
         final LoyaltyRuleResponse response = businessLoyaltyRuleMapper.toResponse(loyaltyRule);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -51,21 +51,21 @@ public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
             final UUID id,
             @Valid final LoyaltyRuleUpdateRequest loyaltyRuleUpdateRequest
     ) {
-        final String ownerEmail = SecurityUtils.currentUserEmail();
+        final UUID ownerId = SecurityUtils.currentUserId();
         final BusinessLoyaltyRuleUpdateCommand command =
                 businessLoyaltyRuleMapper.toUpdateCommand(loyaltyRuleUpdateRequest);
         if (!command.hasChanges()) {
             throw LoyaltyRuleUpdateValidationException.noFieldsForUpdate();
         }
-        final BusinessLoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.updateRule(ownerEmail, id, command);
+        final BusinessLoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.updateRule(ownerId, id, command);
         final LoyaltyRuleResponse response = businessLoyaltyRuleMapper.toResponse(loyaltyRule);
         return ResponseEntity.ok(response);
     }
 
     @Override
     public ResponseEntity<LoyaltyRuleResponse> getBusinessLoyaltyRuleById(final UUID id) {
-        final String ownerEmail = SecurityUtils.currentUserEmail();
-        final BusinessLoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.getRuleById(ownerEmail, id)
+        final UUID ownerId = SecurityUtils.currentUserId();
+        final BusinessLoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.getRuleById(ownerId, id)
                 .orElseThrow(() -> new LoyaltyRuleNotFoundException(id));
         final LoyaltyRuleResponse response = businessLoyaltyRuleMapper.toResponse(loyaltyRule);
         return ResponseEntity.ok(response);

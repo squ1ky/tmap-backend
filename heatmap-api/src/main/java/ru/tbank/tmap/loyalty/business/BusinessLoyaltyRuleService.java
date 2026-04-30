@@ -13,9 +13,6 @@ import ru.tbank.tmap.loyalty.exception.LoyaltyRuleStateException;
 import ru.tbank.tmap.loyalty.repository.LoyaltyRuleUsageCount;
 import ru.tbank.tmap.loyalty.repository.LoyaltyRuleRepository;
 import ru.tbank.tmap.loyalty.repository.LoyaltyVerificationRepository;
-import ru.tbank.tmap.user.User;
-import ru.tbank.tmap.user.UserNotFoundException;
-import ru.tbank.tmap.user.UserRepository;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.exception.VenueNotFoundException;
 import ru.tbank.tmap.venue.repository.VenueRepository;
@@ -28,35 +25,31 @@ public class BusinessLoyaltyRuleService {
     private final LoyaltyRuleRepository loyaltyRuleRepository;
     private final LoyaltyVerificationRepository loyaltyVerificationRepository;
     private final VenueRepository venueRepository;
-    private final UserRepository userRepository;
     private final BusinessLoyaltyRuleMapper businessLoyaltyRuleMapper;
 
     @Transactional
     public BusinessLoyaltyRuleDetails createRule(
-            final String ownerEmail,
+            final UUID ownerId,
             final UUID venueId,
             final BusinessLoyaltyRuleCreateCommand command
     ) {
-        final User owner = findOwner(ownerEmail);
-        final Venue venue = findOwnedVenue(owner, venueId);
+        final Venue venue = findOwnedVenue(ownerId, venueId);
         final LoyaltyRule loyaltyRule = businessLoyaltyRuleMapper.toEntity(venue, command);
         final LoyaltyRule savedRule = loyaltyRuleRepository.save(loyaltyRule);
         return new BusinessLoyaltyRuleDetails(savedRule, 0);
     }
 
-    public List<BusinessLoyaltyRuleDetails> getVenueRules(final String ownerEmail, final UUID venueId) {
-        final User owner = findOwner(ownerEmail);
-        findOwnedVenue(owner, venueId);
+    public List<BusinessLoyaltyRuleDetails> getVenueRules(final UUID ownerId, final UUID venueId) {
+        findOwnedVenue(ownerId, venueId);
         final List<LoyaltyRule> rules = loyaltyRuleRepository.findByVenueIdAndVenueOwnerIdOrderByCreatedAtDescIdDesc(
                 venueId,
-                owner.getId()
+                ownerId
         );
         return businessLoyaltyRuleMapper.toDetails(rules, getUsagesMap(rules));
     }
 
-    public Optional<BusinessLoyaltyRuleDetails> getRuleById(final String ownerEmail, final UUID ruleId) {
-        final User owner = findOwner(ownerEmail);
-        return loyaltyRuleRepository.findByIdAndVenueOwnerId(ruleId, owner.getId())
+    public Optional<BusinessLoyaltyRuleDetails> getRuleById(final UUID ownerId, final UUID ruleId) {
+        return loyaltyRuleRepository.findByIdAndVenueOwnerId(ruleId, ownerId)
                 .map(rule -> new BusinessLoyaltyRuleDetails(
                         rule,
                         loyaltyVerificationRepository.countByRuleId(rule.getId())
@@ -65,12 +58,11 @@ public class BusinessLoyaltyRuleService {
 
     @Transactional
     public BusinessLoyaltyRuleDetails updateRule(
-            final String ownerEmail,
+            final UUID ownerId,
             final UUID ruleId,
             final BusinessLoyaltyRuleUpdateCommand command
     ) {
-        final User owner = findOwner(ownerEmail);
-        final LoyaltyRule rule = loyaltyRuleRepository.findByIdAndVenueOwnerId(ruleId, owner.getId())
+        final LoyaltyRule rule = loyaltyRuleRepository.findByIdAndVenueOwnerId(ruleId, ownerId)
                 .orElseThrow(() -> new LoyaltyRuleNotFoundException(ruleId));
 
         if (rule.isActive()) {
@@ -118,13 +110,8 @@ public class BusinessLoyaltyRuleService {
         }
     }
 
-    private Venue findOwnedVenue(final User owner, final UUID venueId) {
-        return venueRepository.findByIdAndOwnerId(venueId, owner.getId())
+    private Venue findOwnedVenue(final UUID ownerId, final UUID venueId) {
+        return venueRepository.findByIdAndOwnerId(venueId, ownerId)
                 .orElseThrow(() -> new VenueNotFoundException(venueId));
-    }
-
-    private User findOwner(final String ownerEmail) {
-        return userRepository.findByEmail(ownerEmail)
-                .orElseThrow(() -> new UserNotFoundException(ownerEmail));
     }
 }

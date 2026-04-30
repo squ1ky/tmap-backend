@@ -43,6 +43,7 @@ import ru.tbank.tmap.venue.domain.VenueCategory;
 @Import({
         SecurityConfig.class,
         GlobalExceptionHandler.class,
+        BusinessLoyaltyRuleMapper.class,
         BusinessLoyaltyRuleControllerTest.TestBeans.class
 })
 class BusinessLoyaltyRuleControllerTest {
@@ -67,7 +68,10 @@ class BusinessLoyaltyRuleControllerTest {
 
     @Test
     void getBusinessVenueLoyaltyRules_whenOwnerAuthenticated_thenReturnsRules() throws Exception {
-        given(businessLoyaltyRuleService.getVenueRules("owner@example.com", VENUE_ID))
+        given(businessLoyaltyRuleService.getVenueRules(
+                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                VENUE_ID
+        ))
                 .willReturn(List.of(ruleView(true, 4)));
 
         mockMvc.perform(get("/api/v1/business/venues/{id}/loyalty-rules", VENUE_ID)
@@ -81,7 +85,10 @@ class BusinessLoyaltyRuleControllerTest {
 
     @Test
     void getBusinessLoyaltyRuleById_whenOwnerAuthenticated_thenReturnsRule() throws Exception {
-        given(businessLoyaltyRuleService.getRuleById("owner@example.com", RULE_ID))
+        given(businessLoyaltyRuleService.getRuleById(
+                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                RULE_ID
+        ))
                 .willReturn(java.util.Optional.of(ruleView(true, 9)));
 
         mockMvc.perform(get("/api/v1/business/loyalty-rules/{id}", RULE_ID)
@@ -94,7 +101,7 @@ class BusinessLoyaltyRuleControllerTest {
     @Test
     void createBusinessVenueLoyaltyRule_whenRequestValid_thenReturnsCreated() throws Exception {
         given(businessLoyaltyRuleService.createRule(
-                org.mockito.ArgumentMatchers.eq("owner@example.com"),
+                org.mockito.ArgumentMatchers.eq(UUID.fromString("11111111-1111-1111-1111-111111111111")),
                 org.mockito.ArgumentMatchers.eq(VENUE_ID),
                 org.mockito.ArgumentMatchers.any()
         )).willReturn(ruleView(true, 0));
@@ -129,7 +136,7 @@ class BusinessLoyaltyRuleControllerTest {
     @Test
     void updateBusinessLoyaltyRule_whenRequestValid_thenReturnsUpdatedRule() throws Exception {
         given(businessLoyaltyRuleService.updateRule(
-                org.mockito.ArgumentMatchers.eq("owner@example.com"),
+                org.mockito.ArgumentMatchers.eq(UUID.fromString("11111111-1111-1111-1111-111111111111")),
                 org.mockito.ArgumentMatchers.eq(RULE_ID),
                 org.mockito.ArgumentMatchers.any()
         )).willReturn(ruleView(false, 5));
@@ -190,17 +197,17 @@ class BusinessLoyaltyRuleControllerTest {
                 UUID.fromString("11111111-1111-1111-1111-111111111111"),
                 "owner@example.com",
                 "password-hash",
-                "owner",
+                "Owner",
                 UserRole.BUSINESS_OWNER
         );
         final Venue venue = new Venue(
                 VENUE_ID,
                 owner,
-                "Venue",
-                "Address",
-                GeoPoint.of(55.75, 37.62),
-                123L,
-                VenueCategory.FOOD
+                "Bar One",
+                "Kazan Center, 2",
+                GeoPoint.of(55.7905, 49.1140),
+                617422037122678783L,
+                VenueCategory.ENTERTAINMENT
         );
         final LoyaltyRule rule = new LoyaltyRule(
                 RULE_ID,
@@ -216,11 +223,6 @@ class BusinessLoyaltyRuleControllerTest {
 
     @TestConfiguration
     static class TestBeans {
-
-        @Bean
-        BusinessLoyaltyRuleMapper businessLoyaltyRuleMapper() {
-            return new BusinessLoyaltyRuleMapper();
-        }
 
         @Bean
         CorsConfigurationSource corsConfigurationSource() {

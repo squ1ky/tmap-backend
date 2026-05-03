@@ -1,9 +1,8 @@
-package ru.tbank.tmap.auth.refresh;
+package ru.tbank.tmap.auth.infrastructure.hash;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import ru.tbank.tmap.auth.infrastructure.hash.Sha256TokenHasher;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -17,7 +16,7 @@ class Sha256TokenHasherTest {
     }
 
     @Test
-    @DisplayName("Должен корректно хэшировать строку в Base64 (SHA-256)")
+    @DisplayName("hash: должен корректно хэшировать строку в Base64 (SHA-256)")
     void hash_whenPlainTokenProvided_thenReturnBase64EncodedSha256Hash() {
         String plainToken = "test";
         String expectedHash = "n4bQgYhMfWWaL+qgxVrQFaO/TxsrC4Is0V1sFbDwCgg=";
@@ -29,7 +28,7 @@ class Sha256TokenHasherTest {
     }
 
     @Test
-    @DisplayName("Одинаковые строки должны давать одинаковый хэш")
+    @DisplayName("hash: одинаковые строки должны давать одинаковый хэш")
     void hash_whenSameTokensProvided_thenReturnSameHashes() {
         String token = "my-secure-refresh-token-123";
 
@@ -40,7 +39,7 @@ class Sha256TokenHasherTest {
     }
 
     @Test
-    @DisplayName("Разные строки должны давать разный хэш")
+    @DisplayName("hash: разные строки должны давать разный хэш")
     void hash_whenDifferentTokensProvided_thenReturnDifferentHashes() {
         String token1 = "refresh-token-A";
         String token2 = "refresh-token-B";

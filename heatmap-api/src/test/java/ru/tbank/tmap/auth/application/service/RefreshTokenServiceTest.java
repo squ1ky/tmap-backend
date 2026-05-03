@@ -1,4 +1,4 @@
-package ru.tbank.tmap.auth.refresh;
+package ru.tbank.tmap.auth.application.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -9,20 +9,15 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.tbank.tmap.auth.application.port.RefreshTokenHasher;
-import ru.tbank.tmap.auth.application.service.RefreshTokenService;
 import ru.tbank.tmap.auth.domain.RefreshToken;
 import ru.tbank.tmap.auth.domain.RefreshTokenRepository;
 import ru.tbank.tmap.auth.infrastructure.security.JwtProperties;
-import ru.tbank.tmap.user.domain.User;
-import ru.tbank.tmap.user.domain.UserRole;
-import ru.tbank.tmap.auth.application.AuthResult;
 import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -30,7 +25,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,7 +33,6 @@ class RefreshTokenServiceTest {
     private static final Duration REFRESH_EXPIRATION = Duration.ofDays(7);
     private static final String PLAIN_TOKEN = "plain-token-value";
     private static final String TOKEN_HASH = "hashed-token-123";
-    private static final String NEW_ACCESS_TOKEN = "new-access-token";
 
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
@@ -47,14 +40,11 @@ class RefreshTokenServiceTest {
     @Mock
     private RefreshTokenHasher tokenHasher;
 
-    @Mock
-    private JwtService jwtService;
-
     @Captor
     private ArgumentCaptor<RefreshToken> refreshTokenCaptor;
 
     private RefreshTokenService refreshTokenService;
-    private User user;
+    private UUID userId;
 
     @BeforeEach
     void setUp() {
@@ -63,96 +53,102 @@ class RefreshTokenServiceTest {
         refreshTokenService = new RefreshTokenService(
                 refreshTokenRepository,
                 tokenHasher,
-                jwtProperties,
-                jwtService
+                jwtProperties
         );
 
-        user = new User(
-                UUID.randomUUID(),
-                "test@example.com",
-                "password-hash",
-                "nickname",
-                UserRole.USER
-        );
+        userId = UUID.randomUUID();
     }
 
     @Test
-    @DisplayName("Должен выдавать refresh токен, хэшировать его и сохранять в БД")
-    void issue_whenValidUser_thenSaveAndReturnPlainToken() {
-        String expectedHash = "hashed-token-123";
-        given(tokenHasher.hash(anyString())).willReturn(expectedHash);
+    @DisplayName("issue: должен выдавать refresh токен, хэшировать его и сохранять в БД")
+    void issue_whenValidUserId_thenSaveAndReturnPlainToken() {
+        given(tokenHasher.hash(anyString())).willReturn(TOKEN_HASH);
 
-        String plainToken = refreshTokenService.issue(user);
+        final String plainToken = refreshTokenService.issue(userId);
 
         assertThat(plainToken).isNotBlank();
 
         verify(refreshTokenRepository).save(refreshTokenCaptor.capture());
-        RefreshToken savedToken = refreshTokenCaptor.getValue();
+        final RefreshToken savedToken = refreshTokenCaptor.getValue();
 
-        assertThat(savedToken).isNotNull();
         assertThat(savedToken.getId()).isNotNull();
-        assertThat(savedToken.getUser()).isEqualTo(user);
-        assertThat(savedToken.getTokenHash()).isEqualTo(expectedHash);
+        assertThat(savedToken.getUserId()).isEqualTo(userId);
+        assertThat(savedToken.getTokenHash()).isEqualTo(TOKEN_HASH);
         assertThat(savedToken.getExpiresAt()).isAfter(OffsetDateTime.now().plusDays(6));
         assertThat(savedToken.getExpiresAt()).isBeforeOrEqualTo(OffsetDateTime.now().plusDays(7).plusMinutes(1));
     }
 
     @Test
-    @DisplayName("Должен генерировать уникальный URL-safe Base64 токен корректной длины")
-    void generatePlainToken_whenCalled_thenReturnValidBase64String() {
-        String token1 = refreshTokenService.generatePlainToken();
-        String token2 = refreshTokenService.generatePlainToken();
+    @DisplayName("issue: каждый вызов должен возвращать уникальный URL-safe Base64 токен")
+    void issue_whenCalledMultipleTimes_thenReturnUniqueTokens() {
+        given(tokenHasher.hash(anyString())).willReturn(TOKEN_HASH);
 
-        assertThat(token1).isNotBlank();
-        assertThat(token1).hasSize(43);
-        assertThat(token1).matches("^[a-zA-Z0-9_-]+$");
-        assertThat(token1).isNotEqualTo(token2);
+        final String token1 = refreshTokenService.issue(userId);
+        final String token2 = refreshTokenService.issue(userId);
+
+        assertThat(token1)
+                .isNotBlank()
+                .hasSize(43)
+                .matches("^[a-zA-Z0-9_-]+$")
+                .isNotEqualTo(token2);
     }
 
     @Test
-    @DisplayName("Должен отозвать старый токен и выпустить новую пару")
-    void rotate_whenTokenValid_thenRevokeOldAndIssueNewPair() {
+    @DisplayName("validateAndRevoke: должен пометить токен отозванным и вернуть userId")
+    void validateAndRevoke_whenTokenValid_thenRevokeAndReturnUserId() {
         final RefreshToken existing = new RefreshToken(
                 UUID.randomUUID(),
-                user,
+                userId,
                 TOKEN_HASH,
                 OffsetDateTime.now().plusDays(1)
         );
         given(tokenHasher.hash(PLAIN_TOKEN)).willReturn(TOKEN_HASH);
-        given(tokenHasher.hash(org.mockito.ArgumentMatchers
-                .argThat(arg -> !PLAIN_TOKEN.equals(arg))))
-                .willReturn("new-hash");
         given(refreshTokenRepository.findByTokenHash(TOKEN_HASH)).willReturn(Optional.of(existing));
-        given(jwtService.generateAccessToken(user)).willReturn(NEW_ACCESS_TOKEN);
 
-        final AuthResult result = refreshTokenService.rotate(PLAIN_TOKEN);
+        final UUID result = refreshTokenService.validateAndRevoke(PLAIN_TOKEN);
 
+        assertThat(result).isEqualTo(userId);
         assertThat(existing.isRevoked()).isTrue();
-        assertThat(result.userId()).isEqualTo(user.getId());
-        assertThat(result.role()).isEqualTo(UserRole.USER);
-        assertThat(result.accessToken()).isEqualTo(NEW_ACCESS_TOKEN);
-        assertThat(result.plainRefreshToken()).isNotBlank().isNotEqualTo(PLAIN_TOKEN);
 
-        verify(refreshTokenRepository, times(2)).save(refreshTokenCaptor.capture());
-        final List<RefreshToken> saved = refreshTokenCaptor.getAllValues();
-
-        final RefreshToken revokedSave = saved.get(0);
-        assertThat(revokedSave).isSameAs(existing);
-        assertThat(revokedSave.isRevoked()).isTrue();
-
-        final RefreshToken newSave = saved.get(1);
-        assertThat(newSave).isNotSameAs(existing);
-        assertThat(newSave.getUser()).isEqualTo(user);
-        assertThat(newSave.isRevoked()).isFalse();
-        assertThat(newSave.getTokenHash()).isEqualTo("new-hash");
+        verify(refreshTokenRepository).save(refreshTokenCaptor.capture());
+        assertThat(refreshTokenCaptor.getValue()).isSameAs(existing);
+        assertThat(refreshTokenCaptor.getValue().isRevoked()).isTrue();
     }
 
     @Test
-    @DisplayName("Должен бросить исключение, если токен уже отозван")
-    void rotate_whenTokenRevoked_thenThrowInvalidRefreshToken() {
+    @DisplayName("validateAndRevoke: должен бросить исключение, если токен пустой")
+    void validateAndRevoke_whenBlankToken_thenThrowInvalidRefreshToken() {
+        assertThatThrownBy(() -> refreshTokenService.validateAndRevoke("   "))
+                .isInstanceOf(InvalidRefreshTokenException.class)
+                .hasMessageContaining("missing");
+        assertThatThrownBy(() -> refreshTokenService.validateAndRevoke(null))
+                .isInstanceOf(InvalidRefreshTokenException.class)
+                .hasMessageContaining("missing");
+
+        verify(tokenHasher, never()).hash(anyString());
+        verify(refreshTokenRepository, never()).findByTokenHash(anyString());
+        verify(refreshTokenRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("validateAndRevoke: должен бросить исключение, если токен не найден")
+    void validateAndRevoke_whenTokenNotFound_thenThrowInvalidRefreshToken() {
+        given(tokenHasher.hash(PLAIN_TOKEN)).willReturn(TOKEN_HASH);
+        given(refreshTokenRepository.findByTokenHash(TOKEN_HASH)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> refreshTokenService.validateAndRevoke(PLAIN_TOKEN))
+                .isInstanceOf(InvalidRefreshTokenException.class)
+                .hasMessageContaining("not found");
+
+        verify(refreshTokenRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("validateAndRevoke: должен бросить исключение, если токен уже отозван")
+    void validateAndRevoke_whenTokenRevoked_thenThrowInvalidRefreshToken() {
         final RefreshToken revoked = new RefreshToken(
                 UUID.randomUUID(),
-                user,
+                userId,
                 TOKEN_HASH,
                 OffsetDateTime.now().plusDays(1)
         );
@@ -160,32 +156,35 @@ class RefreshTokenServiceTest {
         given(tokenHasher.hash(PLAIN_TOKEN)).willReturn(TOKEN_HASH);
         given(refreshTokenRepository.findByTokenHash(TOKEN_HASH)).willReturn(Optional.of(revoked));
 
-        assertThatThrownBy(() -> refreshTokenService.rotate(PLAIN_TOKEN))
+        assertThatThrownBy(() -> refreshTokenService.validateAndRevoke(PLAIN_TOKEN))
                 .isInstanceOf(InvalidRefreshTokenException.class)
                 .hasMessageContaining("revoked");
 
         verify(refreshTokenRepository, never()).save(any());
-        verify(jwtService, never()).generateAccessToken(user);
     }
 
     @Test
-    @DisplayName("Должен бросить исключение, если токен не найден")
-    void rotate_whenTokenNotFound_thenThrowInvalidRefreshToken() {
+    @DisplayName("validateAndRevoke: должен бросить исключение, если токен истёк")
+    void validateAndRevoke_whenTokenExpired_thenThrowInvalidRefreshToken() {
+        final RefreshToken expired = new RefreshToken(
+                UUID.randomUUID(),
+                userId,
+                TOKEN_HASH,
+                OffsetDateTime.now().minusMinutes(1)
+        );
         given(tokenHasher.hash(PLAIN_TOKEN)).willReturn(TOKEN_HASH);
-        given(refreshTokenRepository.findByTokenHash(TOKEN_HASH)).willReturn(Optional.empty());
+        given(refreshTokenRepository.findByTokenHash(TOKEN_HASH)).willReturn(Optional.of(expired));
 
-        assertThatThrownBy(() -> refreshTokenService.rotate(PLAIN_TOKEN))
+        assertThatThrownBy(() -> refreshTokenService.validateAndRevoke(PLAIN_TOKEN))
                 .isInstanceOf(InvalidRefreshTokenException.class)
-                .hasMessageContaining("not found");
+                .hasMessageContaining("expired");
 
         verify(refreshTokenRepository, never()).save(any());
-        verify(jwtService, never()).generateAccessToken(user);
     }
 
     @Test
     @DisplayName("revokeSpecificToken: должен хэшировать токен и отзывать конкретную сессию в БД")
     void revokeSpecificToken_whenValidToken_thenDelegateToRepository() {
-        final UUID userId = UUID.randomUUID();
         given(tokenHasher.hash(PLAIN_TOKEN)).willReturn(TOKEN_HASH);
         given(refreshTokenRepository.revokeByTokenHashAndUserId(TOKEN_HASH, userId)).willReturn(1);
 
@@ -198,8 +197,6 @@ class RefreshTokenServiceTest {
     @Test
     @DisplayName("revokeSpecificToken: должен ничего не делать, если токен пустой")
     void revokeSpecificToken_whenBlankToken_thenDoNothing() {
-        final UUID userId = UUID.randomUUID();
-
         refreshTokenService.revokeSpecificToken(userId, "   ");
         refreshTokenService.revokeSpecificToken(userId, null);
 

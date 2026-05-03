@@ -17,6 +17,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.BoundingBox;
+import ru.tbank.tmap.test.security.TestSecurityConfig;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.venue.repository.VenuePublicRow;
@@ -25,7 +26,11 @@ import ru.tbank.tmap.venue.search.VenueSearchService;
 
 @WebMvcTest(VenueController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import({GlobalExceptionHandler.class, VenuePublicMapper.class})
+@Import({
+        TestSecurityConfig.class,
+        GlobalExceptionHandler.class,
+        VenuePublicMapper.class
+})
 class VenueControllerTest {
 
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");

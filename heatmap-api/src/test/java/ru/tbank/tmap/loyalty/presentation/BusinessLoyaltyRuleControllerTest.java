@@ -19,29 +19,23 @@ import org.openapitools.model.LoyaltyRuleCreateRequest;
 import org.openapitools.model.LoyaltyRuleUpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
-import ru.tbank.tmap.infrastructure.security.SecurityConfig;
 import ru.tbank.tmap.loyalty.application.BusinessLoyaltyRuleService;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
 import ru.tbank.tmap.loyalty.presentation.dto.BusinessLoyaltyRuleDetails;
 import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
+import ru.tbank.tmap.test.security.TestSecurityConfig;
 
 @WebMvcTest(BusinessLoyaltyRuleController.class)
 @Import({
-        SecurityConfig.class,
+        TestSecurityConfig.class,
         GlobalExceptionHandler.class,
         BusinessLoyaltyRuleMapper.class,
-        BusinessLoyaltyRuleControllerTest.TestBeans.class
 })
 class BusinessLoyaltyRuleControllerTest {
 
@@ -56,12 +50,6 @@ class BusinessLoyaltyRuleControllerTest {
 
     @MockitoBean
     private BusinessLoyaltyRuleService businessLoyaltyRuleService;
-
-    @MockitoBean
-    private JwtService jwtService;
-
-    @MockitoBean
-    private UserDetailsService userDetailsService;
 
     @Test
     void getBusinessVenueLoyaltyRules_whenOwnerAuthenticated_thenReturnsRules() throws Exception {
@@ -81,6 +69,7 @@ class BusinessLoyaltyRuleControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     void getBusinessLoyaltyRuleById_whenOwnerAuthenticated_thenReturnsRule() throws Exception {
         given(businessLoyaltyRuleService.getRuleById(
                 UUID.fromString("11111111-1111-1111-1111-111111111111"),
@@ -194,14 +183,5 @@ class BusinessLoyaltyRuleControllerTest {
         rule.setActive(active);
         rule.setCreatedAt(OffsetDateTime.parse("2026-04-27T08:30:00+03:00"));
         return new BusinessLoyaltyRuleDetails(rule, currentUsages);
-    }
-
-    @TestConfiguration
-    static class TestBeans {
-
-        @Bean
-        CorsConfigurationSource corsConfigurationSource() {
-            return request -> new CorsConfiguration().applyPermitDefaultValues();
-        }
     }
 }

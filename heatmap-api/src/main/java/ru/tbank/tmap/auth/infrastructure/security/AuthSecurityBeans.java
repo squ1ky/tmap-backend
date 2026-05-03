@@ -24,6 +24,7 @@ public class AuthSecurityBeans {
     }
 
     @Bean
+    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }

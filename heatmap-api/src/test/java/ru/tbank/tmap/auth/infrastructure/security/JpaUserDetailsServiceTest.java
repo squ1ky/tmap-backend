@@ -1,4 +1,4 @@
-package ru.tbank.tmap.auth;
+package ru.tbank.tmap.auth.infrastructure.security;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import ru.tbank.tmap.auth.infrastructure.security.UserDetailsServiceAdapter;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRole;
 import ru.tbank.tmap.user.domain.UserRepository;
@@ -33,7 +32,7 @@ class JpaUserDetailsServiceTest {
     private final String testPasswordHash = "encoded_hash_123";
 
     @Test
-    @DisplayName("Должен возвращать UserDetails с активным статусом, если пользователь найден и не заблокирован")
+    @DisplayName("loadUserByUsername: должен возвращать UserDetails с активным статусом, если пользователь найден и не заблокирован")
     void loadUserByUsername_whenUserExistsAndNotBlocked_thenReturnActiveUserDetails() {
         User mockUser = mock(User.class);
         given(mockUser.getEmail()).willReturn(testEmail);
@@ -60,7 +59,7 @@ class JpaUserDetailsServiceTest {
     }
 
     @Test
-    @DisplayName("Должен возвращать UserDetails с выключенным статусом, если пользователь заблокирован")
+    @DisplayName("loadUserByUsername: должен возвращать UserDetails с выключенным статусом, если пользователь заблокирован")
     void loadUserByUsername_whenUserIsBlocked_thenReturnDisabledUserDetails() {
         User mockUser = mock(User.class);
         given(mockUser.getEmail()).willReturn(testEmail);
@@ -81,7 +80,7 @@ class JpaUserDetailsServiceTest {
     }
 
     @Test
-    @DisplayName("Должен выбрасывать UsernameNotFoundException, если пользователь не найден")
+    @DisplayName("loadUserByUsername: должен выбрасывать UsernameNotFoundException, если пользователь не найден")
     void loadUserByUsername_whenUserNotFound_thenThrowUsernameNotFoundException() {
         given(userRepository.findByEmail(testEmail)).willReturn(Optional.empty());
 

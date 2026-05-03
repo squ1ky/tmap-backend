@@ -22,6 +22,7 @@ import ru.tbank.tmap.auth.application.AuthResult;
 import ru.tbank.tmap.auth.application.service.AuthService;
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
 import ru.tbank.tmap.auth.infrastructure.security.cookie.RefreshTokenCookieFactory;
+import ru.tbank.tmap.test.security.TestSecurityConfig;
 import ru.tbank.tmap.user.api.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;
@@ -46,7 +47,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
-@Import(AuthControllerTest.TestBeans.class)
+@Import({
+        TestSecurityConfig.class,
+        AuthControllerTest.TestBeans.class
+})
 @WithMockUser
 class AuthControllerTest {
 

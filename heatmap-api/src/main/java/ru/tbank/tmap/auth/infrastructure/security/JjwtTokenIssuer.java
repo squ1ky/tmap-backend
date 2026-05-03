@@ -26,7 +26,7 @@ public class JjwtTokenIssuer implements TokenIssuer {
     private SecretKey secretKey;
 
     @PostConstruct
-        /* default */ void init() {
+    /* default */ void init() {
         final byte[] keyBytes = Base64.getDecoder().decode(jwtProperties.secret());
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }

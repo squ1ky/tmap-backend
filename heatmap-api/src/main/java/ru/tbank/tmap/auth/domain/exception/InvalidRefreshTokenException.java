@@ -1,4 +1,4 @@
-package ru.tbank.tmap.auth.exception;
+package ru.tbank.tmap.auth.domain.exception;
 
 public class InvalidRefreshTokenException extends RuntimeException {
 

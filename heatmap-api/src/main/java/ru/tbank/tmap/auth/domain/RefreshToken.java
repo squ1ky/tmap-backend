@@ -1,11 +1,8 @@
-package ru.tbank.tmap.auth.refresh;
+package ru.tbank.tmap.auth.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,7 +13,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import ru.tbank.tmap.user.User;
 
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -38,9 +34,8 @@ public class RefreshToken {
     private UUID id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
     @NotBlank
     @Size(max = 255)
@@ -59,9 +54,9 @@ public class RefreshToken {
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private OffsetDateTime createdAt;
 
-    public RefreshToken(UUID id, User user, String tokenHash, OffsetDateTime expiresAt) {
+    public RefreshToken(UUID id, UUID userId, String tokenHash, OffsetDateTime expiresAt) {
         this.id = Objects.requireNonNull(id, "id");
-        this.user = Objects.requireNonNull(user, "user");
+        this.userId = Objects.requireNonNull(userId, "userId");
         this.tokenHash = Objects.requireNonNull(tokenHash, "tokenHash");
         this.expiresAt = Objects.requireNonNull(expiresAt, "expiresAt");
     }

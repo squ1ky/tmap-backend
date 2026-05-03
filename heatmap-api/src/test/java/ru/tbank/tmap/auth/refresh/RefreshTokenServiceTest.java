@@ -8,11 +8,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.tbank.tmap.auth.domain.RefreshToken;
+import ru.tbank.tmap.auth.domain.RefreshTokenRepository;
 import ru.tbank.tmap.auth.jwt.JwtProperties;
 import ru.tbank.tmap.user.User;
 import ru.tbank.tmap.user.UserRole;
 import ru.tbank.tmap.auth.AuthResult;
-import ru.tbank.tmap.auth.exception.InvalidRefreshTokenException;
+import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;
 import ru.tbank.tmap.auth.jwt.JwtService;
 
 import java.time.Duration;

@@ -21,9 +21,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.auth.userdetails.CustomUserDetails;
 import ru.tbank.tmap.infrastructure.security.cookie.RefreshTokenCookieFactory;
 import ru.tbank.tmap.user.UserRole;
-import ru.tbank.tmap.auth.exception.EmailAlreadyExistsException;
-import ru.tbank.tmap.auth.exception.InvalidCredentialsException;
-import ru.tbank.tmap.auth.exception.InvalidRefreshTokenException;
+import ru.tbank.tmap.auth.domain.exception.EmailAlreadyExistsException;
+import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
+import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;
 import ru.tbank.tmap.auth.jwt.JwtService;
 
 import java.util.List;

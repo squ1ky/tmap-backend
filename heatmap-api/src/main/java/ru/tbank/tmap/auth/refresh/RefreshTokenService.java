@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.auth.domain.RefreshToken;
+import ru.tbank.tmap.auth.domain.RefreshTokenRepository;
 import ru.tbank.tmap.auth.jwt.JwtProperties;
 import ru.tbank.tmap.user.User;
 import ru.tbank.tmap.auth.AuthResult;
-import ru.tbank.tmap.auth.exception.InvalidRefreshTokenException;
+import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;
 import ru.tbank.tmap.auth.jwt.JwtService;
 
 import java.security.SecureRandom;

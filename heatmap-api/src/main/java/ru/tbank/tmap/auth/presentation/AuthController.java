@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.tbank.tmap.auth.application.AuthResult;
 import ru.tbank.tmap.auth.application.service.AuthService;
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
-import ru.tbank.tmap.infrastructure.security.cookie.RefreshTokenCookieFactory;
+import ru.tbank.tmap.auth.infrastructure.security.cookie.RefreshTokenCookieFactory;
 import ru.tbank.tmap.shared.utils.SecurityUtils;
 
 @RestController

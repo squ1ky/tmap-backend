@@ -1,4 +1,4 @@
-package ru.tbank.tmap.infrastructure.security.cookie;
+package ru.tbank.tmap.auth.infrastructure.security.cookie;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
@@ -15,7 +15,7 @@ public class RefreshTokenCookieFactory {
     private static final String COOKIE_PATH = "/api/v1/auth";
 
     private final JwtProperties jwtProperties;
-    private final CookieSecurityProperties cookieSecurityProperties;
+    private final RefreshTokenCookieProperties cookieProperties;
 
     public ResponseCookie create(final String plainRefreshToken) {
         return baseBuilder(plainRefreshToken)
@@ -32,8 +32,8 @@ public class RefreshTokenCookieFactory {
     private ResponseCookie.ResponseCookieBuilder baseBuilder(final String value) {
         return ResponseCookie.from(COOKIE_NAME, value)
                 .httpOnly(true)
-                .secure(cookieSecurityProperties.secure())
+                .secure(cookieProperties.secure())
                 .path(COOKIE_PATH)
-                .sameSite(cookieSecurityProperties.sameSite());
+                .sameSite(cookieProperties.sameSite());
     }
 }

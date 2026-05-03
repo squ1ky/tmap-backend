@@ -1,4 +1,4 @@
-package ru.tbank.tmap.auth;
+package ru.tbank.tmap.auth.presentation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
@@ -21,9 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.auth.application.AuthResult;
 import ru.tbank.tmap.auth.application.service.AuthService;
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
-import ru.tbank.tmap.auth.presentation.AuthController;
-import ru.tbank.tmap.infrastructure.security.cookie.RefreshTokenCookieFactory;
-import ru.tbank.tmap.user.domain.UserRole;
+import ru.tbank.tmap.auth.infrastructure.security.cookie.RefreshTokenCookieFactory;
 import ru.tbank.tmap.user.api.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;
@@ -77,9 +75,6 @@ class AuthControllerTest {
     private AuthService authService;
 
     @MockitoBean
-    private JwtService jwtService;
-
-    @MockitoBean
     private UserDetailsService userDetailsService;
 
     @Autowired
@@ -89,7 +84,7 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
-        authResult = new AuthResult(USER_ID, UserRole.USER, ACCESS_TOKEN, REFRESH_TOKEN);
+        authResult = new AuthResult(USER_ID, "USER", ACCESS_TOKEN, REFRESH_TOKEN);
 
         final ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, REFRESH_TOKEN)
                 .httpOnly(true)

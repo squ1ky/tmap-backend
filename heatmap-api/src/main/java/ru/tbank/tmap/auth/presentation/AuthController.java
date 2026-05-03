@@ -1,4 +1,4 @@
-package ru.tbank.tmap.auth;
+package ru.tbank.tmap.auth.presentation;
 
 import lombok.RequiredArgsConstructor;
 import org.openapitools.api.AuthApi;
@@ -63,7 +63,7 @@ public class AuthController implements AuthApi {
     private ResponseEntity<AuthResponse> buildAuthResponse(final AuthResult result, final HttpStatus status) {
         final AuthResponse body = new AuthResponse()
                 .userId(result.userId())
-                .role(UserRole.fromValue(result.role().name()))
+                .role(UserRole.fromValue(result.role()))
                 .accessToken(result.accessToken());
 
         final ResponseCookie cookie = refreshTokenCookieFactory.create(result.plainRefreshToken());

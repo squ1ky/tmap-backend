@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.auth.application.AuthResult;
 import ru.tbank.tmap.auth.application.service.AuthService;
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
+import ru.tbank.tmap.auth.presentation.AuthController;
 import ru.tbank.tmap.infrastructure.security.cookie.RefreshTokenCookieFactory;
 import ru.tbank.tmap.user.domain.UserRole;
 import ru.tbank.tmap.user.api.exception.EmailAlreadyExistsException;

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.auth.jwt;
+package ru.tbank.tmap.auth.infrastructure.security;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

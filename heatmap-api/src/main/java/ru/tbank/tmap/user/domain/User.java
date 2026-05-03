@@ -1,4 +1,4 @@
-package ru.tbank.tmap.user;
+package ru.tbank.tmap.user.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

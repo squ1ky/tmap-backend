@@ -1,4 +1,4 @@
-package ru.tbank.tmap.auth.userdetails;
+package ru.tbank.tmap.auth.infrastructure.security;
 
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;

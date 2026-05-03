@@ -1,4 +1,4 @@
-package ru.tbank.tmap.auth.userdetails;
+package ru.tbank.tmap.auth.infrastructure.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -6,13 +6,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import ru.tbank.tmap.user.UserRepository;
+import ru.tbank.tmap.user.domain.UserRepository;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class JpaUserDetailsService implements UserDetailsService {
+public class UserDetailsServiceAdapter implements UserDetailsService {
 
     private static final String ROLE_PREFIX = "ROLE_";
     private static final boolean ACCOUNT_NON_EXPIRED = true;

@@ -1,16 +1,14 @@
-package ru.tbank.tmap.auth.refresh;
+package ru.tbank.tmap.auth.application.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.auth.application.port.RefreshTokenHasher;
 import ru.tbank.tmap.auth.domain.RefreshToken;
 import ru.tbank.tmap.auth.domain.RefreshTokenRepository;
-import ru.tbank.tmap.auth.jwt.JwtProperties;
-import ru.tbank.tmap.user.User;
-import ru.tbank.tmap.auth.AuthResult;
+import ru.tbank.tmap.auth.infrastructure.security.JwtProperties;
 import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;
-import ru.tbank.tmap.auth.jwt.JwtService;
 
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
@@ -27,15 +25,14 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenHasher tokenHasher;
     private final JwtProperties jwtProperties;
-    private final JwtService jwtService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Transactional
-    public String issue(final User user) {
+    public String issue(final UUID userId) {
         final String plainToken = generatePlainToken();
         final RefreshToken refreshToken = new RefreshToken(
                 UUID.randomUUID(),
-                user,
+                userId,
                 tokenHasher.hash(plainToken),
                 OffsetDateTime.now().plus(jwtProperties.refreshExpiration())
         );
@@ -43,11 +40,17 @@ public class RefreshTokenService {
         return plainToken;
     }
 
+    /**
+     * Validates a plain refresh token, revokes it, and returns the owner's user id.
+     * Throws {@link InvalidRefreshTokenException} if the token is missing, unknown,
+     * already revoked, or expired.
+     */
     @Transactional
-    public AuthResult rotate(final String plainToken) {
+    public UUID validateAndRevoke(final String plainToken) {
         if (plainToken == null || plainToken.isBlank()) {
             throw new InvalidRefreshTokenException("Refresh token is missing");
         }
+
         final String hash = tokenHasher.hash(plainToken);
         final RefreshToken existing = refreshTokenRepository.findByTokenHash(hash)
                 .orElseThrow(() -> new InvalidRefreshTokenException("Refresh token not found"));
@@ -62,16 +65,7 @@ public class RefreshTokenService {
         existing.setRevoked(true);
         refreshTokenRepository.save(existing);
 
-        final User user = existing.getUser();
-        final String newPlainRefreshToken = issue(user);
-        final String accessToken = jwtService.generateAccessToken(user);
-
-        return new AuthResult(
-                user.getId(),
-                user.getRole(),
-                accessToken,
-                newPlainRefreshToken
-        );
+        return existing.getUserId();
     }
 
     @Transactional

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.user;
+package ru.tbank.tmap.user.domain.exception;
 
 import lombok.Getter;
 

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.user;
+package ru.tbank.tmap.user.domain;
 
 public enum UserRole {
     USER,

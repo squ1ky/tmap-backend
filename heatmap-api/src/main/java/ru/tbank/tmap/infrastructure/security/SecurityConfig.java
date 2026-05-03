@@ -16,8 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
-import ru.tbank.tmap.auth.jwt.JwtAuthenticationFilter;
-import ru.tbank.tmap.auth.jwt.JwtService;
+import ru.tbank.tmap.auth.infrastructure.security.JwtAuthenticationFilter;
 
 @Configuration
 @EnableMethodSecurity

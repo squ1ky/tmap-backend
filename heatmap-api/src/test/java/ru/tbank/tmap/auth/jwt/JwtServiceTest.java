@@ -6,10 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.tbank.tmap.auth.jwt.JwtService;
-import ru.tbank.tmap.auth.jwt.JwtProperties;
-import ru.tbank.tmap.user.User;
-import ru.tbank.tmap.user.UserRole;
+import ru.tbank.tmap.auth.infrastructure.security.JwtProperties;
+import ru.tbank.tmap.user.domain.User;
+import ru.tbank.tmap.user.domain.UserRole;
 
 import java.time.Duration;
 import java.util.UUID;

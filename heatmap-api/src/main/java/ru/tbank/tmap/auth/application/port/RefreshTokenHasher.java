@@ -1,4 +1,4 @@
-package ru.tbank.tmap.auth.refresh;
+package ru.tbank.tmap.auth.application.port;
 
 public interface RefreshTokenHasher {
     String hash(String plainToken);

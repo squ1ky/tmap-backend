@@ -1,6 +1,7 @@
-package ru.tbank.tmap.auth.refresh;
+package ru.tbank.tmap.auth.infrastructure.hash;
 
 import org.springframework.stereotype.Component;
+import ru.tbank.tmap.auth.application.port.RefreshTokenHasher;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

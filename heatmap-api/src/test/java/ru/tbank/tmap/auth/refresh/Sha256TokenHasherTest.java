@@ -3,6 +3,7 @@ package ru.tbank.tmap.auth.refresh;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import ru.tbank.tmap.auth.infrastructure.hash.Sha256TokenHasher;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 

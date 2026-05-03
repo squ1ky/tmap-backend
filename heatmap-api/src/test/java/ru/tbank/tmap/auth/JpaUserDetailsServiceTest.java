@@ -8,10 +8,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import ru.tbank.tmap.auth.userdetails.JpaUserDetailsService;
-import ru.tbank.tmap.user.User;
-import ru.tbank.tmap.user.UserRole;
-import ru.tbank.tmap.user.UserRepository;
+import ru.tbank.tmap.auth.infrastructure.security.UserDetailsServiceAdapter;
+import ru.tbank.tmap.user.domain.User;
+import ru.tbank.tmap.user.domain.UserRole;
+import ru.tbank.tmap.user.domain.UserRepository;
 
 import java.util.Optional;
 
@@ -27,7 +27,7 @@ class JpaUserDetailsServiceTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private JpaUserDetailsService userDetailsService;
+    private UserDetailsServiceAdapter userDetailsService;
 
     private final String testEmail = "security@tbank.ru";
     private final String testPasswordHash = "encoded_hash_123";

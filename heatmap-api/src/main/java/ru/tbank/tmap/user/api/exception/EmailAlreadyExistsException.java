@@ -1,4 +1,4 @@
-package ru.tbank.tmap.auth.domain.exception;
+package ru.tbank.tmap.user.api.exception;
 
 public class EmailAlreadyExistsException extends RuntimeException {
     public EmailAlreadyExistsException(String email) {

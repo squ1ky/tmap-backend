@@ -1,4 +1,4 @@
-package ru.tbank.tmap.auth.jwt;
+package ru.tbank.tmap.auth.infrastructure.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
+import ru.tbank.tmap.auth.application.port.TokenIssuer;
 
 import java.io.IOException;
 
@@ -24,7 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private final JwtService jwtService;
+    private final TokenIssuer tokenIssuer;
     private final UserDetailsService userDetailsService;
 
     private final UserDetailsChecker userDetailsChecker = new AccountStatusUserDetailsChecker();
@@ -43,8 +44,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = header.substring(BEARER_PREFIX.length());
 
-        if (jwtService.isValidAccessToken(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
-            final String email = jwtService.extractEmail(token);
+        if (tokenIssuer.isValidAccessToken(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
+            final String email = tokenIssuer.extractEmail(token);
             if (email != null) {
                 final UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 

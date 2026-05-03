@@ -3,7 +3,7 @@ package ru.tbank.tmap.infrastructure.security.cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
-import ru.tbank.tmap.auth.jwt.JwtProperties;
+import ru.tbank.tmap.auth.infrastructure.security.JwtProperties;
 
 import java.time.Duration;
 

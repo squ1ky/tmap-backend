@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import ru.tbank.tmap.infrastructure.minio.MinioProperties;
 import ru.tbank.tmap.infrastructure.security.cors.CorsProperties;
 import ru.tbank.tmap.infrastructure.security.cookie.CookieSecurityProperties;
-import ru.tbank.tmap.auth.jwt.JwtProperties;
+import ru.tbank.tmap.auth.infrastructure.security.JwtProperties;
 
 @SpringBootApplication
 @EnableScheduling

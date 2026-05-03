@@ -1,4 +1,4 @@
-package ru.tbank.tmap.loyalty.business;
+package ru.tbank.tmap.loyalty.presentation.dto;
 
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
 

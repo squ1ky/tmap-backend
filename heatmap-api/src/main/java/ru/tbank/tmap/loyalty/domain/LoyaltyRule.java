@@ -2,10 +2,7 @@ package ru.tbank.tmap.loyalty.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -19,7 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import ru.tbank.tmap.venue.domain.Venue;
+import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleStateException;
 
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -41,9 +38,8 @@ public class LoyaltyRule {
     private UUID id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "venue_id", nullable = false)
-    private Venue venue;
+    @Column(name = "venue_id", nullable = false)
+    private UUID venueId;
 
     @NotBlank
     @Size(max = 255)
@@ -70,12 +66,12 @@ public class LoyaltyRule {
     private OffsetDateTime createdAt;
 
     public LoyaltyRule(UUID id,
-                       Venue venue,
+                       UUID venueId,
                        String description,
                        int discountPercent,
                        int maxUsages) {
         this.id = Objects.requireNonNull(id, "id");
-        this.venue = Objects.requireNonNull(venue, "venue");
+        this.venueId = Objects.requireNonNull(venueId, "venueId");
         this.description = Objects.requireNonNull(description, "description");
         if (discountPercent < 0 || discountPercent > 100) {
             throw new IllegalArgumentException("discountPercent must be in [0, 100], got " + discountPercent);
@@ -85,5 +81,16 @@ public class LoyaltyRule {
         }
         this.discountPercent = discountPercent;
         this.maxUsages = maxUsages;
+    }
+
+    public void updateMaxUsages(Integer newMaxUsages, long currentUsages) {
+        if (newMaxUsages == null) {
+            return;
+        }
+
+        if (newMaxUsages < currentUsages) {
+            throw LoyaltyRuleStateException.maxUsagesCannotBeLessThanCurrentUsages(this.getId());
+        }
+        this.maxUsages = newMaxUsages;
     }
 }

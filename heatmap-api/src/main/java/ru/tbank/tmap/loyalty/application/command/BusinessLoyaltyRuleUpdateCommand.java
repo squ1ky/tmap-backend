@@ -1,4 +1,4 @@
-package ru.tbank.tmap.loyalty.business;
+package ru.tbank.tmap.loyalty.application.command;
 
 public record BusinessLoyaltyRuleUpdateCommand(
         String description,

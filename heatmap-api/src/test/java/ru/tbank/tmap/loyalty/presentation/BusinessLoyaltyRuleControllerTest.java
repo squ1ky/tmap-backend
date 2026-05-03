@@ -1,4 +1,4 @@
-package ru.tbank.tmap.loyalty.business;
+package ru.tbank.tmap.loyalty.presentation;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -10,9 +10,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Map;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.openapitools.model.LoyaltyRuleCreateRequest;
@@ -28,16 +28,14 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
-import ru.tbank.tmap.auth.userdetails.CustomUserDetails;
 import ru.tbank.tmap.auth.jwt.JwtService;
+import ru.tbank.tmap.auth.userdetails.CustomUserDetails;
 import ru.tbank.tmap.infrastructure.security.SecurityConfig;
+import ru.tbank.tmap.loyalty.application.BusinessLoyaltyRuleService;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
+import ru.tbank.tmap.loyalty.presentation.dto.BusinessLoyaltyRuleDetails;
+import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
-import ru.tbank.tmap.shared.geo.GeoPoint;
-import ru.tbank.tmap.user.User;
-import ru.tbank.tmap.user.UserRole;
-import ru.tbank.tmap.venue.domain.Venue;
-import ru.tbank.tmap.venue.domain.VenueCategory;
 
 @WebMvcTest(BusinessLoyaltyRuleController.class)
 @Import({
@@ -193,29 +191,7 @@ class BusinessLoyaltyRuleControllerTest {
     }
 
     private BusinessLoyaltyRuleDetails ruleView(final boolean active, final int currentUsages) {
-        final User owner = new User(
-                UUID.fromString("11111111-1111-1111-1111-111111111111"),
-                "owner@example.com",
-                "password-hash",
-                "Owner",
-                UserRole.BUSINESS_OWNER
-        );
-        final Venue venue = new Venue(
-                VENUE_ID,
-                owner,
-                "Bar One",
-                "Kazan Center, 2",
-                GeoPoint.of(55.7905, 49.1140),
-                617422037122678783L,
-                VenueCategory.ENTERTAINMENT
-        );
-        final LoyaltyRule rule = new LoyaltyRule(
-                RULE_ID,
-                venue,
-                "Discount 15%",
-                15,
-                100
-        );
+        final LoyaltyRule rule = new LoyaltyRule(RULE_ID, VENUE_ID, "Discount 15%", 15, 100);
         rule.setActive(active);
         rule.setCreatedAt(OffsetDateTime.parse("2026-04-27T08:30:00+03:00"));
         return new BusinessLoyaltyRuleDetails(rule, currentUsages);

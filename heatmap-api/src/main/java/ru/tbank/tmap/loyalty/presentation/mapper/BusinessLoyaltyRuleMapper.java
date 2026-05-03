@@ -1,4 +1,4 @@
-package ru.tbank.tmap.loyalty.business;
+package ru.tbank.tmap.loyalty.presentation.mapper;
 
 import java.util.List;
 import java.util.Map;
@@ -7,8 +7,10 @@ import org.openapitools.model.LoyaltyRuleCreateRequest;
 import org.openapitools.model.LoyaltyRuleResponse;
 import org.openapitools.model.LoyaltyRuleUpdateRequest;
 import org.springframework.stereotype.Component;
+import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
+import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
-import ru.tbank.tmap.venue.domain.Venue;
+import ru.tbank.tmap.loyalty.presentation.dto.BusinessLoyaltyRuleDetails;
 
 @Component
 public class BusinessLoyaltyRuleMapper {
@@ -30,21 +32,11 @@ public class BusinessLoyaltyRuleMapper {
         );
     }
 
-    public LoyaltyRule toEntity(final Venue venue, final BusinessLoyaltyRuleCreateCommand command) {
-        return new LoyaltyRule(
-                UUID.randomUUID(),
-                venue,
-                command.description(),
-                command.discountPercent(),
-                command.maxUsages()
-        );
-    }
-
     public LoyaltyRuleResponse toResponse(final BusinessLoyaltyRuleDetails details) {
         final LoyaltyRule rule = details.rule();
         return new LoyaltyRuleResponse()
                 .id(rule.getId())
-                .venueId(rule.getVenue().getId())
+                .venueId(rule.getVenueId())
                 .description(rule.getDescription())
                 .discountPercent(rule.getDiscountPercent())
                 .maxUsages(rule.getMaxUsages())

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.loyalty.exception;
+package ru.tbank.tmap.loyalty.domain.exception;
 
 import java.util.UUID;
 

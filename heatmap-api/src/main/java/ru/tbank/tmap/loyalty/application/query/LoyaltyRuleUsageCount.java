@@ -1,4 +1,4 @@
-package ru.tbank.tmap.loyalty.repository;
+package ru.tbank.tmap.loyalty.application.query;
 
 import java.util.UUID;
 

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap;
+package ru.tbank.tmap.heatmap.presentation;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -6,7 +6,9 @@ import org.openapitools.model.ClusterDTO;
 import org.openapitools.model.ClusterDetailsResponse;
 import org.openapitools.model.HeatmapResponse;
 import org.springframework.stereotype.Component;
-import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
+import ru.tbank.tmap.heatmap.application.query.HeatmapClusterAggregate;
+import ru.tbank.tmap.heatmap.application.query.ClusterDetailsAggregate;
+import ru.tbank.tmap.heatmap.presentation.dto.HeatmapClusters;
 
 @Component
 public class HeatmapMapper {

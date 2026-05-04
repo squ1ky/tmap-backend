@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap.cluster;
+package ru.tbank.tmap.heatmap.application;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

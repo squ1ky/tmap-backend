@@ -23,8 +23,8 @@ import ru.tbank.tmap.infrastructure.h3.H3Config;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 import ru.tbank.tmap.venue.domain.VenueCategory;
-import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
-import ru.tbank.tmap.heatmap.HeatmapClusterAggregate;
+import ru.tbank.tmap.heatmap.application.query.ClusterDetailsAggregate;
+import ru.tbank.tmap.heatmap.application.query.HeatmapClusterAggregate;
 
 @JdbcTest
 @Import({TestcontainersConfiguration.class, H3Config.class, JdbcClusterHistoryQueryRepository.class})

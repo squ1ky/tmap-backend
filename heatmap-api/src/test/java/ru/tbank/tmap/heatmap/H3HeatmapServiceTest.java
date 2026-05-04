@@ -13,11 +13,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import ru.tbank.tmap.heatmap.application.H3HeatmapService;
+import ru.tbank.tmap.heatmap.application.query.HeatmapClusterAggregate;
+import ru.tbank.tmap.heatmap.presentation.dto.HeatmapClusters;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 import ru.tbank.tmap.heatmap.domain.ClusterHistoryQueryRepository;
-import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
+import ru.tbank.tmap.heatmap.application.query.ClusterDetailsAggregate;
 
 class H3HeatmapServiceTest {
 

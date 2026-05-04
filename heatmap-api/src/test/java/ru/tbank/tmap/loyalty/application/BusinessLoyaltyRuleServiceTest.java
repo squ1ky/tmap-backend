@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.openapitools.model.LoyaltyActivationStatus;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
 import ru.tbank.tmap.loyalty.application.exception.VenueAccessDeniedException;
@@ -23,6 +24,7 @@ import ru.tbank.tmap.loyalty.application.port.VenueOwnershipPort;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleUsageCount;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRuleRepository;
+import ru.tbank.tmap.loyalty.domain.LoyaltyVerification;
 import ru.tbank.tmap.loyalty.domain.LoyaltyVerificationRepository;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleStateException;
@@ -35,6 +37,7 @@ class BusinessLoyaltyRuleServiceTest {
     private static final UUID OWNER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
     private static final UUID RULE_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
+    private static final UUID USER_ID = UUID.fromString("55555555-5555-5555-5555-555555555555");
 
     @Mock
     private LoyaltyRuleRepository loyaltyRuleRepository;
@@ -259,6 +262,57 @@ class BusinessLoyaltyRuleServiceTest {
         assertThat(result.rule().getMaxUsages()).isEqualTo(120);
         assertThat(result.currentUsages()).isEqualTo(4);
         assertThat(result.rule().isActive()).isFalse();
+    }
+
+    @Test
+    void activateRule_whenUserAlreadyUsedRule_thenReturnsAlreadyUsedStatus() {
+        final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
+        given(loyaltyRuleRepository.findById(RULE_ID)).willReturn(Optional.of(rule));
+        given(loyaltyVerificationRepository.existsByRuleIdAndUserId(RULE_ID, USER_ID)).willReturn(true);
+
+        final BusinessLoyaltyRuleService.LoyaltyActivationResult result = businessLoyaltyRuleService
+                .activateRule(OWNER_ID, RULE_ID, USER_ID);
+
+        assertThat(result.status()).isEqualTo(LoyaltyActivationStatus.ALREADY_USED);
+        assertThat(result.verification()).isNull();
+    }
+
+    @Test
+    void activateRule_whenMaxUsagesReached_thenReturnsLimitExceededStatus() {
+        final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 2, true);
+        given(loyaltyRuleRepository.findById(RULE_ID)).willReturn(Optional.of(rule));
+        given(loyaltyVerificationRepository.existsByRuleIdAndUserId(RULE_ID, USER_ID)).willReturn(false);
+        given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(2L);
+
+        final BusinessLoyaltyRuleService.LoyaltyActivationResult result = businessLoyaltyRuleService
+                .activateRule(OWNER_ID, RULE_ID, USER_ID);
+
+        assertThat(result.status()).isEqualTo(LoyaltyActivationStatus.LIMIT_EXCEEDED);
+        assertThat(result.verification()).isNull();
+    }
+
+    @Test
+    void activateRule_whenChecksPass_thenCreatesVerificationAndReturnsSuccessStatus() {
+        final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
+        final LoyaltyVerification savedVerification = new LoyaltyVerification(
+                UUID.fromString("66666666-6666-6666-6666-666666666666"),
+                VENUE_ID,
+                USER_ID,
+                rule,
+                15
+        );
+        savedVerification.setVerifiedAt(OffsetDateTime.parse("2026-04-27T09:00:00+03:00"));
+
+        given(loyaltyRuleRepository.findById(RULE_ID)).willReturn(Optional.of(rule));
+        given(loyaltyVerificationRepository.existsByRuleIdAndUserId(RULE_ID, USER_ID)).willReturn(false);
+        given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(1L);
+        given(loyaltyVerificationRepository.save(any(LoyaltyVerification.class))).willReturn(savedVerification);
+
+        final BusinessLoyaltyRuleService.LoyaltyActivationResult result = businessLoyaltyRuleService
+                .activateRule(OWNER_ID, RULE_ID, USER_ID);
+
+        assertThat(result.status()).isEqualTo(LoyaltyActivationStatus.SUCCESS);
+        assertThat(result.verification()).isEqualTo(savedVerification);
     }
 
     private LoyaltyRule loyaltyRule(

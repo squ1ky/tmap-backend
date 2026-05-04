@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.tbank.tmap.loyalty.application.BusinessLoyaltyRuleService;
-import ru.tbank.tmap.loyalty.application.command.ActivateLoyaltyRuleCommand;
+import ru.tbank.tmap.loyalty.application.command.RedeemLoyaltyRuleCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
 import ru.tbank.tmap.loyalty.presentation.dto.BusinessLoyaltyRuleDetails;
@@ -85,28 +85,15 @@ public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
             @Valid final LoyaltyActivationRequest loyaltyActivationRequest
     ) {
         final UUID ownerId = SecurityUtils.currentUserId();
-        final BusinessLoyaltyRuleService.LoyaltyActivationResult activationResult = businessLoyaltyRuleService
-                .activateRule(new ActivateLoyaltyRuleCommand(
+        return ResponseEntity.ok(businessLoyaltyRuleMapper.toVerifyResponse(
+                ruleId,
+                loyaltyActivationRequest,
+                businessLoyaltyRuleService.redeemLoyaltyRule(new RedeemLoyaltyRuleCommand(
                         ownerId,
                         ruleId,
                         loyaltyActivationRequest.getUserId(),
                         loyaltyActivationRequest.getVenueId()
-                ));
-
-        final LoyaltyVerifyResponse response = new LoyaltyVerifyResponse();
-        response.setRuleId(ruleId);
-        response.setUserId(loyaltyActivationRequest.getUserId());
-        response.setStatus(activationResult.status());
-
-        if (activationResult.verification() != null) {
-            response.setId(activationResult.verification().getId());
-            response.setVenueId(activationResult.verification().getVenueId());
-            response.setDiscountApplied(activationResult.verification().getDiscountApplied());
-            response.setVerifiedAt(activationResult.verification().getVerifiedAt());
-        } else {
-            response.setVenueId(loyaltyActivationRequest.getVenueId());
-        }
-
-        return ResponseEntity.ok(response);
+                ))
+        ));
     }
 }

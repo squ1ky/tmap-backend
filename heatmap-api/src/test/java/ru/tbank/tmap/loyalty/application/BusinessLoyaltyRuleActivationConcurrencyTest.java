@@ -24,7 +24,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
-import ru.tbank.tmap.loyalty.application.command.ActivateLoyaltyRuleCommand;
+import ru.tbank.tmap.loyalty.application.command.RedeemLoyaltyRuleCommand;
 import ru.tbank.tmap.loyalty.application.port.VenueOwnershipPort;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRuleRepository;
@@ -53,16 +53,16 @@ class BusinessLoyaltyRuleActivationConcurrencyTest {
     private VenueOwnershipPort venueOwnershipPort;
 
     @Test
-    void activateRule_whenConcurrentRequestsWithMaxUsageOne_thenOnlyOneSucceeds() throws Exception {
+    void redeemLoyaltyRule_whenConcurrentRequestsWithMaxUsageOne_thenOnlyOneSucceeds() throws Exception {
         willDoNothing().given(venueOwnershipPort).requireOwner(VENUE_ID, OWNER_ID);
 
         final UUID ruleId = UUID.randomUUID();
         loyaltyRuleRepository.save(new LoyaltyRule(ruleId, VENUE_ID, "Concurrent test rule", 15, 1));
 
-        final ActivateLoyaltyRuleCommand firstCommand =
-                new ActivateLoyaltyRuleCommand(OWNER_ID, ruleId, FIRST_USER_ID, VENUE_ID);
-        final ActivateLoyaltyRuleCommand secondCommand =
-                new ActivateLoyaltyRuleCommand(OWNER_ID, ruleId, SECOND_USER_ID, VENUE_ID);
+        final RedeemLoyaltyRuleCommand firstCommand =
+                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, FIRST_USER_ID, VENUE_ID);
+        final RedeemLoyaltyRuleCommand secondCommand =
+                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, SECOND_USER_ID, VENUE_ID);
 
         final List<LoyaltyActivationStatus> statuses = runConcurrently(firstCommand, secondCommand);
 
@@ -74,16 +74,16 @@ class BusinessLoyaltyRuleActivationConcurrencyTest {
     }
 
     @Test
-    void activateRule_whenConcurrentRequestsForSameUser_thenSecondIsRejectedAsAlreadyUsed() throws Exception {
+    void redeemLoyaltyRule_whenConcurrentRequestsForSameUser_thenSecondIsRejectedAsAlreadyUsed() throws Exception {
         willDoNothing().given(venueOwnershipPort).requireOwner(VENUE_ID, OWNER_ID);
 
         final UUID ruleId = UUID.randomUUID();
         loyaltyRuleRepository.save(new LoyaltyRule(ruleId, VENUE_ID, "Same user race test", 10, 10));
 
-        final ActivateLoyaltyRuleCommand firstCommand =
-                new ActivateLoyaltyRuleCommand(OWNER_ID, ruleId, FIRST_USER_ID, VENUE_ID);
-        final ActivateLoyaltyRuleCommand secondCommand =
-                new ActivateLoyaltyRuleCommand(OWNER_ID, ruleId, FIRST_USER_ID, VENUE_ID);
+        final RedeemLoyaltyRuleCommand firstCommand =
+                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, FIRST_USER_ID, VENUE_ID);
+        final RedeemLoyaltyRuleCommand secondCommand =
+                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, FIRST_USER_ID, VENUE_ID);
 
         final List<LoyaltyActivationStatus> statuses = runConcurrently(firstCommand, secondCommand);
 
@@ -95,8 +95,8 @@ class BusinessLoyaltyRuleActivationConcurrencyTest {
     }
 
     private List<LoyaltyActivationStatus> runConcurrently(
-            final ActivateLoyaltyRuleCommand first,
-            final ActivateLoyaltyRuleCommand second
+            final RedeemLoyaltyRuleCommand first,
+            final RedeemLoyaltyRuleCommand second
     ) throws InterruptedException, ExecutionException {
         final ExecutorService executor = Executors.newFixedThreadPool(2);
         final CountDownLatch startGate = new CountDownLatch(1);
@@ -116,12 +116,12 @@ class BusinessLoyaltyRuleActivationConcurrencyTest {
     }
 
     private Callable<LoyaltyActivationStatus> task(
-            final ActivateLoyaltyRuleCommand command,
+            final RedeemLoyaltyRuleCommand command,
             final CountDownLatch startGate
     ) {
         return () -> {
             startGate.await(5, TimeUnit.SECONDS);
-            return businessLoyaltyRuleService.activateRule(command).status();
+            return businessLoyaltyRuleService.redeemLoyaltyRule(command).status();
         };
     }
 

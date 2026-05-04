@@ -11,9 +11,10 @@ import org.openapitools.model.LoyaltyActivationStatus;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.tbank.tmap.loyalty.application.command.ActivateLoyaltyRuleCommand;
+import ru.tbank.tmap.loyalty.application.command.RedeemLoyaltyRuleCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
+import ru.tbank.tmap.loyalty.application.command.LoyaltyActivationResult;
 import ru.tbank.tmap.loyalty.application.port.VenueOwnershipPort;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleUsageCount;
 import ru.tbank.tmap.loyalty.domain.LoyaltyVerification;
@@ -98,7 +99,7 @@ public class BusinessLoyaltyRuleService {
     }
 
     @Transactional
-    public LoyaltyActivationResult activateRule(final ActivateLoyaltyRuleCommand command) {
+    public LoyaltyActivationResult redeemLoyaltyRule(final RedeemLoyaltyRuleCommand command) {
         final LoyaltyRule rule = loyaltyRuleRepository.findByIdForUpdate(command.ruleId())
                 .orElseThrow(() -> new LoyaltyRuleNotFoundException(command.ruleId()));
 
@@ -109,7 +110,7 @@ public class BusinessLoyaltyRuleService {
         }
 
         if (!rule.isActive()) {
-            throw LoyaltyRuleStateException.inactiveRuleCannotBeActivated(command.ruleId());
+            throw LoyaltyRuleStateException.inactiveRuleCannotBeRedeemed(command.ruleId());
         }
 
         if (loyaltyVerificationRepository.existsByRuleIdAndUserId(command.ruleId(), command.userId())) {
@@ -173,9 +174,4 @@ public class BusinessLoyaltyRuleService {
         }
     }
 
-    public record LoyaltyActivationResult(
-            LoyaltyActivationStatus status,
-            LoyaltyVerification verification
-    ) {
-    }
 }

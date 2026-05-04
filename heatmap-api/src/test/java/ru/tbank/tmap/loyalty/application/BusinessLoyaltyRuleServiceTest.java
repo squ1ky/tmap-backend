@@ -18,7 +18,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.openapitools.model.LoyaltyActivationStatus;
 import org.springframework.dao.DataIntegrityViolationException;
-import ru.tbank.tmap.loyalty.application.command.ActivateLoyaltyRuleCommand;
+import ru.tbank.tmap.loyalty.application.command.RedeemLoyaltyRuleCommand;
+import ru.tbank.tmap.loyalty.application.command.LoyaltyActivationResult;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
 import ru.tbank.tmap.loyalty.application.exception.VenueAccessDeniedException;
@@ -40,8 +41,8 @@ class BusinessLoyaltyRuleServiceTest {
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
     private static final UUID RULE_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
     private static final UUID USER_ID = UUID.fromString("55555555-5555-5555-5555-555555555555");
-    private static final ActivateLoyaltyRuleCommand ACTIVATE_COMMAND =
-            new ActivateLoyaltyRuleCommand(OWNER_ID, RULE_ID, USER_ID, VENUE_ID);
+    private static final RedeemLoyaltyRuleCommand REDEEM_COMMAND =
+            new RedeemLoyaltyRuleCommand(OWNER_ID, RULE_ID, USER_ID, VENUE_ID);
 
     @Mock
     private LoyaltyRuleRepository loyaltyRuleRepository;
@@ -269,34 +270,34 @@ class BusinessLoyaltyRuleServiceTest {
     }
 
     @Test
-    void activateRule_whenUserAlreadyUsedRule_thenReturnsAlreadyUsedStatus() {
+    void redeemLoyaltyRule_whenUserAlreadyUsedRule_thenReturnsAlreadyUsedStatus() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
         given(loyaltyRuleRepository.findByIdForUpdate(RULE_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.existsByRuleIdAndUserId(RULE_ID, USER_ID)).willReturn(true);
 
-        final BusinessLoyaltyRuleService.LoyaltyActivationResult result = businessLoyaltyRuleService
-                .activateRule(ACTIVATE_COMMAND);
+        final LoyaltyActivationResult result = businessLoyaltyRuleService
+                .redeemLoyaltyRule(REDEEM_COMMAND);
 
         assertThat(result.status()).isEqualTo(LoyaltyActivationStatus.ALREADY_USED);
         assertThat(result.verification()).isNull();
     }
 
     @Test
-    void activateRule_whenMaxUsagesReached_thenReturnsLimitExceededStatus() {
+    void redeemLoyaltyRule_whenMaxUsagesReached_thenReturnsLimitExceededStatus() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 2, true);
         given(loyaltyRuleRepository.findByIdForUpdate(RULE_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.existsByRuleIdAndUserId(RULE_ID, USER_ID)).willReturn(false);
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(2L);
 
-        final BusinessLoyaltyRuleService.LoyaltyActivationResult result = businessLoyaltyRuleService
-                .activateRule(ACTIVATE_COMMAND);
+        final LoyaltyActivationResult result = businessLoyaltyRuleService
+                .redeemLoyaltyRule(REDEEM_COMMAND);
 
         assertThat(result.status()).isEqualTo(LoyaltyActivationStatus.LIMIT_EXCEEDED);
         assertThat(result.verification()).isNull();
     }
 
     @Test
-    void activateRule_whenChecksPass_thenCreatesVerificationAndReturnsSuccessStatus() {
+    void redeemLoyaltyRule_whenChecksPass_thenCreatesVerificationAndReturnsSuccessStatus() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
         final LoyaltyVerification savedVerification = new LoyaltyVerification(
                 UUID.fromString("66666666-6666-6666-6666-666666666666"),
@@ -312,29 +313,29 @@ class BusinessLoyaltyRuleServiceTest {
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(1L);
         given(loyaltyVerificationRepository.save(any(LoyaltyVerification.class))).willReturn(savedVerification);
 
-        final BusinessLoyaltyRuleService.LoyaltyActivationResult result = businessLoyaltyRuleService
-                .activateRule(ACTIVATE_COMMAND);
+        final LoyaltyActivationResult result = businessLoyaltyRuleService
+                .redeemLoyaltyRule(REDEEM_COMMAND);
 
         assertThat(result.status()).isEqualTo(LoyaltyActivationStatus.SUCCESS);
         assertThat(result.verification()).isEqualTo(savedVerification);
     }
 
     @Test
-    void activateRule_whenVenueDoesNotMatchRule_thenThrowsValidationError() {
+    void redeemLoyaltyRule_whenVenueDoesNotMatchRule_thenThrowsValidationError() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
         given(loyaltyRuleRepository.findByIdForUpdate(RULE_ID)).willReturn(Optional.of(rule));
 
-        final ActivateLoyaltyRuleCommand wrongVenueCommand =
-                new ActivateLoyaltyRuleCommand(OWNER_ID, RULE_ID, USER_ID,
+        final RedeemLoyaltyRuleCommand wrongVenueCommand =
+                new RedeemLoyaltyRuleCommand(OWNER_ID, RULE_ID, USER_ID,
                         UUID.fromString("77777777-7777-7777-7777-777777777777"));
 
-        assertThatThrownBy(() -> businessLoyaltyRuleService.activateRule(wrongVenueCommand))
+        assertThatThrownBy(() -> businessLoyaltyRuleService.redeemLoyaltyRule(wrongVenueCommand))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Rule does not belong to requested venue");
     }
 
     @Test
-    void activateRule_whenConcurrentInsertViolatesUniqueConstraint_thenReturnsAlreadyUsed() {
+    void redeemLoyaltyRule_whenConcurrentInsertViolatesUniqueConstraint_thenReturnsAlreadyUsed() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
         given(loyaltyRuleRepository.findByIdForUpdate(RULE_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.existsByRuleIdAndUserId(RULE_ID, USER_ID)).willReturn(false);
@@ -342,8 +343,8 @@ class BusinessLoyaltyRuleServiceTest {
         given(loyaltyVerificationRepository.save(any(LoyaltyVerification.class)))
                 .willThrow(new DataIntegrityViolationException("uq_loyalty_verifications_rule_user"));
 
-        final BusinessLoyaltyRuleService.LoyaltyActivationResult result = businessLoyaltyRuleService
-                .activateRule(ACTIVATE_COMMAND);
+        final LoyaltyActivationResult result = businessLoyaltyRuleService
+                .redeemLoyaltyRule(REDEEM_COMMAND);
 
         assertThat(result.status()).isEqualTo(LoyaltyActivationStatus.ALREADY_USED);
         assertThat(result.verification()).isNull();

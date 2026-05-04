@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 import ru.tbank.tmap.shared.h3.H3IndexService;
-import ru.tbank.tmap.user.User;
-import ru.tbank.tmap.user.UserNotFoundException;
-import ru.tbank.tmap.user.UserRepository;
+import ru.tbank.tmap.user.domain.User;
+import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
+import ru.tbank.tmap.user.domain.UserRepository;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.repository.VenueRepository;
 

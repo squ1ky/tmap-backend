@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -21,10 +20,14 @@ import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
+import ru.tbank.tmap.test.security.TestSecurityConfig;
 
 @WebMvcTest(controllers = HeatmapController.class)
-@AutoConfigureMockMvc(addFilters = false)
-@Import({GlobalExceptionHandler.class, HeatmapMapper.class})
+@Import({
+        TestSecurityConfig.class,
+        GlobalExceptionHandler.class,
+        HeatmapMapper.class
+})
 class HeatmapControllerTest {
 
     @Autowired

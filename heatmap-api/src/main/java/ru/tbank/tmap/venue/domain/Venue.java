@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import ru.tbank.tmap.shared.geo.GeoPoint;
-import ru.tbank.tmap.user.User;
+import ru.tbank.tmap.user.domain.User;
 
 import java.time.OffsetDateTime;
 import java.util.Objects;

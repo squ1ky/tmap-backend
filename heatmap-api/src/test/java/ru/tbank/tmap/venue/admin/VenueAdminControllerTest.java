@@ -14,34 +14,27 @@ import org.junit.jupiter.api.Test;
 import org.openapitools.model.AdminModerationDecision;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import ru.tbank.tmap.auth.jwt.JwtService;
-import ru.tbank.tmap.infrastructure.security.SecurityConfig;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.shared.geo.GeoPoint;
-import ru.tbank.tmap.user.User;
-import ru.tbank.tmap.user.UserRole;
+import ru.tbank.tmap.test.security.TestSecurityConfig;
+import ru.tbank.tmap.user.domain.User;
+import ru.tbank.tmap.user.domain.UserRole;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 
 @WebMvcTest(VenueAdminController.class)
 @Import({
-        SecurityConfig.class,
+        TestSecurityConfig.class,
         GlobalExceptionHandler.class,
         VenueModerationMapper.class,
-        VenueAdminControllerTest.TestBeans.class
 })
 class VenueAdminControllerTest {
 
@@ -56,12 +49,6 @@ class VenueAdminControllerTest {
 
     @MockitoBean
     private VenueModerationService venueModerationService;
-
-    @MockitoBean
-    private JwtService jwtService;
-
-    @MockitoBean
-    private UserDetailsService userDetailsService;
 
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -134,14 +121,5 @@ class VenueAdminControllerTest {
         venue.setStatus(status);
         venue.setRejectReason(rejectReason);
         return venue;
-    }
-
-    @TestConfiguration
-    static class TestBeans {
-
-        @Bean
-        CorsConfigurationSource corsConfigurationSource() {
-            return request -> new CorsConfiguration().applyPermitDefaultValues();
-        }
     }
 }

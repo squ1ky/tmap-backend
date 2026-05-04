@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.tbank.tmap.loyalty.application.BusinessLoyaltyRuleService;
+import ru.tbank.tmap.loyalty.application.command.ActivateLoyaltyRuleCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
 import ru.tbank.tmap.loyalty.presentation.dto.BusinessLoyaltyRuleDetails;
@@ -85,7 +86,12 @@ public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
     ) {
         final UUID ownerId = SecurityUtils.currentUserId();
         final BusinessLoyaltyRuleService.LoyaltyActivationResult activationResult = businessLoyaltyRuleService
-                .activateRule(ownerId, ruleId, loyaltyActivationRequest.getUserId());
+                .activateRule(new ActivateLoyaltyRuleCommand(
+                        ownerId,
+                        ruleId,
+                        loyaltyActivationRequest.getUserId(),
+                        loyaltyActivationRequest.getVenueId()
+                ));
 
         final LoyaltyVerifyResponse response = new LoyaltyVerifyResponse();
         response.setRuleId(ruleId);

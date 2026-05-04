@@ -8,8 +8,10 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import org.openapitools.model.LoyaltyActivationStatus;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.loyalty.application.command.ActivateLoyaltyRuleCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
 import ru.tbank.tmap.loyalty.application.port.VenueOwnershipPort;
@@ -96,34 +98,43 @@ public class BusinessLoyaltyRuleService {
     }
 
     @Transactional
-    public LoyaltyActivationResult activateRule(final UUID ownerId, final UUID ruleId, final UUID userId) {
-        final LoyaltyRule rule = loyaltyRuleRepository.findById(ruleId)
-                .orElseThrow(() -> new LoyaltyRuleNotFoundException(ruleId));
+    public LoyaltyActivationResult activateRule(final ActivateLoyaltyRuleCommand command) {
+        final LoyaltyRule rule = loyaltyRuleRepository.findByIdForUpdate(command.ruleId())
+                .orElseThrow(() -> new LoyaltyRuleNotFoundException(command.ruleId()));
 
-        venueOwnershipPort.requireOwner(rule.getVenueId(), ownerId);
+        venueOwnershipPort.requireOwner(rule.getVenueId(), command.ownerId());
 
-        if (!rule.isActive()) {
-            throw LoyaltyRuleStateException.inactiveRuleCannotBeActivated(ruleId);
+        if (!rule.getVenueId().equals(command.venueId())) {
+            throw new IllegalArgumentException("Rule does not belong to requested venue");
         }
 
-        if (loyaltyVerificationRepository.existsByRuleIdAndUserId(ruleId, userId)) {
+        if (!rule.isActive()) {
+            throw LoyaltyRuleStateException.inactiveRuleCannotBeActivated(command.ruleId());
+        }
+
+        if (loyaltyVerificationRepository.existsByRuleIdAndUserId(command.ruleId(), command.userId())) {
             return new LoyaltyActivationResult(LoyaltyActivationStatus.ALREADY_USED, null);
         }
 
-        final long currentUsages = loyaltyVerificationRepository.countByRuleId(ruleId);
+        final long currentUsages = loyaltyVerificationRepository.countByRuleId(command.ruleId());
         if (currentUsages >= rule.getMaxUsages()) {
             return new LoyaltyActivationResult(LoyaltyActivationStatus.LIMIT_EXCEEDED, null);
         }
 
-        final LoyaltyVerification loyaltyVerification = loyaltyVerificationRepository.save(
-                new LoyaltyVerification(
-                        UUID.randomUUID(),
-                        rule.getVenueId(),
-                        userId,
-                        rule,
-                        rule.getDiscountPercent()
-                )
-        );
+        final LoyaltyVerification loyaltyVerification;
+        try {
+            loyaltyVerification = loyaltyVerificationRepository.save(
+                    new LoyaltyVerification(
+                            UUID.randomUUID(),
+                            rule.getVenueId(),
+                            command.userId(),
+                            rule,
+                            rule.getDiscountPercent()
+                    )
+            );
+        } catch (DataIntegrityViolationException ex) {
+            return new LoyaltyActivationResult(LoyaltyActivationStatus.ALREADY_USED, null);
+        }
         return new LoyaltyActivationResult(LoyaltyActivationStatus.SUCCESS, loyaltyVerification);
     }
 

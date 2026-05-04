@@ -14,7 +14,7 @@ import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.heatmap.repository.HeatmapQueryRepository;
+import ru.tbank.tmap.heatmap.domain.ClusterHistoryQueryRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +24,7 @@ public class H3HeatmapService implements HeatmapService {
     private static final int DEFAULT_WINDOW_MINUTES = 60;
     private static final int REFRESH_INTERVAL_MINUTES = 5;
 
-    private final HeatmapQueryRepository heatmapQueryRepository;
+    private final ClusterHistoryQueryRepository heatmapQueryRepository;
     private final MinioUrlBuilder minioUrlBuilder;
     private final Clock clock;
 

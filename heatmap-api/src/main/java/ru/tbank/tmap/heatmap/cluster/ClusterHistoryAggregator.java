@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.heatmap.domain.ClusterHistoryWriteRepository;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 
 import java.time.Clock;

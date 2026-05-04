@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap.cluster;
+package ru.tbank.tmap.heatmap.domain.exception;
 
 public class ClusterNotFoundException extends RuntimeException {
 

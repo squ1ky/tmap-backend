@@ -1,9 +1,10 @@
-package ru.tbank.tmap.heatmap.cluster;
+package ru.tbank.tmap.heatmap.infrastructure.db;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import ru.tbank.tmap.heatmap.domain.ClusterHistoryWriteRepository;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 
 import java.sql.Timestamp;

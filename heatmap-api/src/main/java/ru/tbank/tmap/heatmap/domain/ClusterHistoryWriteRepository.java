@@ -1,13 +1,12 @@
-package ru.tbank.tmap.heatmap.cluster;
+package ru.tbank.tmap.heatmap.domain;
 
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.heatmap.repository.HeatmapQueryRepository;
 
 import java.time.Instant;
 
 /**
  * Repository for writing to cluster_history.
- * Separate from {@link HeatmapQueryRepository} to keep read and write paths distinct.
+ * Separate from {@link ClusterHistoryQueryRepository} to keep read and write paths distinct.
  */
 public interface ClusterHistoryWriteRepository {
 

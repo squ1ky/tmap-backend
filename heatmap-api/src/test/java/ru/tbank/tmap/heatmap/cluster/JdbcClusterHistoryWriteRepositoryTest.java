@@ -13,8 +13,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import ru.tbank.tmap.TestcontainersConfiguration;
+import ru.tbank.tmap.heatmap.domain.ClusterHistoryWriteRepository;
+import ru.tbank.tmap.heatmap.infrastructure.db.JdbcClusterHistoryWriteRepository;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.venue.domain.VenueCategory;
 
 @JdbcTest
 @Import({TestcontainersConfiguration.class, JdbcClusterHistoryWriteRepository.class})

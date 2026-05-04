@@ -16,13 +16,13 @@ import org.mockito.MockitoAnnotations;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.heatmap.repository.HeatmapQueryRepository;
+import ru.tbank.tmap.heatmap.domain.ClusterHistoryQueryRepository;
 import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
 
 class H3HeatmapServiceTest {
 
     @Mock
-    private HeatmapQueryRepository heatmapQueryRepository;
+    private ClusterHistoryQueryRepository heatmapQueryRepository;
 
     @Mock
     private MinioUrlBuilder minioUrlBuilder;

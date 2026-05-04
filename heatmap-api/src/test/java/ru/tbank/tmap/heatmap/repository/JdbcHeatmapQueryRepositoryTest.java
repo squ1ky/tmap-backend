@@ -17,6 +17,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import ru.tbank.tmap.TestcontainersConfiguration;
+import ru.tbank.tmap.heatmap.domain.ClusterHistoryQueryRepository;
+import ru.tbank.tmap.heatmap.infrastructure.db.JdbcClusterHistoryQueryRepository;
 import ru.tbank.tmap.infrastructure.h3.H3Config;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
@@ -25,7 +27,7 @@ import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
 import ru.tbank.tmap.heatmap.HeatmapClusterAggregate;
 
 @JdbcTest
-@Import({TestcontainersConfiguration.class, H3Config.class, JdbcHeatmapQueryRepository.class})
+@Import({TestcontainersConfiguration.class, H3Config.class, JdbcClusterHistoryQueryRepository.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
 class JdbcHeatmapQueryRepositoryTest {
@@ -34,7 +36,7 @@ class JdbcHeatmapQueryRepositoryTest {
     private static final String PHOTO_URL = "districts/kazan/vahitovsky.jpg";
 
     @Autowired
-    private HeatmapQueryRepository heatmapQueryRepository;
+    private ClusterHistoryQueryRepository heatmapQueryRepository;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

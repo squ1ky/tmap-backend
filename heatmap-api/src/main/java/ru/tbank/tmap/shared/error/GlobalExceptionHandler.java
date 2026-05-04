@@ -14,7 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.tbank.tmap.user.api.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;
-import ru.tbank.tmap.heatmap.cluster.ClusterNotFoundException;
+import ru.tbank.tmap.heatmap.domain.exception.ClusterNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleStateException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleUpdateValidationException;

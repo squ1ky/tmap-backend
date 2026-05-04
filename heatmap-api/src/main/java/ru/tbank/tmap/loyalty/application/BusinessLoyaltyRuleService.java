@@ -7,12 +7,14 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
+import org.openapitools.model.LoyaltyActivationStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
 import ru.tbank.tmap.loyalty.application.port.VenueOwnershipPort;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleUsageCount;
+import ru.tbank.tmap.loyalty.domain.LoyaltyVerification;
 import ru.tbank.tmap.loyalty.presentation.dto.BusinessLoyaltyRuleDetails;
 import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
@@ -93,6 +95,38 @@ public class BusinessLoyaltyRuleService {
         return new BusinessLoyaltyRuleDetails(rule, currentUsages);
     }
 
+    @Transactional
+    public LoyaltyActivationResult activateRule(final UUID ownerId, final UUID ruleId, final UUID userId) {
+        final LoyaltyRule rule = loyaltyRuleRepository.findById(ruleId)
+                .orElseThrow(() -> new LoyaltyRuleNotFoundException(ruleId));
+
+        venueOwnershipPort.requireOwner(rule.getVenueId(), ownerId);
+
+        if (!rule.isActive()) {
+            throw LoyaltyRuleStateException.inactiveRuleCannotBeActivated(ruleId);
+        }
+
+        if (loyaltyVerificationRepository.existsByRuleIdAndUserId(ruleId, userId)) {
+            return new LoyaltyActivationResult(LoyaltyActivationStatus.ALREADY_USED, null);
+        }
+
+        final long currentUsages = loyaltyVerificationRepository.countByRuleId(ruleId);
+        if (currentUsages >= rule.getMaxUsages()) {
+            return new LoyaltyActivationResult(LoyaltyActivationStatus.LIMIT_EXCEEDED, null);
+        }
+
+        final LoyaltyVerification loyaltyVerification = loyaltyVerificationRepository.save(
+                new LoyaltyVerification(
+                        UUID.randomUUID(),
+                        rule.getVenueId(),
+                        userId,
+                        rule,
+                        rule.getDiscountPercent()
+                )
+        );
+        return new LoyaltyActivationResult(LoyaltyActivationStatus.SUCCESS, loyaltyVerification);
+    }
+
     private Map<UUID, Long> getUsagesMap(final List<LoyaltyRule> rules) {
         if (rules.isEmpty()) {
             return Map.of();
@@ -126,5 +160,11 @@ public class BusinessLoyaltyRuleService {
         if (Boolean.FALSE.equals(command.active())) {
             rule.setActive(false);
         }
+    }
+
+    public record LoyaltyActivationResult(
+            LoyaltyActivationStatus status,
+            LoyaltyVerification verification
+    ) {
     }
 }

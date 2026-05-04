@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.openapitools.api.BusinessOwnerLoyaltyApi;
+import org.openapitools.model.LoyaltyActivationRequest;
 import org.openapitools.model.LoyaltyRuleCreateRequest;
 import org.openapitools.model.LoyaltyRuleResponse;
 import org.openapitools.model.LoyaltyRuleUpdateRequest;
+import org.openapitools.model.LoyaltyVerifyResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -73,6 +75,32 @@ public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
         final BusinessLoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.getRuleById(ownerId, id)
                 .orElseThrow(() -> new LoyaltyRuleNotFoundException(id));
         final LoyaltyRuleResponse response = businessLoyaltyRuleMapper.toResponse(loyaltyRule);
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
+    public ResponseEntity<LoyaltyVerifyResponse> activateLoyaltyQr(
+            final UUID ruleId,
+            @Valid final LoyaltyActivationRequest loyaltyActivationRequest
+    ) {
+        final UUID ownerId = SecurityUtils.currentUserId();
+        final BusinessLoyaltyRuleService.LoyaltyActivationResult activationResult = businessLoyaltyRuleService
+                .activateRule(ownerId, ruleId, loyaltyActivationRequest.getUserId());
+
+        final LoyaltyVerifyResponse response = new LoyaltyVerifyResponse();
+        response.setRuleId(ruleId);
+        response.setUserId(loyaltyActivationRequest.getUserId());
+        response.setStatus(activationResult.status());
+
+        if (activationResult.verification() != null) {
+            response.setId(activationResult.verification().getId());
+            response.setVenueId(activationResult.verification().getVenueId());
+            response.setDiscountApplied(activationResult.verification().getDiscountApplied());
+            response.setVerifiedAt(activationResult.verification().getVerifiedAt());
+        } else {
+            response.setVenueId(loyaltyActivationRequest.getVenueId());
+        }
+
         return ResponseEntity.ok(response);
     }
 }

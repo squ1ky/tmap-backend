@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap;
+package ru.tbank.tmap.heatmap.presentation;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -16,7 +16,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
+import ru.tbank.tmap.heatmap.application.H3HeatmapService;
+import ru.tbank.tmap.heatmap.application.query.HeatmapClusterAggregate;
+import ru.tbank.tmap.heatmap.application.query.ClusterDetailsAggregate;
+import ru.tbank.tmap.heatmap.presentation.dto.HeatmapClusters;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
@@ -34,7 +37,7 @@ class HeatmapControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private HeatmapService heatmapService;
+    private H3HeatmapService heatmapService;
 
     @Test
     void getHeatmapClusters_whenRequestIsValid_thenReturnHeatmapData() throws Exception {

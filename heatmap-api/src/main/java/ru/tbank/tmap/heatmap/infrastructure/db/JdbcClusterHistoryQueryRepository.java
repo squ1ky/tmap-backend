@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap.repository;
+package ru.tbank.tmap.heatmap.infrastructure.db;
 
 import com.uber.h3core.H3Core;
 import java.sql.Timestamp;
@@ -11,18 +11,19 @@ import com.uber.h3core.util.LatLng;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import ru.tbank.tmap.heatmap.domain.ClusterHistoryQueryRepository;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
-import ru.tbank.tmap.heatmap.HeatmapClusterAggregate;
+import ru.tbank.tmap.heatmap.application.query.ClusterDetailsAggregate;
+import ru.tbank.tmap.heatmap.application.query.HeatmapClusterAggregate;
 
 @Repository
-public class JdbcHeatmapQueryRepository implements HeatmapQueryRepository {
+public class JdbcClusterHistoryQueryRepository implements ClusterHistoryQueryRepository {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final H3Core h3Core;
 
-    public JdbcHeatmapQueryRepository(final NamedParameterJdbcTemplate jdbcTemplate, final H3Core h3Core) {
+    public JdbcClusterHistoryQueryRepository(final NamedParameterJdbcTemplate jdbcTemplate, final H3Core h3Core) {
         this.jdbcTemplate = jdbcTemplate;
         this.h3Core = h3Core;
     }

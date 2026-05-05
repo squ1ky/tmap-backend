@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap.repository;
+package ru.tbank.tmap.heatmap.infrastructure.db;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,26 +15,29 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.ActiveProfiles;
 import ru.tbank.tmap.TestcontainersConfiguration;
+import ru.tbank.tmap.heatmap.domain.ClusterHistoryQueryRepository;
 import ru.tbank.tmap.infrastructure.h3.H3Config;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 import ru.tbank.tmap.venue.domain.VenueCategory;
-import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
-import ru.tbank.tmap.heatmap.HeatmapClusterAggregate;
+import ru.tbank.tmap.heatmap.application.query.ClusterDetailsAggregate;
+import ru.tbank.tmap.heatmap.application.query.HeatmapClusterAggregate;
 
 @JdbcTest
-@Import({TestcontainersConfiguration.class, H3Config.class, JdbcHeatmapQueryRepository.class})
+@Import({
+        TestcontainersConfiguration.class,
+        H3Config.class,
+        JdbcClusterHistoryQueryRepository.class
+})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@ActiveProfiles("test")
-class JdbcHeatmapQueryRepositoryTest {
+class JdbcClusterHistoryQueryRepositoryTest {
 
     private static final String RES_8_CLUSTER = "88115b22b1fffff";
     private static final String PHOTO_URL = "districts/kazan/vahitovsky.jpg";
 
     @Autowired
-    private HeatmapQueryRepository heatmapQueryRepository;
+    private ClusterHistoryQueryRepository heatmapQueryRepository;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap;
+package ru.tbank.tmap.heatmap.application.query;
 
 import java.math.BigDecimal;
 import java.time.Instant;

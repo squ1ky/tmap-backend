@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap.repository;
+package ru.tbank.tmap.heatmap.domain;
 
 import java.time.Instant;
 import java.util.List;
@@ -6,10 +6,10 @@ import java.util.Optional;
 
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
-import ru.tbank.tmap.heatmap.HeatmapClusterAggregate;
+import ru.tbank.tmap.heatmap.application.query.ClusterDetailsAggregate;
+import ru.tbank.tmap.heatmap.application.query.HeatmapClusterAggregate;
 
-public interface HeatmapQueryRepository {
+public interface ClusterHistoryQueryRepository {
 
     List<HeatmapClusterAggregate> findClusters(
             BoundingBox boundingBox,

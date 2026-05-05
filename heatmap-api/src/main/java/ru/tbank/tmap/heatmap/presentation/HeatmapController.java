@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap;
+package ru.tbank.tmap.heatmap.presentation;
 
 import lombok.RequiredArgsConstructor;
 import org.openapitools.api.MapHeatmapApi;
@@ -7,16 +7,17 @@ import org.openapitools.model.HeatmapResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.tbank.tmap.heatmap.application.H3HeatmapService;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.heatmap.cluster.ClusterNotFoundException;
+import ru.tbank.tmap.heatmap.domain.exception.ClusterNotFoundException;
 
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class HeatmapController implements MapHeatmapApi {
 
-    private final HeatmapService heatmapService;
+    private final H3HeatmapService heatmapService;
     private final HeatmapMapper heatmapMapper;
 
     @Override

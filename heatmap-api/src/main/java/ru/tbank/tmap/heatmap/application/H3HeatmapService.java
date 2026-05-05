@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap;
+package ru.tbank.tmap.heatmap.application;
 
 import java.time.Clock;
 import java.time.temporal.ChronoUnit;
@@ -10,25 +10,25 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.tbank.tmap.heatmap.cluster.ClusterDetailsAggregate;
+import ru.tbank.tmap.heatmap.presentation.dto.HeatmapClusters;
+import ru.tbank.tmap.heatmap.application.query.ClusterDetailsAggregate;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.heatmap.repository.HeatmapQueryRepository;
+import ru.tbank.tmap.heatmap.domain.ClusterHistoryQueryRepository;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class H3HeatmapService implements HeatmapService {
+public class H3HeatmapService {
 
     private static final int DEFAULT_WINDOW_MINUTES = 60;
     private static final int REFRESH_INTERVAL_MINUTES = 5;
 
-    private final HeatmapQueryRepository heatmapQueryRepository;
+    private final ClusterHistoryQueryRepository heatmapQueryRepository;
     private final MinioUrlBuilder minioUrlBuilder;
     private final Clock clock;
 
-    @Override
     public HeatmapClusters getHeatmapClusters(
             final BoundingBox boundingBox,
             final H3Resolution resolution,
@@ -47,7 +47,6 @@ public class H3HeatmapService implements HeatmapService {
         );
     }
 
-    @Override
     public Optional<ClusterDetailsAggregate> getClusterDetails(final String h3Index, final H3Resolution resolution) {
         final Instant from = Instant.now(clock).minus(DEFAULT_WINDOW_MINUTES, ChronoUnit.MINUTES);
         final long dbH3Index = parseH3Index(h3Index);

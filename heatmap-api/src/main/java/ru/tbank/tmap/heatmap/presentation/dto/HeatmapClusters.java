@@ -1,4 +1,6 @@
-package ru.tbank.tmap.heatmap;
+package ru.tbank.tmap.heatmap.presentation.dto;
+
+import ru.tbank.tmap.heatmap.application.query.HeatmapClusterAggregate;
 
 import java.time.OffsetDateTime;
 import java.util.List;

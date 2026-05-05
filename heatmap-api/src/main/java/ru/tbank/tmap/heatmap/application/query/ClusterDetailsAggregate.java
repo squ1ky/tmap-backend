@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap.cluster;
+package ru.tbank.tmap.heatmap.application.query;
 
 import ru.tbank.tmap.shared.geo.H3Resolution;
 

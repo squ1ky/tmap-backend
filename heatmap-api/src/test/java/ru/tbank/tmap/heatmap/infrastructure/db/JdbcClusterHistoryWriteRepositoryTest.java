@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap.cluster;
+package ru.tbank.tmap.heatmap.infrastructure.db;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -13,13 +13,15 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import ru.tbank.tmap.TestcontainersConfiguration;
+import ru.tbank.tmap.heatmap.domain.ClusterHistoryWriteRepository;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.venue.domain.VenueCategory;
 
 @JdbcTest
-@Import({TestcontainersConfiguration.class, JdbcClusterHistoryWriteRepository.class})
+@Import({
+        TestcontainersConfiguration.class,
+        JdbcClusterHistoryWriteRepository.class
+})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@ActiveProfiles("test")
 class JdbcClusterHistoryWriteRepositoryTest {
 
     private static final UUID OWNER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");

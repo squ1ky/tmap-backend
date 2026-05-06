@@ -1769,6 +1769,7 @@ components:
           type: integer
         totalElements:
           type: integer
+          format: int64
 
     UsedPromoResponse:
       type: object
@@ -1801,6 +1802,7 @@ components:
           type: integer
         totalElements:
           type: integer
+          format: int64
 
     BusinessLoyaltyVerificationResponse:
       type: object
@@ -1840,6 +1842,7 @@ components:
           type: integer
         totalElements:
           type: integer
+          format: int64
 
     # ── Admin DTOs ────────────────────────────
     AdminModerationDecision:
@@ -1903,6 +1906,7 @@ components:
           type: integer
         totalElements:
           type: integer
+          format: int64
 
     AdminUserModerationResponse:
       type: object
@@ -1941,6 +1945,7 @@ components:
           type: integer
         totalElements:
           type: integer
+          format: int64
 
     # ── Error Schema ──────────────────────────
     ErrorResponse:

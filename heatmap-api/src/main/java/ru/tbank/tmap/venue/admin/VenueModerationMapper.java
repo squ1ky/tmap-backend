@@ -14,8 +14,6 @@ import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 @Component
 public class VenueModerationMapper {
 
-    private static final int MAX_TOTAL_ELEMENTS = Integer.MAX_VALUE;
-
     public AdminVenueModerationPage toPage(final Page<VenueModerationDetails> venues) {
         return new AdminVenueModerationPage()
                 .items(venues.stream()
@@ -24,7 +22,7 @@ public class VenueModerationMapper {
                 .page(venues.getNumber())
                 .size(venues.getSize())
                 .totalPages(venues.getTotalPages())
-                .totalElements(toIntTotalElements(venues.getTotalElements()));
+                .totalElements(venues.getTotalElements());
     }
 
     public AdminVenueModerationResponse toResponse(final Venue venue) {
@@ -47,13 +45,6 @@ public class VenueModerationMapper {
                 .rejectReason(snapshot.rejectReason())
                 .createdAt(snapshot.createdAt())
                 .updatedAt(snapshot.updatedAt());
-    }
-
-    private int toIntTotalElements(final long totalElements) {
-        if (totalElements > MAX_TOTAL_ELEMENTS) {
-            return MAX_TOTAL_ELEMENTS;
-        }
-        return (int) totalElements;
     }
 
     private VenueModerationSnapshot toSnapshot(final VenueModerationDetails details) {

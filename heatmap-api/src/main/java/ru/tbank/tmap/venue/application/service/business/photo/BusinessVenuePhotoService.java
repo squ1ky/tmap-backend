@@ -5,9 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.tbank.tmap.infrastructure.minio.ObjectStorageException;
+import ru.tbank.tmap.venue.application.service.photo.VenuePhotoValidator;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 import ru.tbank.tmap.venue.application.port.VenuePhotoStorage;
+import ru.tbank.tmap.venue.domain.repository.VenueRepository;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +21,7 @@ import java.util.UUID;
 public class BusinessVenuePhotoService {
 
     private final VenueRepository venueRepository;
-    private final BusinessVenuePhotoValidator venuePhotoValidator;
+    private final VenuePhotoValidator venuePhotoValidator;
     private final VenuePhotoStorage venuePhotoStorage;
     private final BusinessVenuePhotoUpdater venuePhotoUpdater;
 
@@ -30,8 +32,9 @@ public class BusinessVenuePhotoService {
     ) {
         final String extension = venuePhotoValidator.validateAndGetExtension(file);
 
-        venueRepository.findByIdAndOwnerId(venueId, ownerId)
-                .orElseThrow(() -> new VenueNotFoundException(venueId));
+        if (!venueRepository.existsByIdAndOwnerId(venueId, ownerId)) {
+            throw new VenueNotFoundException(venueId);
+        }
 
         final String newObjectKey;
         try (InputStream stream = file.getInputStream()) {
@@ -64,6 +67,7 @@ public class BusinessVenuePhotoService {
 
     public Venue deleteVenuePhoto(final UUID ownerId, final UUID venueId) {
         final String oldObjectKey = venuePhotoUpdater.clearPhotoKey(venueId, ownerId);
+
         if (oldObjectKey != null) {
             safePhotoDelete(oldObjectKey);
         }

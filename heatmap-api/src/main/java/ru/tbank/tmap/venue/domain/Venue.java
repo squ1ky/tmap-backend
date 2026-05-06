@@ -26,7 +26,6 @@ import ru.tbank.tmap.shared.geo.GeoPoint;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -140,9 +139,35 @@ public class Venue {
         updatedAt = OffsetDateTime.now();
     }
 
+    public String updatePhoto(String newObjectKey) {
+        String oldObjectKey = this.photoObjectKey;
+        this.photoObjectKey = newObjectKey;
+        this.markEditedForReview();
+        return oldObjectKey;
+    }
+
+    public String removePhoto() {
+        String oldObjectKey = this.photoObjectKey;
+        this.photoObjectKey = null;
+        return oldObjectKey;
+    }
+
     public void markEditedForReview() {
         if (status == VenueStatus.ACTIVE) {
             status = VenueStatus.PENDING_UPDATE;
         }
+    }
+
+    public void verify() {
+        this.status = VenueStatus.ACTIVE;
+        this.rejectReason = null;
+    }
+
+    public void reject(String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Reject reason must not be blank");
+        }
+        this.status = VenueStatus.REJECTED;
+        this.rejectReason = reason.trim();
     }
 }

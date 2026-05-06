@@ -14,7 +14,8 @@ import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
 public class JdbcVenueSearchRepository implements VenueSearchRepository {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
-    private final DataClassRowMapper<VenueSearchProjection> rowMapper = new DataClassRowMapper<>(VenueSearchProjection.class);
+    private final DataClassRowMapper<VenueSearchProjection> rowMapper =
+            new DataClassRowMapper<>(VenueSearchProjection.class);
 
     public JdbcVenueSearchRepository(final NamedParameterJdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;

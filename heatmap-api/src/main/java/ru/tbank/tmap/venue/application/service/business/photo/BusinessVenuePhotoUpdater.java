@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
+import ru.tbank.tmap.venue.domain.repository.VenueRepository;
 
 import java.util.UUID;
 
@@ -23,10 +24,8 @@ public class BusinessVenuePhotoUpdater {
     public String swapPhotoKey(final UUID venueId, final UUID ownerId, final String newObjectKey) {
         final Venue venue = venueRepository.findByIdAndOwnerId(venueId, ownerId)
                 .orElseThrow(() -> new VenueNotFoundException(venueId));
-        final String oldObjectKey = venue.getPhotoObjectKey();
-        venue.setPhotoObjectKey(newObjectKey);
-        venue.markEditedForReview();
-        return oldObjectKey;
+
+        return venue.updatePhoto(newObjectKey);
     }
 
     /**
@@ -38,8 +37,7 @@ public class BusinessVenuePhotoUpdater {
     public String clearPhotoKey(final UUID venueId, final UUID ownerId) {
         final Venue venue = venueRepository.findByIdAndOwnerId(venueId, ownerId)
                 .orElseThrow(() -> new VenueNotFoundException(venueId));
-        final String oldObjectKey = venue.getPhotoObjectKey();
-        venue.setPhotoObjectKey(null);
-        return oldObjectKey;
+
+        return venue.removePhoto();
     }
 }

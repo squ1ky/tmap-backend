@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 import ru.tbank.tmap.shared.h3.H3IndexService;
-import ru.tbank.tmap.user.domain.User;
+import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
-import ru.tbank.tmap.user.domain.UserRepository;
-import ru.tbank.tmap.venue.presentation.business.BusinessVenueMapper;
+import ru.tbank.tmap.venue.domain.VenueStatus;
+import ru.tbank.tmap.venue.domain.repository.VenueRepository;
 import ru.tbank.tmap.venue.application.command.VenueCreateCommand;
 import ru.tbank.tmap.venue.domain.Venue;
 
@@ -23,19 +23,34 @@ import ru.tbank.tmap.venue.domain.Venue;
 public class BusinessVenueService {
 
     private final VenueRepository venueRepository;
-    private final UserRepository userRepository;
+    private final UserAccountFacade userAccountFacade;
     private final H3IndexService h3IndexService;
-    private final BusinessVenueMapper businessVenueMapper;
 
     @Transactional
     public Venue createVenue(final UUID ownerId, final VenueCreateCommand command) {
-        final User owner = findOwner(ownerId);
+        verifyOwnerExists(ownerId);
+
         final long h3Res9 = h3IndexService.toH3(
                 command.location().getLat(),
                 command.location().getLng(),
                 H3Resolution.RES_9
         );
-        return venueRepository.save(businessVenueMapper.toEntity(command, owner, h3Res9));
+
+        final Venue venue = Venue.builder()
+                .id(UUID.randomUUID())
+                .ownerId(ownerId)
+                .name(command.name())
+                .address(command.address())
+                .location(command.location())
+                .h3Res9(h3Res9)
+                .category(command.category())
+                .description(command.description())
+                .dishOfDay(command.dishOfDay())
+                .music(command.music())
+                .status(VenueStatus.PENDING)
+                .build();
+
+        return venueRepository.save(venue);
     }
 
     public List<Venue> getMyVenues(final UUID ownerId) {
@@ -46,8 +61,8 @@ public class BusinessVenueService {
         return venueRepository.findByIdAndOwnerId(venueId, ownerId);
     }
 
-    private User findOwner(final UUID ownerId) {
-        return userRepository.findById(ownerId)
+    private void verifyOwnerExists(final UUID ownerId) {
+        userAccountFacade.findById(ownerId)
                 .orElseThrow(() -> new UserNotFoundException(ownerId.toString()));
     }
 }

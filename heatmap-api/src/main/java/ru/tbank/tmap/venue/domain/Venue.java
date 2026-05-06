@@ -17,6 +17,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -111,13 +112,18 @@ public class Venue {
     @OrderBy("createdAt DESC, id DESC")
     private List<VenuePromo> promos = new ArrayList<>();
 
+    @Builder
     public Venue(UUID id,
                  UUID ownerId,
                  String name,
                  String address,
                  GeoPoint location,
                  long h3Res9,
-                 VenueCategory category) {
+                 VenueCategory category,
+                 String description,
+                 String dishOfDay,
+                 String music,
+                 VenueStatus status) {
         this.id = Objects.requireNonNull(id, "id");
         this.ownerId = Objects.requireNonNull(ownerId, "ownerId");
         this.name = Objects.requireNonNull(name, "name");
@@ -125,6 +131,10 @@ public class Venue {
         this.location = Objects.requireNonNull(location, "location");
         this.h3Res9 = h3Res9;
         this.category = Objects.requireNonNull(category, "category");
+        this.description = description;
+        this.dishOfDay = dishOfDay;
+        this.music = music;
+        this.status = status != null ? status : VenueStatus.PENDING;
     }
 
     @PrePersist

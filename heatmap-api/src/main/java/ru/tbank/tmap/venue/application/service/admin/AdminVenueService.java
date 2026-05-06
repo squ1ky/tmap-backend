@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.admin;
+package ru.tbank.tmap.venue.application.service.admin;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -14,11 +14,11 @@ import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 
 @Service
 @Transactional(readOnly = true)
-public class VenueModerationService {
+public class AdminVenueService {
 
     private final VenueRepository venueRepository;
 
-    public VenueModerationService(final VenueRepository venueRepository) {
+    public AdminVenueService(final VenueRepository venueRepository) {
         this.venueRepository = venueRepository;
     }
 

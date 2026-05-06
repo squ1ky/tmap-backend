@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.business.photo;
+package ru.tbank.tmap.venue.application.service.business.photo;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -7,7 +7,7 @@ import ru.tbank.tmap.venue.domain.exception.InvalidVenuePhotoException;
 import java.util.Map;
 
 @Component
-public class VenuePhotoValidator {
+public class BusinessVenuePhotoValidator {
 
     private static final long MAX_SIZE_BYTES = 10L * 1024L * 1024L; // 10 MB
 

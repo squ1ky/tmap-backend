@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.business;
+package ru.tbank.tmap.venue.presentation.business;
 
 import java.util.List;
 import java.util.UUID;
@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import ru.tbank.tmap.shared.utils.SecurityUtils;
-import ru.tbank.tmap.venue.business.photo.BusinessVenuePhotoService;
+import ru.tbank.tmap.venue.application.command.VenueCreateCommand;
+import ru.tbank.tmap.venue.application.service.business.BusinessVenueService;
+import ru.tbank.tmap.venue.application.service.business.photo.BusinessVenuePhotoService;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 
@@ -24,7 +26,7 @@ public class BusinessVenueController implements BusinessOwnerApi {
     private final BusinessVenueService businessVenueService;
     private final BusinessVenuePhotoService businessVenuePhotoService;
     private final BusinessVenueMapper businessVenueMapper;
-    private final VenueOwnerMapper venueOwnerMapper;
+    private final BusinessVenueOwnerMapper venueOwnerMapper;
 
     @Override
     public ResponseEntity<VenueOwnerResponse> createVenue(final VenueCreateRequest venueCreateRequest) {

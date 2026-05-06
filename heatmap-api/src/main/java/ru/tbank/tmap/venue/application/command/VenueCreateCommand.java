@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.business;
+package ru.tbank.tmap.venue.application.command;
 
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.venue.domain.VenueCategory;

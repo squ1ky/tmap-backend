@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.business;
+package ru.tbank.tmap.venue.presentation.business;
 
 import java.util.List;
 import java.util.Locale;
@@ -6,14 +6,14 @@ import lombok.RequiredArgsConstructor;
 import org.openapitools.model.VenueModerationStatus;
 import org.openapitools.model.VenueOwnerResponse;
 import org.springframework.stereotype.Component;
-import ru.tbank.tmap.venue.VenuePublicMapper;
+import ru.tbank.tmap.venue.presentation.VenueMapper;
 import ru.tbank.tmap.venue.domain.Venue;
 
 @Component
 @RequiredArgsConstructor
-public class VenueOwnerMapper {
+public class BusinessVenueOwnerMapper {
 
-    private final VenuePublicMapper venuePublicMapper;
+    private final VenueMapper venuePublicMapper;
 
     public VenueOwnerResponse toResponse(final Venue venue) {
         return new VenueOwnerResponse()

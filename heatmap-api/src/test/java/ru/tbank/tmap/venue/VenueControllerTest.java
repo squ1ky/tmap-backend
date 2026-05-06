@@ -18,17 +18,20 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.test.security.TestSecurityConfig;
+import ru.tbank.tmap.venue.application.service.VenueQueryService;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
-import ru.tbank.tmap.venue.application.query.VenuePublicProjection;
+import ru.tbank.tmap.venue.application.query.VenueProjection;
 import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
+import ru.tbank.tmap.venue.presentation.VenueController;
+import ru.tbank.tmap.venue.presentation.VenueMapper;
 
 @WebMvcTest(VenueController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @Import({
         TestSecurityConfig.class,
         GlobalExceptionHandler.class,
-        VenuePublicMapper.class
+        VenueMapper.class
 })
 class VenueControllerTest {
 
@@ -38,7 +41,7 @@ class VenueControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private PublicVenueService publicVenueService;
+    private VenueQueryService publicVenueService;
 
     @MockitoBean
     private VenueSearchService venueSearchService;
@@ -152,8 +155,8 @@ class VenueControllerTest {
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
-    private VenuePublicProjection venueResponse() {
-        return new VenuePublicProjection(
+    private VenueProjection venueResponse() {
+        return new VenueProjection(
                 VENUE_ID,
                 "Bar One",
                 "Kazan Center, 2",

@@ -21,6 +21,9 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRole;
+import ru.tbank.tmap.venue.application.service.business.photo.BusinessVenuePhotoService;
+import ru.tbank.tmap.venue.application.service.business.photo.BusinessVenuePhotoUpdater;
+import ru.tbank.tmap.venue.application.service.business.photo.BusinessVenuePhotoValidator;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
@@ -42,13 +45,13 @@ class BusinessVenuePhotoServiceTest {
     private VenueRepository venueRepository;
 
     @Mock
-    private VenuePhotoValidator venuePhotoValidator;
+    private BusinessVenuePhotoValidator venuePhotoValidator;
 
     @Mock
     private VenuePhotoStorage venuePhotoStorage;
 
     @Mock
-    private VenuePhotoUpdater venuePhotoUpdater;
+    private BusinessVenuePhotoUpdater venuePhotoUpdater;
 
     private BusinessVenuePhotoService businessVenuePhotoService;
 

@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRole;
+import ru.tbank.tmap.venue.application.service.admin.AdminVenueService;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
@@ -30,11 +31,11 @@ class VenueModerationServiceTest {
     @Mock
     private VenueRepository venueRepository;
 
-    private VenueModerationService venueModerationService;
+    private AdminVenueService venueModerationService;
 
     @BeforeEach
     void setUp() {
-        venueModerationService = new VenueModerationService(venueRepository);
+        venueModerationService = new AdminVenueService(venueRepository);
     }
 
     @Test

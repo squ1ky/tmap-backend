@@ -1,10 +1,11 @@
-package ru.tbank.tmap.venue.business;
+package ru.tbank.tmap.venue.presentation.business;
 
 import java.util.UUID;
 import org.openapitools.model.VenueCreateRequest;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.domain.User;
+import ru.tbank.tmap.venue.application.command.VenueCreateCommand;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 

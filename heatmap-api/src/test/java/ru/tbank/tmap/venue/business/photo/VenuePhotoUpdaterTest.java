@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRole;
+import ru.tbank.tmap.venue.application.service.business.photo.BusinessVenuePhotoUpdater;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
@@ -32,11 +33,11 @@ class VenuePhotoUpdaterTest {
     @Mock
     private VenueRepository venueRepository;
 
-    private VenuePhotoUpdater venuePhotoUpdater;
+    private BusinessVenuePhotoUpdater venuePhotoUpdater;
 
     @BeforeEach
     void setUp() {
-        venuePhotoUpdater = new VenuePhotoUpdater(venueRepository);
+        venuePhotoUpdater = new BusinessVenuePhotoUpdater(venueRepository);
     }
 
     @Test

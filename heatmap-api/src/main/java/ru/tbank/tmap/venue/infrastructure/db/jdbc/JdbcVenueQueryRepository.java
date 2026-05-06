@@ -11,21 +11,21 @@ import org.springframework.stereotype.Repository;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
-import ru.tbank.tmap.venue.application.query.VenuePublicProjection;
+import ru.tbank.tmap.venue.application.query.VenueProjection;
 import ru.tbank.tmap.venue.domain.repository.VenueQueryRepository;
 
 @Repository
 public class JdbcVenueQueryRepository implements VenueQueryRepository {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
-    private final DataClassRowMapper<VenuePublicProjection> rowMapper = new DataClassRowMapper<>(VenuePublicProjection.class);
+    private final DataClassRowMapper<VenueProjection> rowMapper = new DataClassRowMapper<>(VenueProjection.class);
 
     public JdbcVenueQueryRepository(final NamedParameterJdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
-    public List<VenuePublicProjection> findActiveInViewport(
+    public List<VenueProjection> findActiveInViewport(
             final BoundingBox boundingBox,
             final List<VenueCategory> categories
     ) {
@@ -47,7 +47,7 @@ public class JdbcVenueQueryRepository implements VenueQueryRepository {
     }
 
     @Override
-    public Optional<VenuePublicProjection> findActiveById(final UUID id) {
+    public Optional<VenueProjection> findActiveById(final UUID id) {
         final String sql = baseSelect().append("""
                 WHERE status = :status
                   AND id = :id

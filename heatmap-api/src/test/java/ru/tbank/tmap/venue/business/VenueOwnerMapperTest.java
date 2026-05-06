@@ -11,10 +11,11 @@ import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRole;
-import ru.tbank.tmap.venue.VenuePublicMapper;
+import ru.tbank.tmap.venue.presentation.VenueMapper;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
+import ru.tbank.tmap.venue.presentation.business.BusinessVenueOwnerMapper;
 
 class VenueOwnerMapperTest {
 
@@ -32,7 +33,7 @@ class VenueOwnerMapperTest {
             )
     );
 
-    private final VenueOwnerMapper venueOwnerMapper = new VenueOwnerMapper(new VenuePublicMapper(minioUrlBuilder));
+    private final BusinessVenueOwnerMapper venueOwnerMapper = new BusinessVenueOwnerMapper(new VenueMapper(minioUrlBuilder));
 
     @Test
     void toResponse_whenVenueIsRejected_thenIncludesModerationStatusAndRejectReason() {

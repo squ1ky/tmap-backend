@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue;
+package ru.tbank.tmap.venue.presentation;
 
 import java.net.URI;
 import java.util.List;
@@ -9,16 +9,16 @@ import org.openapitools.model.VenuePublicResponse;
 import org.openapitools.model.VenueSearchResultResponse;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
-import ru.tbank.tmap.venue.application.query.VenuePublicProjection;
+import ru.tbank.tmap.venue.application.query.VenueProjection;
 import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
 
 @Component
 @RequiredArgsConstructor
-public class VenuePublicMapper {
+public class VenueMapper {
 
     private final MinioUrlBuilder minioUrlBuilder;
 
-    public VenuePublicResponse toResponse(final VenuePublicProjection venue) {
+    public VenuePublicResponse toResponse(final VenueProjection venue) {
         return new VenuePublicResponse()
                 .id(venue.id())
                 .name(venue.name())

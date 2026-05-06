@@ -4,7 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 
-public record VenuePublicProjection(
+public record VenueProjection(
         UUID id,
         String name,
         String address,

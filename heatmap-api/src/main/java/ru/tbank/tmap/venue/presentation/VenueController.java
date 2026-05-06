@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue;
+package ru.tbank.tmap.venue.presentation;
 
 import java.util.List;
 import java.util.UUID;
@@ -11,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.tbank.tmap.shared.geo.BoundingBox;
+import ru.tbank.tmap.venue.application.service.VenueQueryService;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 
@@ -20,9 +21,9 @@ import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 @Validated
 public class VenueController implements VenuesPublicApi {
 
-    private final PublicVenueService publicVenueService;
+    private final VenueQueryService publicVenueService;
     private final VenueSearchService venueSearchService;
-    private final VenuePublicMapper venuePublicMapper;
+    private final VenueMapper venuePublicMapper;
 
     @Override
     public ResponseEntity<List<VenuePublicResponse>> getVenuesInViewport(

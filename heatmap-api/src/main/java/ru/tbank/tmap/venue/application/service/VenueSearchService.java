@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.search;
+package ru.tbank.tmap.venue.application.service;
 
 import java.util.List;
 
@@ -7,11 +7,11 @@ import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
 import ru.tbank.tmap.venue.domain.repository.VenueSearchRepository;
 
 @Service
-public class PublicVenueSearchService implements VenueSearchService {
+public class VenueSearchService implements VenueSearchService {
 
     private final VenueSearchRepository venueSearchRepository;
 
-    public PublicVenueSearchService(final VenueSearchRepository venueSearchRepository) {
+    public VenueSearchService(final VenueSearchRepository venueSearchRepository) {
         this.venueSearchRepository = venueSearchRepository;
     }
 

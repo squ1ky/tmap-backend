@@ -26,15 +26,18 @@ import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.test.security.TestSecurityConfig;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRole;
+import ru.tbank.tmap.venue.application.service.admin.AdminVenueService;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
+import ru.tbank.tmap.venue.presentation.admin.AdminVenueController;
+import ru.tbank.tmap.venue.presentation.admin.AdminVenueMapper;
 
-@WebMvcTest(VenueAdminController.class)
+@WebMvcTest(AdminVenueController.class)
 @Import({
         TestSecurityConfig.class,
         GlobalExceptionHandler.class,
-        VenueModerationMapper.class,
+        AdminVenueMapper.class,
 })
 class VenueAdminControllerTest {
 
@@ -48,7 +51,7 @@ class VenueAdminControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private VenueModerationService venueModerationService;
+    private AdminVenueService venueModerationService;
 
     @Test
     @WithMockUser(roles = "ADMIN")

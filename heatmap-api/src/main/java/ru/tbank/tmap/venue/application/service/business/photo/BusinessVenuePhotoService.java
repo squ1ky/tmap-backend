@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.business.photo;
+package ru.tbank.tmap.venue.application.service.business.photo;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,9 +19,9 @@ import java.util.UUID;
 public class BusinessVenuePhotoService {
 
     private final VenueRepository venueRepository;
-    private final VenuePhotoValidator venuePhotoValidator;
+    private final BusinessVenuePhotoValidator venuePhotoValidator;
     private final VenuePhotoStorage venuePhotoStorage;
-    private final VenuePhotoUpdater venuePhotoUpdater;
+    private final BusinessVenuePhotoUpdater venuePhotoUpdater;
 
     public Venue uploadVenuePhoto(
             final UUID ownerId,

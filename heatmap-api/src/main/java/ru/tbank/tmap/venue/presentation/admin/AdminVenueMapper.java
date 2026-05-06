@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.admin;
+package ru.tbank.tmap.venue.presentation.admin;
 
 import java.util.Locale;
 import org.openapitools.model.AdminVenueModerationPage;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import ru.tbank.tmap.venue.domain.Venue;
 
 @Component
-public class VenueModerationMapper {
+public class AdminVenueMapper {
 
     private static final int MAX_TOTAL_ELEMENTS = Integer.MAX_VALUE;
 

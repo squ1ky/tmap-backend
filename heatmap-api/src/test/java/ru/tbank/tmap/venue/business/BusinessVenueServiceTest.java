@@ -18,9 +18,12 @@ import ru.tbank.tmap.shared.h3.H3IndexService;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRepository;
 import ru.tbank.tmap.user.domain.UserRole;
+import ru.tbank.tmap.venue.application.command.VenueCreateCommand;
+import ru.tbank.tmap.venue.application.service.business.BusinessVenueService;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
+import ru.tbank.tmap.venue.presentation.business.BusinessVenueMapper;
 
 @ExtendWith(MockitoExtension.class)
 class BusinessVenueServiceTest {

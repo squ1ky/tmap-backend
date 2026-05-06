@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.business;
+package ru.tbank.tmap.venue.application.service.business;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +12,8 @@ import ru.tbank.tmap.shared.h3.H3IndexService;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 import ru.tbank.tmap.user.domain.UserRepository;
+import ru.tbank.tmap.venue.presentation.business.BusinessVenueMapper;
+import ru.tbank.tmap.venue.application.command.VenueCreateCommand;
 import ru.tbank.tmap.venue.domain.Venue;
 
 @Slf4j

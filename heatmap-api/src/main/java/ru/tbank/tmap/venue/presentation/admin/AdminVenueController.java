@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.admin;
+package ru.tbank.tmap.venue.presentation.admin;
 
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -10,16 +10,17 @@ import org.openapitools.model.VenueModerationStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.tbank.tmap.venue.application.service.admin.AdminVenueService;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-public class VenueAdminController implements AdminVenuesApi {
+public class AdminVenueController implements AdminVenuesApi {
 
-    private final VenueModerationService venueModerationService;
-    private final VenueModerationMapper venueModerationMapper;
+    private final AdminVenueService venueModerationService;
+    private final AdminVenueMapper venueModerationMapper;
 
     @Override
     public ResponseEntity<AdminVenueModerationPage> getAdminVenues(

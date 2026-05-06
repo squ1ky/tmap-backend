@@ -6,13 +6,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import ru.tbank.tmap.venue.application.service.business.photo.BusinessVenuePhotoValidator;
 import ru.tbank.tmap.venue.domain.exception.InvalidVenuePhotoException;
 
 class VenuePhotoValidatorTest {
 
     private static final long MAX_SIZE_BYTES = 10L * 1024L * 1024L;
 
-    private final VenuePhotoValidator validator = new VenuePhotoValidator();
+    private final BusinessVenuePhotoValidator validator = new BusinessVenuePhotoValidator();
 
     @Test
     void validateAndGetExtension_whenJpegFile_thenReturnsJpgExtension() {

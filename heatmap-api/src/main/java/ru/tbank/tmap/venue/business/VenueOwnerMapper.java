@@ -8,6 +8,7 @@ import org.openapitools.model.VenueOwnerResponse;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.venue.VenuePublicMapper;
 import ru.tbank.tmap.venue.domain.Venue;
+import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 
 @Component
 @RequiredArgsConstructor
@@ -16,6 +17,12 @@ public class VenueOwnerMapper {
     private final VenuePublicMapper venuePublicMapper;
 
     public VenueOwnerResponse toResponse(final Venue venue) {
+        return toResponse(new BusinessVenueDetails(venue, null));
+    }
+
+    public VenueOwnerResponse toResponse(final BusinessVenueDetails details) {
+        final Venue venue = details.venue();
+        final VenuePendingUpdate pendingUpdate = details.pendingUpdate();
         return new VenueOwnerResponse()
                 .id(venue.getId())
                 .name(venue.getName())
@@ -30,11 +37,13 @@ public class VenueOwnerMapper {
                 .music(venue.getMusic())
                 .peopleNow(0)
                 .createdAt(venue.getCreatedAt())
-                .updatedAt(venue.getUpdatedAt())
+                .updatedAt(pendingUpdate == null ? venue.getUpdatedAt() : pendingUpdate.getUpdatedAt())
                 .promotions(List.of())
                 .ownerId(venue.getOwner().getId())
                 .h3Res9(Long.toUnsignedString(venue.getH3Res9()))
-                .moderationStatus(VenueModerationStatus.fromValue(venue.getStatus().name()))
-                .rejectReason(venue.getRejectReason());
+                .moderationStatus(VenueModerationStatus.fromValue(
+                        pendingUpdate == null ? venue.getStatus().name() : pendingUpdate.getStatus().name()
+                ))
+                .rejectReason(pendingUpdate == null ? venue.getRejectReason() : pendingUpdate.getRejectReason());
     }
 }

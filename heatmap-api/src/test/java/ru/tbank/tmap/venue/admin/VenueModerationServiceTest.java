@@ -16,6 +16,7 @@ import ru.tbank.tmap.venue.business.BusinessVenueMapper;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRole;
+import ru.tbank.tmap.venue.application.VenueDetails;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
@@ -55,7 +56,7 @@ class VenueModerationServiceTest {
         given(venueRepository.findById(VENUE_ID)).willReturn(Optional.of(venue));
         given(venueRepository.save(venue)).willReturn(venue);
 
-        final VenueModerationDetails response = venueModerationService.verifyAdminVenue(VENUE_ID);
+        final VenueDetails response = venueModerationService.verifyAdminVenue(VENUE_ID);
 
         assertThat(venue.getStatus()).isEqualTo(VenueStatus.ACTIVE);
         assertThat(venue.getRejectReason()).isNull();
@@ -70,7 +71,7 @@ class VenueModerationServiceTest {
         given(venueRepository.findById(VENUE_ID)).willReturn(Optional.of(venue));
         given(venueRepository.save(venue)).willReturn(venue);
 
-        final VenueModerationDetails response =
+        final VenueDetails response =
                 venueModerationService.rejectAdminVenue(VENUE_ID, "Address does not match coordinates");
 
         assertThat(venue.getStatus()).isEqualTo(VenueStatus.REJECTED);
@@ -129,7 +130,7 @@ class VenueModerationServiceTest {
         given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.of(pendingUpdate));
         given(venueRepository.save(venue)).willReturn(venue);
 
-        final VenueModerationDetails response = venueModerationService.verifyAdminVenue(VENUE_ID);
+        final VenueDetails response = venueModerationService.verifyAdminVenue(VENUE_ID);
 
         assertThat(response.pendingUpdate()).isNull();
         assertThat(response.venue().getName()).isEqualTo("Bar Two");
@@ -145,7 +146,7 @@ class VenueModerationServiceTest {
         given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.of(pendingUpdate));
         given(venuePendingUpdateRepository.save(pendingUpdate)).willReturn(pendingUpdate);
 
-        final VenueModerationDetails response =
+        final VenueDetails response =
                 venueModerationService.rejectAdminVenue(VENUE_ID, "Name does not match");
 
         assertThat(response.venue().getName()).isEqualTo("Bar One");

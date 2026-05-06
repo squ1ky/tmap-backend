@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.venue.application.VenueDetails;
 import ru.tbank.tmap.venue.business.BusinessVenueMapper;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
@@ -34,7 +35,7 @@ public class VenueModerationService {
         this.businessVenueMapper = businessVenueMapper;
     }
 
-    public Page<VenueModerationDetails> getAdminVenues(
+    public Page<VenueDetails> getAdminVenues(
             final VenueStatus status,
             final int page,
             final int size
@@ -42,22 +43,22 @@ public class VenueModerationService {
         final Pageable pageable = PageRequest.of(page, size);
         if (status == VenueStatus.PENDING_UPDATE) {
             return venuePendingUpdateRepository.findByStatus(VenueStatus.PENDING_UPDATE, pageable)
-                    .map(pendingUpdate -> new VenueModerationDetails(pendingUpdate.getVenue(), pendingUpdate));
+                    .map(pendingUpdate -> new VenueDetails(pendingUpdate.getVenue(), pendingUpdate));
         }
         return venueRepository.findByStatus(status, pageable)
-                .map(venue -> new VenueModerationDetails(venue, null));
+                .map(venue -> new VenueDetails(venue, null));
     }
 
-    public Optional<VenueModerationDetails> getAdminVenueById(final UUID id) {
+    public Optional<VenueDetails> getAdminVenueById(final UUID id) {
         return venueRepository.findById(id)
-                .map(venue -> new VenueModerationDetails(
+                .map(venue -> new VenueDetails(
                         venue,
                         venuePendingUpdateRepository.findByVenueId(id).orElse(null)
                 ));
     }
 
     @Transactional
-    public VenueModerationDetails verifyAdminVenue(final UUID id) {
+    public VenueDetails verifyAdminVenue(final UUID id) {
         final VenuePendingUpdate pendingUpdate = venuePendingUpdateRepository.findByVenueId(id).orElse(null);
         if (pendingUpdate != null) {
             if (pendingUpdate.getStatus() != VenueStatus.PENDING_UPDATE) {
@@ -69,17 +70,17 @@ public class VenueModerationService {
             venue.setRejectReason(null);
             final Venue savedVenue = venueRepository.save(venue);
             venuePendingUpdateRepository.delete(pendingUpdate);
-            return new VenueModerationDetails(savedVenue, null);
+            return new VenueDetails(savedVenue, null);
         }
 
         final Venue venue = findPendingVenue(id);
         venue.setStatus(VenueStatus.ACTIVE);
         venue.setRejectReason(null);
-        return new VenueModerationDetails(venueRepository.save(venue), null);
+        return new VenueDetails(venueRepository.save(venue), null);
     }
 
     @Transactional
-    public VenueModerationDetails rejectAdminVenue(final UUID id, final String reason) {
+    public VenueDetails rejectAdminVenue(final UUID id, final String reason) {
         if (reason == null || reason.isBlank()) {
             throw new IllegalArgumentException("Reject reason must not be blank");
         }
@@ -92,13 +93,13 @@ public class VenueModerationService {
             pendingUpdate.setStatus(VenueStatus.REJECTED);
             pendingUpdate.setRejectReason(reason.trim());
             final VenuePendingUpdate savedPendingUpdate = venuePendingUpdateRepository.save(pendingUpdate);
-            return new VenueModerationDetails(savedPendingUpdate.getVenue(), savedPendingUpdate);
+            return new VenueDetails(savedPendingUpdate.getVenue(), savedPendingUpdate);
         }
 
         final Venue venue = findPendingVenue(id);
         venue.setStatus(VenueStatus.REJECTED);
         venue.setRejectReason(reason.trim());
-        return new VenueModerationDetails(venueRepository.save(venue), null);
+        return new VenueDetails(venueRepository.save(venue), null);
     }
 
     private Venue findPendingVenue(final UUID id) {

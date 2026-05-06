@@ -7,6 +7,7 @@ import org.openapitools.model.AdminVenueModerationResponse;
 import org.openapitools.model.VenueModerationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
+import ru.tbank.tmap.venue.application.VenueDetails;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
@@ -14,7 +15,7 @@ import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 @Component
 public class VenueModerationMapper {
 
-    public AdminVenueModerationPage toPage(final Page<VenueModerationDetails> venues) {
+    public AdminVenueModerationPage toPage(final Page<VenueDetails> venues) {
         return new AdminVenueModerationPage()
                 .items(venues.stream()
                         .map(this::toResponse)
@@ -26,10 +27,10 @@ public class VenueModerationMapper {
     }
 
     public AdminVenueModerationResponse toResponse(final Venue venue) {
-        return toResponse(new VenueModerationDetails(venue, null));
+        return toResponse(new VenueDetails(venue, null));
     }
 
-    public AdminVenueModerationResponse toResponse(final VenueModerationDetails details) {
+    public AdminVenueModerationResponse toResponse(final VenueDetails details) {
         final VenueModerationSnapshot snapshot = toSnapshot(details);
         return new AdminVenueModerationResponse()
                 .id(snapshot.id())
@@ -47,7 +48,7 @@ public class VenueModerationMapper {
                 .updatedAt(snapshot.updatedAt());
     }
 
-    private VenueModerationSnapshot toSnapshot(final VenueModerationDetails details) {
+    private VenueModerationSnapshot toSnapshot(final VenueDetails details) {
         final VenuePendingUpdate pendingUpdate = details.pendingUpdate();
         if (pendingUpdate == null) {
             return VenueModerationSnapshot.fromVenue(details.venue());

@@ -12,6 +12,7 @@ import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRole;
+import ru.tbank.tmap.venue.application.VenueDetails;
 import ru.tbank.tmap.venue.VenuePublicMapper;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
@@ -90,7 +91,7 @@ class VenueOwnerMapperTest {
         pendingUpdate.setStatus(VenueStatus.REJECTED);
         pendingUpdate.setRejectReason("Name does not match");
 
-        final VenueOwnerResponse response = venueOwnerMapper.toResponse(new BusinessVenueDetails(venue, pendingUpdate));
+        final VenueOwnerResponse response = venueOwnerMapper.toResponse(new VenueDetails(venue, pendingUpdate));
 
         assertThat(response.getName()).isEqualTo("Bar One");
         assertThat(response.getModerationStatus()).isEqualTo(VenueModerationStatus.REJECTED);
@@ -111,7 +112,7 @@ class VenueOwnerMapperTest {
         pendingUpdate.setStatus(VenueStatus.PENDING_UPDATE);
         pendingUpdate.setUpdatedAt(OffsetDateTime.parse("2026-05-06T16:30:00+03:00"));
 
-        final VenueOwnerResponse response = venueOwnerMapper.toResponse(new BusinessVenueDetails(venue, pendingUpdate));
+        final VenueOwnerResponse response = venueOwnerMapper.toResponse(new VenueDetails(venue, pendingUpdate));
 
         assertThat(response.getName()).isEqualTo("Bar One");
         assertThat(response.getAddress()).isEqualTo("Kazan Center, 2");

@@ -26,6 +26,7 @@ import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.test.security.TestSecurityConfig;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRole;
+import ru.tbank.tmap.venue.application.VenueDetails;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
@@ -56,7 +57,7 @@ class VenueAdminControllerTest {
     void getAdminVenues_whenUserIsAdmin_thenReturnPendingVenues() throws Exception {
         given(venueModerationService.getAdminVenues(VenueStatus.PENDING, 0, 20))
                 .willReturn(new PageImpl<>(
-                        List.of(new VenueModerationDetails(venue(VenueStatus.PENDING, null), null)),
+                        List.of(new VenueDetails(venue(VenueStatus.PENDING, null), null)),
                         PageRequest.of(0, 20),
                         1
                 ));
@@ -78,7 +79,7 @@ class VenueAdminControllerTest {
     @WithMockUser(roles = "ADMIN")
     void verifyAdminVenue_whenUserIsAdmin_thenReturnActivatedVenue() throws Exception {
         given(venueModerationService.verifyAdminVenue(VENUE_ID))
-                .willReturn(new VenueModerationDetails(venue(VenueStatus.ACTIVE, null), null));
+                .willReturn(new VenueDetails(venue(VenueStatus.ACTIVE, null), null));
 
         mockMvc.perform(patch("/api/v1/admin/venues/{id}/verify", VENUE_ID)
                         .with(csrf()))
@@ -92,7 +93,7 @@ class VenueAdminControllerTest {
         final AdminModerationDecision decision = new AdminModerationDecision()
                 .reason("Address does not match coordinates");
         given(venueModerationService.rejectAdminVenue(VENUE_ID, "Address does not match coordinates"))
-                .willReturn(new VenueModerationDetails(
+                .willReturn(new VenueDetails(
                         venue(VenueStatus.ACTIVE, null),
                         pendingUpdate(VenueStatus.REJECTED, "Address does not match coordinates")
                 ));

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import ru.tbank.tmap.shared.utils.SecurityUtils;
+import ru.tbank.tmap.venue.application.VenueDetails;
 import ru.tbank.tmap.venue.business.photo.BusinessVenuePhotoService;
 import ru.tbank.tmap.venue.exception.VenueNotFoundException;
 
@@ -30,7 +31,7 @@ public class BusinessVenueController implements BusinessOwnerApi {
     public ResponseEntity<VenueOwnerResponse> createVenue(final VenueCreateRequest venueCreateRequest) {
         final UUID ownerId = SecurityUtils.currentUserId();
         final VenueCreateCommand command = businessVenueMapper.toCommand(venueCreateRequest);
-        final BusinessVenueDetails venue = businessVenueService.createVenue(ownerId, command);
+        final VenueDetails venue = businessVenueService.createVenue(ownerId, command);
         final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -39,7 +40,7 @@ public class BusinessVenueController implements BusinessOwnerApi {
     @Override
     public ResponseEntity<List<VenueOwnerResponse>> getMyVenues() {
         final UUID ownerId = SecurityUtils.currentUserId();
-        final List<BusinessVenueDetails> venues = businessVenueService.getMyVenues(ownerId);
+        final List<VenueDetails> venues = businessVenueService.getMyVenues(ownerId);
         return ResponseEntity.ok(venues.stream()
                 .map(venueOwnerMapper::toResponse)
                 .toList());
@@ -48,7 +49,7 @@ public class BusinessVenueController implements BusinessOwnerApi {
     @Override
     public ResponseEntity<VenueOwnerResponse> getMyVenueById(final UUID id) {
         final UUID ownerId = SecurityUtils.currentUserId();
-        final BusinessVenueDetails venue = businessVenueService.getMyVenueById(ownerId, id)
+        final VenueDetails venue = businessVenueService.getMyVenueById(ownerId, id)
                 .orElseThrow(() -> new VenueNotFoundException(id));
         final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
         return ResponseEntity.ok(response);
@@ -58,7 +59,7 @@ public class BusinessVenueController implements BusinessOwnerApi {
     public ResponseEntity<VenueOwnerResponse> updateVenue(final UUID id, final VenueUpdateRequest venueUpdateRequest) {
         final UUID ownerId = SecurityUtils.currentUserId();
         final VenueUpdateCommand command = businessVenueMapper.toCommand(venueUpdateRequest);
-        final BusinessVenueDetails venue = businessVenueService.updateVenue(ownerId, id, command);
+        final VenueDetails venue = businessVenueService.updateVenue(ownerId, id, command);
         return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
     }
 

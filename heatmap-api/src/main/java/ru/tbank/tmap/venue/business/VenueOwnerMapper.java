@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.openapitools.model.VenueModerationStatus;
 import org.openapitools.model.VenueOwnerResponse;
 import org.springframework.stereotype.Component;
+import ru.tbank.tmap.venue.application.VenueDetails;
 import ru.tbank.tmap.venue.VenuePublicMapper;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
@@ -20,10 +21,10 @@ public class VenueOwnerMapper {
     private final VenuePublicMapper venuePublicMapper;
 
     public VenueOwnerResponse toResponse(final Venue venue) {
-        return toResponse(new BusinessVenueDetails(venue, null));
+        return toResponse(new VenueDetails(venue, null));
     }
 
-    public VenueOwnerResponse toResponse(final BusinessVenueDetails details) {
+    public VenueOwnerResponse toResponse(final VenueDetails details) {
         final VenueOwnerSnapshot snapshot = toSnapshot(details);
         return new VenueOwnerResponse()
                 .id(snapshot.id())
@@ -47,7 +48,7 @@ public class VenueOwnerMapper {
                 .rejectReason(snapshot.rejectReason());
     }
 
-    private VenueOwnerSnapshot toSnapshot(final BusinessVenueDetails details) {
+    private VenueOwnerSnapshot toSnapshot(final VenueDetails details) {
         final VenuePendingUpdate pendingUpdate = details.pendingUpdate();
         if (pendingUpdate == null) {
             return VenueOwnerSnapshot.fromVenue(details.venue());

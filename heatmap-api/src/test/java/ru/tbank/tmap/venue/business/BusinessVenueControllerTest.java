@@ -24,6 +24,7 @@ import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.test.security.TestSecurityConfig;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRole;
+import ru.tbank.tmap.venue.application.VenueDetails;
 import ru.tbank.tmap.venue.business.photo.BusinessVenuePhotoService;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
@@ -70,8 +71,8 @@ class BusinessVenueControllerTest {
                 org.mockito.ArgumentMatchers.eq(OWNER_ID),
                 org.mockito.ArgumentMatchers.eq(VENUE_ID),
                 org.mockito.ArgumentMatchers.any(VenueUpdateCommand.class)
-        )).willReturn(new BusinessVenueDetails(venue, pendingUpdate));
-        given(venueOwnerMapper.toResponse(org.mockito.ArgumentMatchers.any(BusinessVenueDetails.class)))
+        )).willReturn(new VenueDetails(venue, pendingUpdate));
+        given(venueOwnerMapper.toResponse(org.mockito.ArgumentMatchers.any(VenueDetails.class)))
                 .willReturn(new VenueOwnerResponse()
                         .id(VENUE_ID)
                         .name("Bar One")

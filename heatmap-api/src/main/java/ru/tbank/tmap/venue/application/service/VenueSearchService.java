@@ -2,20 +2,17 @@ package ru.tbank.tmap.venue.application.service;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
 import ru.tbank.tmap.venue.domain.repository.VenueSearchRepository;
 
 @Service
-public class VenueSearchService implements VenueSearchService {
+@RequiredArgsConstructor
+public class VenueSearchService {
 
     private final VenueSearchRepository venueSearchRepository;
 
-    public VenueSearchService(final VenueSearchRepository venueSearchRepository) {
-        this.venueSearchRepository = venueSearchRepository;
-    }
-
-    @Override
     public List<VenueSearchProjection> searchByName(final String query) {
         final String normalizedQuery = query == null ? "" : query.trim();
         if (normalizedQuery.isEmpty()) {

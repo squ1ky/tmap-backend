@@ -3,6 +3,8 @@ package ru.tbank.tmap.venue.application.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.shared.geo.BoundingBox;
@@ -11,14 +13,11 @@ import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.repository.VenueQueryRepository;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class VenueQueryService {
 
     private final VenueQueryRepository venueQueryRepository;
-
-    public VenueQueryService(final VenueQueryRepository venueQueryRepository) {
-        this.venueQueryRepository = venueQueryRepository;
-    }
 
     public List<VenueProjection> getVenuesInViewport(
             final BoundingBox boundingBox,

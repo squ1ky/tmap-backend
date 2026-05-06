@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.venue.api.VenueAccessFacade;
+import ru.tbank.tmap.venue.domain.repository.VenueRepository;
 
 import java.util.UUID;
 

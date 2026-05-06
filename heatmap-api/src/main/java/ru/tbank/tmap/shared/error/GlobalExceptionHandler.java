@@ -19,9 +19,9 @@ import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleStateException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleUpdateValidationException;
 import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
-import ru.tbank.tmap.venue.exception.InvalidVenuePhotoException;
-import ru.tbank.tmap.venue.exception.VenueModerationStateException;
-import ru.tbank.tmap.venue.exception.VenueNotFoundException;
+import ru.tbank.tmap.venue.domain.exception.InvalidVenuePhotoException;
+import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
+import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 
 @Slf4j
 @RestControllerAdvice

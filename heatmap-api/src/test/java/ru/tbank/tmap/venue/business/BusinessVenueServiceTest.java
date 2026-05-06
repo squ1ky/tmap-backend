@@ -21,7 +21,6 @@ import ru.tbank.tmap.user.domain.UserRole;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
-import ru.tbank.tmap.venue.repository.VenueRepository;
 
 @ExtendWith(MockitoExtension.class)
 class BusinessVenueServiceTest {

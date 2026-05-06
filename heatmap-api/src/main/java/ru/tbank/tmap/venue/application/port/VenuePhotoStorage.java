@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.business.photo;
+package ru.tbank.tmap.venue.application.port;
 
 import java.io.InputStream;
 import java.util.UUID;

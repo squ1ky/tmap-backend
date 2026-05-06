@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.tbank.tmap.venue.domain.VenueStatus;
-import ru.tbank.tmap.venue.exception.VenueNotFoundException;
+import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 
 @RestController
 @RequestMapping("/api/v1")

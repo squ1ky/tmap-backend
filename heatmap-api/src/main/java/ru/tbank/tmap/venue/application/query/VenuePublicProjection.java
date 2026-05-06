@@ -1,10 +1,10 @@
-package ru.tbank.tmap.venue.repository;
+package ru.tbank.tmap.venue.application.query;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 
-public record VenuePublicRow(
+public record VenuePublicProjection(
         UUID id,
         String name,
         String address,

@@ -1,16 +1,16 @@
-package ru.tbank.tmap.infrastructure.minio.adapter;
+package ru.tbank.tmap.venue.infrastructure.storage;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.infrastructure.minio.MinioObjectStorage;
-import ru.tbank.tmap.venue.business.photo.VenuePhotoStorage;
+import ru.tbank.tmap.venue.application.port.VenuePhotoStorage;
 
 import java.io.InputStream;
 import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class MinioVenueStorageAdapter implements VenuePhotoStorage {
+public class MinioVenuePhotoStorage implements VenuePhotoStorage {
 
     private final MinioObjectStorage minioObjectStorage;
 

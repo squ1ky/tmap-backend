@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.exception;
+package ru.tbank.tmap.venue.domain.exception;
 
 import java.util.UUID;
 import ru.tbank.tmap.venue.domain.VenueStatus;

@@ -9,9 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueStatus;
-import ru.tbank.tmap.venue.exception.VenueModerationStateException;
-import ru.tbank.tmap.venue.exception.VenueNotFoundException;
-import ru.tbank.tmap.venue.repository.VenueRepository;
+import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
+import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 
 @Service
 @Transactional(readOnly = true)

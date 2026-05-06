@@ -1,7 +1,8 @@
-package ru.tbank.tmap.venue.domain;
+package ru.tbank.tmap.venue.infrastructure.db.jpa;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+import ru.tbank.tmap.venue.domain.VenueCategory;
 
 @Converter
 public class VenueCategoryConverter implements AttributeConverter<VenueCategory, String> {

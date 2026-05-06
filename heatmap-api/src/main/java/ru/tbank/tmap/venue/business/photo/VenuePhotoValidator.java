@@ -2,7 +2,7 @@ package ru.tbank.tmap.venue.business.photo;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
-import ru.tbank.tmap.venue.exception.InvalidVenuePhotoException;
+import ru.tbank.tmap.venue.domain.exception.InvalidVenuePhotoException;
 
 import java.util.Map;
 

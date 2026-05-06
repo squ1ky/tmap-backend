@@ -13,7 +13,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import ru.tbank.tmap.TestcontainersConfiguration;
+import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
 import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.domain.repository.VenueSearchRepository;
+import ru.tbank.tmap.venue.infrastructure.db.jdbc.JdbcVenueSearchRepository;
 
 @JdbcTest
 @Import({TestcontainersConfiguration.class, JdbcVenueSearchRepository.class})
@@ -34,10 +37,10 @@ class JdbcVenueSearchRepositoryTest {
     void searchByName_whenFullNameMatches_thenReturnsVenue() {
         insertVenue("33333333-3333-3333-3333-333333333331", "Coffee Point", "ACTIVE");
 
-        final List<VenueSearchResult> result = venueSearchRepository.searchByName("Coffee Point");
+        final List<VenueSearchProjection> result = venueSearchRepository.searchByName("Coffee Point");
 
         assertThat(result)
-                .extracting(VenueSearchResult::name)
+                .extracting(VenueSearchProjection::name)
                 .contains("Coffee Point");
     }
 
@@ -45,10 +48,10 @@ class JdbcVenueSearchRepositoryTest {
     void searchByName_whenPartialNameMatches_thenReturnsVenue() {
         insertVenue("33333333-3333-3333-3333-333333333332", "North Coffee Lab", "ACTIVE");
 
-        final List<VenueSearchResult> result = venueSearchRepository.searchByName("Coffee");
+        final List<VenueSearchProjection> result = venueSearchRepository.searchByName("Coffee");
 
         assertThat(result)
-                .extracting(VenueSearchResult::name)
+                .extracting(VenueSearchProjection::name)
                 .contains("North Coffee Lab");
     }
 
@@ -56,10 +59,10 @@ class JdbcVenueSearchRepositoryTest {
     void searchByName_whenCaseDiffers_thenReturnsVenue() {
         insertVenue("33333333-3333-3333-3333-333333333333", "Case Cafe", "ACTIVE");
 
-        final List<VenueSearchResult> result = venueSearchRepository.searchByName("case cafe");
+        final List<VenueSearchProjection> result = venueSearchRepository.searchByName("case cafe");
 
         assertThat(result)
-                .extracting(VenueSearchResult::name)
+                .extracting(VenueSearchProjection::name)
                 .contains("Case Cafe");
     }
 
@@ -67,7 +70,7 @@ class JdbcVenueSearchRepositoryTest {
     void searchByName_whenNoMatches_thenReturnsEmptyList() {
         insertVenue("33333333-3333-3333-3333-333333333334", "Hidden Cafe", "ACTIVE");
 
-        final List<VenueSearchResult> result = venueSearchRepository.searchByName("Cinema");
+        final List<VenueSearchProjection> result = venueSearchRepository.searchByName("Cinema");
 
         assertThat(result).isEmpty();
     }
@@ -78,10 +81,10 @@ class JdbcVenueSearchRepositoryTest {
         insertVenue("33333333-3333-3333-3333-333333333336", "Moderated Cafe Rejected", "REJECTED");
         insertVenue("33333333-3333-3333-3333-333333333337", "Moderated Cafe Active", "ACTIVE");
 
-        final List<VenueSearchResult> result = venueSearchRepository.searchByName("Moderated Cafe");
+        final List<VenueSearchProjection> result = venueSearchRepository.searchByName("Moderated Cafe");
 
         assertThat(result)
-                .extracting(VenueSearchResult::name)
+                .extracting(VenueSearchProjection::name)
                 .containsExactly("Moderated Cafe Active");
     }
 
@@ -90,7 +93,7 @@ class JdbcVenueSearchRepositoryTest {
         final UUID venueId = UUID.fromString("33333333-3333-3333-3333-333333333338");
         insertVenue(venueId.toString(), "Display Cafe", "ACTIVE");
 
-        final VenueSearchResult result = venueSearchRepository.searchByName("Display").getFirst();
+        final VenueSearchProjection result = venueSearchRepository.searchByName("Display").getFirst();
 
         assertThat(result.id()).isEqualTo(venueId);
         assertThat(result.name()).isEqualTo("Display Cafe");

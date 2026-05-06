@@ -14,7 +14,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import ru.tbank.tmap.TestcontainersConfiguration;
 import ru.tbank.tmap.shared.geo.BoundingBox;
+import ru.tbank.tmap.venue.application.query.VenuePublicProjection;
 import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.domain.repository.VenueQueryRepository;
+import ru.tbank.tmap.venue.infrastructure.db.jdbc.JdbcVenueQueryRepository;
 
 @JdbcTest
 @Import({TestcontainersConfiguration.class, JdbcVenueQueryRepository.class})
@@ -43,13 +46,13 @@ class JdbcVenueQueryRepositoryTest {
         insertVenue(REJECTED_FOOD_ID, "Rejected Food", 55.7930, 49.1230, VenueCategory.FOOD, "REJECTED");
         insertVenue(OUTSIDE_VIEWPORT_ID, "Outside Food", 55.9000, 49.3000, VenueCategory.FOOD, "ACTIVE");
 
-        final List<VenuePublicRow> result = venueQueryRepository.findActiveInViewport(
+        final List<VenuePublicProjection> result = venueQueryRepository.findActiveInViewport(
                 new BoundingBox(55.7800, 49.1100, 55.8000, 49.1300),
                 List.of()
         );
 
         assertThat(result)
-                .extracting(VenuePublicRow::id)
+                .extracting(VenuePublicProjection::id)
                 .contains(ACTIVE_FOOD_ID, ACTIVE_SHOPPING_ID)
                 .doesNotContain(PENDING_FOOD_ID, REJECTED_FOOD_ID, OUTSIDE_VIEWPORT_ID);
     }
@@ -59,13 +62,13 @@ class JdbcVenueQueryRepositoryTest {
         insertVenue(ACTIVE_FOOD_ID, "Active Food", 55.7900, 49.1200, VenueCategory.FOOD, "ACTIVE");
         insertVenue(ACTIVE_SHOPPING_ID, "Active Shop", 55.7910, 49.1210, VenueCategory.SHOPPING, "ACTIVE");
 
-        final List<VenuePublicRow> result = venueQueryRepository.findActiveInViewport(
+        final List<VenuePublicProjection> result = venueQueryRepository.findActiveInViewport(
                 new BoundingBox(55.7800, 49.1100, 55.8000, 49.1300),
                 List.of(VenueCategory.FOOD)
         );
 
         assertThat(result)
-                .extracting(VenuePublicRow::id)
+                .extracting(VenuePublicProjection::id)
                 .contains(ACTIVE_FOOD_ID)
                 .doesNotContain(ACTIVE_SHOPPING_ID);
     }
@@ -74,7 +77,7 @@ class JdbcVenueQueryRepositoryTest {
     void findActiveById_whenVenueIsActive_thenReturnsVenue() {
         insertVenue(ACTIVE_FOOD_ID, "Active Food", 55.7900, 49.1200, VenueCategory.FOOD, "ACTIVE");
 
-        final Optional<VenuePublicRow> result = venueQueryRepository.findActiveById(ACTIVE_FOOD_ID);
+        final Optional<VenuePublicProjection> result = venueQueryRepository.findActiveById(ACTIVE_FOOD_ID);
 
         assertThat(result).isPresent();
         assertThat(result.orElseThrow().id()).isEqualTo(ACTIVE_FOOD_ID);
@@ -86,8 +89,8 @@ class JdbcVenueQueryRepositoryTest {
         insertVenue(PENDING_FOOD_ID, "Pending Food", 55.7920, 49.1220, VenueCategory.FOOD, "PENDING");
         insertVenue(REJECTED_FOOD_ID, "Rejected Food", 55.7930, 49.1230, VenueCategory.FOOD, "REJECTED");
 
-        final Optional<VenuePublicRow> pendingResult = venueQueryRepository.findActiveById(PENDING_FOOD_ID);
-        final Optional<VenuePublicRow> rejectedResult = venueQueryRepository.findActiveById(REJECTED_FOOD_ID);
+        final Optional<VenuePublicProjection> pendingResult = venueQueryRepository.findActiveById(PENDING_FOOD_ID);
+        final Optional<VenuePublicProjection> rejectedResult = venueQueryRepository.findActiveById(REJECTED_FOOD_ID);
 
         assertThat(pendingResult).isEmpty();
         assertThat(rejectedResult).isEmpty();

@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.tbank.tmap.shared.utils.SecurityUtils;
 import ru.tbank.tmap.venue.business.photo.BusinessVenuePhotoService;
 import ru.tbank.tmap.venue.domain.Venue;
-import ru.tbank.tmap.venue.exception.VenueNotFoundException;
+import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 
 @RestController
 @RequestMapping("/api/v1")

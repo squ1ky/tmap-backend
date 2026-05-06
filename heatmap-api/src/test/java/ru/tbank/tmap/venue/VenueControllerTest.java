@@ -20,9 +20,8 @@ import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.test.security.TestSecurityConfig;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
-import ru.tbank.tmap.venue.repository.VenuePublicRow;
-import ru.tbank.tmap.venue.search.VenueSearchResult;
-import ru.tbank.tmap.venue.search.VenueSearchService;
+import ru.tbank.tmap.venue.application.query.VenuePublicProjection;
+import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
 
 @WebMvcTest(VenueController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -121,7 +120,7 @@ class VenueControllerTest {
     @Test
     void searchVenues_whenRequestIsValid_thenReturnsMatchingVenues() throws Exception {
         given(venueSearchService.searchByName("bar"))
-                .willReturn(List.of(new VenueSearchResult(
+                .willReturn(List.of(new VenueSearchProjection(
                         VENUE_ID,
                         "Bar One",
                         "Kazan Center, 2",
@@ -153,8 +152,8 @@ class VenueControllerTest {
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
-    private VenuePublicRow venueResponse() {
-        return new VenuePublicRow(
+    private VenuePublicProjection venueResponse() {
+        return new VenuePublicProjection(
                 VENUE_ID,
                 "Bar One",
                 "Kazan Center, 2",

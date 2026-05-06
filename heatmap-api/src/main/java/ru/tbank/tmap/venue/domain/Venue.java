@@ -1,5 +1,6 @@
 package ru.tbank.tmap.venue.domain;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -7,8 +8,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -22,9 +23,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import ru.tbank.tmap.shared.geo.GeoPoint;
-import ru.tbank.tmap.user.domain.User;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -44,9 +47,8 @@ public class Venue {
     private UUID id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "owner_id", nullable = false)
-    private User owner;
+    @Column(name = "owner_id", nullable = false)
+    private UUID ownerId;
 
     @NotBlank
     @Size(max = 255)
@@ -101,15 +103,24 @@ public class Venue {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
+    @OneToMany(
+            mappedBy = "venue",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    @OrderBy("createdAt DESC, id DESC")
+    private List<VenuePromo> promos = new ArrayList<>();
+
     public Venue(UUID id,
-                 User owner,
+                 UUID ownerId,
                  String name,
                  String address,
                  GeoPoint location,
                  long h3Res9,
                  VenueCategory category) {
         this.id = Objects.requireNonNull(id, "id");
-        this.owner = Objects.requireNonNull(owner, "owner");
+        this.ownerId = Objects.requireNonNull(ownerId, "ownerId");
         this.name = Objects.requireNonNull(name, "name");
         this.address = Objects.requireNonNull(address, "address");
         this.location = Objects.requireNonNull(location, "location");

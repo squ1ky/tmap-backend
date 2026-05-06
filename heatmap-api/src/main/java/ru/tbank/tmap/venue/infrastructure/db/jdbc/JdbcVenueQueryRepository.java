@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.repository;
+package ru.tbank.tmap.venue.infrastructure.db.jdbc;
 
 import java.util.List;
 import java.util.Map;
@@ -11,19 +11,21 @@ import org.springframework.stereotype.Repository;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
+import ru.tbank.tmap.venue.application.query.VenuePublicProjection;
+import ru.tbank.tmap.venue.domain.repository.VenueQueryRepository;
 
 @Repository
 public class JdbcVenueQueryRepository implements VenueQueryRepository {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
-    private final DataClassRowMapper<VenuePublicRow> rowMapper = new DataClassRowMapper<>(VenuePublicRow.class);
+    private final DataClassRowMapper<VenuePublicProjection> rowMapper = new DataClassRowMapper<>(VenuePublicProjection.class);
 
     public JdbcVenueQueryRepository(final NamedParameterJdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
-    public List<VenuePublicRow> findActiveInViewport(
+    public List<VenuePublicProjection> findActiveInViewport(
             final BoundingBox boundingBox,
             final List<VenueCategory> categories
     ) {
@@ -45,7 +47,7 @@ public class JdbcVenueQueryRepository implements VenueQueryRepository {
     }
 
     @Override
-    public Optional<VenuePublicRow> findActiveById(final UUID id) {
+    public Optional<VenuePublicProjection> findActiveById(final UUID id) {
         final String sql = baseSelect().append("""
                 WHERE status = :status
                   AND id = :id

@@ -1,10 +1,10 @@
-package ru.tbank.tmap.venue.search;
+package ru.tbank.tmap.venue.application.query;
 
 import java.util.UUID;
 
 import ru.tbank.tmap.venue.domain.VenueCategory;
 
-public record VenueSearchResult(
+public record VenueSearchProjection(
         UUID id,
         String name,
         String address,

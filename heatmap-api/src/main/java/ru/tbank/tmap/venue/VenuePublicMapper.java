@@ -9,8 +9,8 @@ import org.openapitools.model.VenuePublicResponse;
 import org.openapitools.model.VenueSearchResultResponse;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
-import ru.tbank.tmap.venue.repository.VenuePublicRow;
-import ru.tbank.tmap.venue.search.VenueSearchResult;
+import ru.tbank.tmap.venue.application.query.VenuePublicProjection;
+import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
 
 @Component
 @RequiredArgsConstructor
@@ -18,7 +18,7 @@ public class VenuePublicMapper {
 
     private final MinioUrlBuilder minioUrlBuilder;
 
-    public VenuePublicResponse toResponse(final VenuePublicRow venue) {
+    public VenuePublicResponse toResponse(final VenuePublicProjection venue) {
         return new VenuePublicResponse()
                 .id(venue.id())
                 .name(venue.name())
@@ -37,7 +37,7 @@ public class VenuePublicMapper {
                 .promotions(List.of());
     }
 
-    public VenueSearchResultResponse toSearchResponse(final VenueSearchResult venue) {
+    public VenueSearchResultResponse toSearchResponse(final VenueSearchProjection venue) {
         return new VenueSearchResultResponse()
                 .id(venue.id())
                 .name(venue.name())

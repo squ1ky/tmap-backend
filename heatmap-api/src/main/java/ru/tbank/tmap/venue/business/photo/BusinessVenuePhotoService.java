@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.tbank.tmap.infrastructure.minio.ObjectStorageException;
 import ru.tbank.tmap.venue.domain.Venue;
-import ru.tbank.tmap.venue.exception.VenueNotFoundException;
-import ru.tbank.tmap.venue.repository.VenueRepository;
+import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
+import ru.tbank.tmap.venue.application.port.VenuePhotoStorage;
 
 import java.io.IOException;
 import java.io.InputStream;

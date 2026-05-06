@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-import ru.tbank.tmap.venue.exception.InvalidVenuePhotoException;
+import ru.tbank.tmap.venue.domain.exception.InvalidVenuePhotoException;
 
 class VenuePhotoValidatorTest {
 

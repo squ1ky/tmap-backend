@@ -24,8 +24,8 @@ import ru.tbank.tmap.user.domain.UserRole;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
-import ru.tbank.tmap.venue.exception.VenueNotFoundException;
-import ru.tbank.tmap.venue.repository.VenueRepository;
+import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
+import ru.tbank.tmap.venue.application.port.VenuePhotoStorage;
 
 @ExtendWith(MockitoExtension.class)
 class BusinessVenuePhotoServiceTest {

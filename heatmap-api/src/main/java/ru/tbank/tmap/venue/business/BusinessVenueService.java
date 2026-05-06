@@ -13,7 +13,6 @@ import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 import ru.tbank.tmap.user.domain.UserRepository;
 import ru.tbank.tmap.venue.domain.Venue;
-import ru.tbank.tmap.venue.repository.VenueRepository;
 
 @Slf4j
 @Service

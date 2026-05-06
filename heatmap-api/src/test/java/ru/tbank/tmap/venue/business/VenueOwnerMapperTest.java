@@ -14,6 +14,7 @@ import ru.tbank.tmap.user.domain.UserRole;
 import ru.tbank.tmap.venue.VenuePublicMapper;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 
 class VenueOwnerMapperTest {
@@ -74,6 +75,25 @@ class VenueOwnerMapperTest {
         final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
 
         assertThat(response.getPhotoUrl()).isNull();
+    }
+
+    @Test
+    void toResponse_whenActiveVenueHasRejectedPendingUpdate_thenKeepsPublishedFieldsAndReturnsPendingStatus() {
+        final Venue venue = venue(VenueStatus.ACTIVE, null);
+        final VenuePendingUpdate pendingUpdate = new VenuePendingUpdate(venue);
+        pendingUpdate.setName("Bar Two");
+        pendingUpdate.setAddress("Kazan Center, 4");
+        pendingUpdate.setLocation(GeoPoint.of(55.8000, 49.1300));
+        pendingUpdate.setH3Res9(617422037122678784L);
+        pendingUpdate.setCategory(VenueCategory.FOOD);
+        pendingUpdate.setStatus(VenueStatus.REJECTED);
+        pendingUpdate.setRejectReason("Name does not match");
+
+        final VenueOwnerResponse response = venueOwnerMapper.toResponse(new BusinessVenueDetails(venue, pendingUpdate));
+
+        assertThat(response.getName()).isEqualTo("Bar One");
+        assertThat(response.getModerationStatus()).isEqualTo(VenueModerationStatus.REJECTED);
+        assertThat(response.getRejectReason()).isEqualTo("Name does not match");
     }
 
     private Venue venue(final VenueStatus status, final String rejectReason) {

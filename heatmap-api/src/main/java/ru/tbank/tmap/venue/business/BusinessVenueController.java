@@ -6,14 +6,15 @@ import lombok.RequiredArgsConstructor;
 import org.openapitools.api.BusinessOwnerApi;
 import org.openapitools.model.VenueCreateRequest;
 import org.openapitools.model.VenueOwnerResponse;
+import org.openapitools.model.VenueUpdateRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import ru.tbank.tmap.shared.utils.SecurityUtils;
+import ru.tbank.tmap.venue.application.VenueDetails;
 import ru.tbank.tmap.venue.business.photo.BusinessVenuePhotoService;
-import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.exception.VenueNotFoundException;
 
 @RestController
@@ -30,7 +31,7 @@ public class BusinessVenueController implements BusinessOwnerApi {
     public ResponseEntity<VenueOwnerResponse> createVenue(final VenueCreateRequest venueCreateRequest) {
         final UUID ownerId = SecurityUtils.currentUserId();
         final VenueCreateCommand command = businessVenueMapper.toCommand(venueCreateRequest);
-        final Venue venue = businessVenueService.createVenue(ownerId, command);
+        final VenueDetails venue = businessVenueService.createVenue(ownerId, command);
         final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -39,7 +40,7 @@ public class BusinessVenueController implements BusinessOwnerApi {
     @Override
     public ResponseEntity<List<VenueOwnerResponse>> getMyVenues() {
         final UUID ownerId = SecurityUtils.currentUserId();
-        final List<Venue> venues = businessVenueService.getMyVenues(ownerId);
+        final List<VenueDetails> venues = businessVenueService.getMyVenues(ownerId);
         return ResponseEntity.ok(venues.stream()
                 .map(venueOwnerMapper::toResponse)
                 .toList());
@@ -48,23 +49,31 @@ public class BusinessVenueController implements BusinessOwnerApi {
     @Override
     public ResponseEntity<VenueOwnerResponse> getMyVenueById(final UUID id) {
         final UUID ownerId = SecurityUtils.currentUserId();
-        final Venue venue = businessVenueService.getMyVenueById(ownerId, id)
+        final VenueDetails venue = businessVenueService.getMyVenueById(ownerId, id)
                 .orElseThrow(() -> new VenueNotFoundException(id));
         final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
         return ResponseEntity.ok(response);
     }
 
     @Override
+    public ResponseEntity<VenueOwnerResponse> updateVenue(final UUID id, final VenueUpdateRequest venueUpdateRequest) {
+        final UUID ownerId = SecurityUtils.currentUserId();
+        final VenueUpdateCommand command = businessVenueMapper.toCommand(venueUpdateRequest);
+        final VenueDetails venue = businessVenueService.updateVenue(ownerId, id, command);
+        return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
+    }
+
+    @Override
     public ResponseEntity<VenueOwnerResponse> uploadVenuePhoto(UUID id, MultipartFile file) {
         final UUID ownerId = SecurityUtils.currentUserId();
-        final Venue venue = businessVenuePhotoService.uploadVenuePhoto(ownerId, id, file);
+        final ru.tbank.tmap.venue.domain.Venue venue = businessVenuePhotoService.uploadVenuePhoto(ownerId, id, file);
         return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
     }
 
     @Override
     public ResponseEntity<VenueOwnerResponse> deleteVenuePhoto(UUID id) {
         final UUID ownerId = SecurityUtils.currentUserId();
-        final Venue venue = businessVenuePhotoService.deleteVenuePhoto(ownerId, id);
+        final ru.tbank.tmap.venue.domain.Venue venue = businessVenuePhotoService.deleteVenuePhoto(ownerId, id);
         return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
     }
 }

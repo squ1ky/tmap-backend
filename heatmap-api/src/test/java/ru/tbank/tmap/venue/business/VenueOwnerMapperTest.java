@@ -2,6 +2,7 @@ package ru.tbank.tmap.venue.business;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.openapitools.model.VenueModerationStatus;
@@ -11,9 +12,11 @@ import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRole;
+import ru.tbank.tmap.venue.application.VenueDetails;
 import ru.tbank.tmap.venue.VenuePublicMapper;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 
 class VenueOwnerMapperTest {
@@ -74,6 +77,49 @@ class VenueOwnerMapperTest {
         final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
 
         assertThat(response.getPhotoUrl()).isNull();
+    }
+
+    @Test
+    void toResponse_whenActiveVenueHasRejectedPendingUpdate_thenKeepsPublishedFieldsAndReturnsPendingStatus() {
+        final Venue venue = venue(VenueStatus.ACTIVE, null);
+        final VenuePendingUpdate pendingUpdate = new VenuePendingUpdate(venue);
+        pendingUpdate.setName("Bar Two");
+        pendingUpdate.setAddress("Kazan Center, 4");
+        pendingUpdate.setLocation(GeoPoint.of(55.8000, 49.1300));
+        pendingUpdate.setH3Res9(617422037122678784L);
+        pendingUpdate.setCategory(VenueCategory.FOOD);
+        pendingUpdate.setStatus(VenueStatus.REJECTED);
+        pendingUpdate.setRejectReason("Name does not match");
+
+        final VenueOwnerResponse response = venueOwnerMapper.toResponse(new VenueDetails(venue, pendingUpdate));
+
+        assertThat(response.getName()).isEqualTo("Bar One");
+        assertThat(response.getModerationStatus()).isEqualTo(VenueModerationStatus.REJECTED);
+        assertThat(response.getRejectReason()).isEqualTo("Name does not match");
+    }
+
+    @Test
+    void toResponse_whenActiveVenueHasPendingUpdate_thenKeepsPublishedFieldsAndUsesDraftStatusAndUpdatedAt() {
+        final Venue venue = venue(VenueStatus.ACTIVE, null);
+        venue.setUpdatedAt(OffsetDateTime.parse("2026-05-06T15:00:00+03:00"));
+
+        final VenuePendingUpdate pendingUpdate = new VenuePendingUpdate(venue);
+        pendingUpdate.setName("Bar Two");
+        pendingUpdate.setAddress("Kazan Center, 4");
+        pendingUpdate.setLocation(GeoPoint.of(55.8000, 49.1300));
+        pendingUpdate.setH3Res9(617422037122678784L);
+        pendingUpdate.setCategory(VenueCategory.FOOD);
+        pendingUpdate.setStatus(VenueStatus.PENDING_UPDATE);
+        pendingUpdate.setUpdatedAt(OffsetDateTime.parse("2026-05-06T16:30:00+03:00"));
+
+        final VenueOwnerResponse response = venueOwnerMapper.toResponse(new VenueDetails(venue, pendingUpdate));
+
+        assertThat(response.getName()).isEqualTo("Bar One");
+        assertThat(response.getAddress()).isEqualTo("Kazan Center, 2");
+        assertThat(response.getLat()).isEqualTo(55.7905);
+        assertThat(response.getLng()).isEqualTo(49.1140);
+        assertThat(response.getModerationStatus()).isEqualTo(VenueModerationStatus.PENDING_UPDATE);
+        assertThat(response.getUpdatedAt()).isEqualTo(OffsetDateTime.parse("2026-05-06T16:30:00+03:00"));
     }
 
     private Venue venue(final VenueStatus status, final String rejectReason) {

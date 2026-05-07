@@ -15,11 +15,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRole;
+import ru.tbank.tmap.venue.application.VenueDetails;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.exception.VenueModerationStateException;
 import ru.tbank.tmap.venue.exception.VenueNotFoundException;
+import ru.tbank.tmap.venue.repository.VenuePendingUpdateRepository;
 import ru.tbank.tmap.venue.repository.VenueRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,39 +34,48 @@ class VenueModerationServiceTest {
     @Mock
     private VenueRepository venueRepository;
 
+    @Mock
+    private VenuePendingUpdateRepository venuePendingUpdateRepository;
+
     private VenueModerationService venueModerationService;
 
     @BeforeEach
     void setUp() {
-        venueModerationService = new VenueModerationService(venueRepository);
+        venueModerationService = new VenueModerationService(
+                venueRepository,
+                venuePendingUpdateRepository
+        );
     }
 
     @Test
     void verifyAdminVenue_whenVenueIsPending_thenActivateVenue() {
         final Venue venue = pendingVenue();
+        given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.empty());
         given(venueRepository.findById(VENUE_ID)).willReturn(Optional.of(venue));
         given(venueRepository.save(venue)).willReturn(venue);
 
-        final Venue response = venueModerationService.verifyAdminVenue(VENUE_ID);
+        final VenueDetails response = venueModerationService.verifyAdminVenue(VENUE_ID);
 
         assertThat(venue.getStatus()).isEqualTo(VenueStatus.ACTIVE);
         assertThat(venue.getRejectReason()).isNull();
-        assertThat(response.getStatus()).isEqualTo(VenueStatus.ACTIVE);
+        assertThat(response.venue().getStatus()).isEqualTo(VenueStatus.ACTIVE);
         verify(venueRepository).save(venue);
     }
 
     @Test
     void rejectAdminVenue_whenVenueIsPending_thenRejectVenueWithReason() {
         final Venue venue = pendingVenue();
+        given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.empty());
         given(venueRepository.findById(VENUE_ID)).willReturn(Optional.of(venue));
         given(venueRepository.save(venue)).willReturn(venue);
 
-        final Venue response = venueModerationService.rejectAdminVenue(VENUE_ID, "Address does not match coordinates");
+        final VenueDetails response =
+                venueModerationService.rejectAdminVenue(VENUE_ID, "Address does not match coordinates");
 
         assertThat(venue.getStatus()).isEqualTo(VenueStatus.REJECTED);
         assertThat(venue.getRejectReason()).isEqualTo("Address does not match coordinates");
-        assertThat(response.getStatus()).isEqualTo(VenueStatus.REJECTED);
-        assertThat(response.getRejectReason()).isEqualTo("Address does not match coordinates");
+        assertThat(response.venue().getStatus()).isEqualTo(VenueStatus.REJECTED);
+        assertThat(response.venue().getRejectReason()).isEqualTo("Address does not match coordinates");
         verify(venueRepository).save(venue);
     }
 
@@ -71,6 +83,7 @@ class VenueModerationServiceTest {
     void verifyAdminVenue_whenVenueIsAlreadyActive_thenReturnConflict() {
         final Venue venue = pendingVenue();
         venue.setStatus(VenueStatus.ACTIVE);
+        given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.empty());
         given(venueRepository.findById(VENUE_ID)).willReturn(Optional.of(venue));
 
         assertThatThrownBy(() -> venueModerationService.verifyAdminVenue(VENUE_ID))
@@ -82,6 +95,7 @@ class VenueModerationServiceTest {
     void verifyAdminVenue_whenVenueIsAlreadyRejected_thenReturnConflict() {
         final Venue venue = pendingVenue();
         venue.setStatus(VenueStatus.REJECTED);
+        given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.empty());
         given(venueRepository.findById(VENUE_ID)).willReturn(Optional.of(venue));
 
         assertThatThrownBy(() -> venueModerationService.verifyAdminVenue(VENUE_ID))
@@ -91,6 +105,7 @@ class VenueModerationServiceTest {
 
     @Test
     void verifyAdminVenue_whenVenueDoesNotExist_thenReturnNotFound() {
+        given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.empty());
         given(venueRepository.findById(VENUE_ID)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> venueModerationService.verifyAdminVenue(VENUE_ID))
@@ -103,6 +118,39 @@ class VenueModerationServiceTest {
         assertThatThrownBy(() -> venueModerationService.rejectAdminVenue(VENUE_ID, " "))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Reject reason must not be blank");
+    }
+
+    @Test
+    void verifyAdminVenue_whenPendingUpdateExists_thenApplyItAndDeleteDraft() {
+        final Venue venue = pendingVenue();
+        venue.setStatus(VenueStatus.ACTIVE);
+        final VenuePendingUpdate pendingUpdate = pendingUpdate(venue, VenueStatus.PENDING_UPDATE, null);
+        given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.of(pendingUpdate));
+        given(venueRepository.save(venue)).willReturn(venue);
+
+        final VenueDetails response = venueModerationService.verifyAdminVenue(VENUE_ID);
+
+        assertThat(response.pendingUpdate()).isNull();
+        assertThat(response.venue().getName()).isEqualTo("Bar Two");
+        assertThat(response.venue().getStatus()).isEqualTo(VenueStatus.ACTIVE);
+        verify(venuePendingUpdateRepository).delete(pendingUpdate);
+    }
+
+    @Test
+    void rejectAdminVenue_whenPendingUpdateExists_thenRejectDraftAndKeepPublishedVenueUntouched() {
+        final Venue venue = pendingVenue();
+        venue.setStatus(VenueStatus.ACTIVE);
+        final VenuePendingUpdate pendingUpdate = pendingUpdate(venue, VenueStatus.PENDING_UPDATE, null);
+        given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.of(pendingUpdate));
+        given(venuePendingUpdateRepository.save(pendingUpdate)).willReturn(pendingUpdate);
+
+        final VenueDetails response =
+                venueModerationService.rejectAdminVenue(VENUE_ID, "Name does not match");
+
+        assertThat(response.venue().getName()).isEqualTo("Bar One");
+        assertThat(response.pendingUpdate()).isNotNull();
+        assertThat(response.pendingUpdate().getStatus()).isEqualTo(VenueStatus.REJECTED);
+        assertThat(response.pendingUpdate().getRejectReason()).isEqualTo("Name does not match");
     }
 
     private Venue pendingVenue() {
@@ -122,5 +170,24 @@ class VenueModerationServiceTest {
                 617422037122678783L,
                 VenueCategory.ENTERTAINMENT
         );
+    }
+
+    private VenuePendingUpdate pendingUpdate(
+            final Venue venue,
+            final VenueStatus status,
+            final String rejectReason
+    ) {
+        final VenuePendingUpdate pendingUpdate = new VenuePendingUpdate(venue);
+        pendingUpdate.setName("Bar Two");
+        pendingUpdate.setAddress("Kazan Center, 5");
+        pendingUpdate.setLocation(GeoPoint.of(55.8000, 49.1300));
+        pendingUpdate.setH3Res9(617422037122678784L);
+        pendingUpdate.setCategory(VenueCategory.FOOD);
+        pendingUpdate.setDescription("Updated description");
+        pendingUpdate.setDishOfDay("Soup");
+        pendingUpdate.setMusic("Jazz");
+        pendingUpdate.setStatus(status);
+        pendingUpdate.setRejectReason(rejectReason);
+        return pendingUpdate;
     }
 }

@@ -27,8 +27,10 @@ import ru.tbank.tmap.test.security.TestSecurityConfig;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRole;
 import ru.tbank.tmap.venue.application.service.admin.AdminVenueService;
+import ru.tbank.tmap.venue.application.query.VenueDetails;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.presentation.admin.AdminVenueController;
 import ru.tbank.tmap.venue.presentation.admin.AdminVenueMapper;
@@ -57,7 +59,11 @@ class VenueAdminControllerTest {
     @WithMockUser(roles = "ADMIN")
     void getAdminVenues_whenUserIsAdmin_thenReturnPendingVenues() throws Exception {
         given(venueModerationService.getAdminVenues(VenueStatus.PENDING, 0, 20))
-                .willReturn(new PageImpl<>(List.of(venue(VenueStatus.PENDING, null)), PageRequest.of(0, 20), 1));
+                .willReturn(new PageImpl<>(
+                        List.of(new VenueDetails(venue(VenueStatus.PENDING, null), null)),
+                        PageRequest.of(0, 20),
+                        1
+                ));
 
         mockMvc.perform(get("/api/v1/admin/venues"))
                 .andExpect(status().isOk())
@@ -76,7 +82,7 @@ class VenueAdminControllerTest {
     @WithMockUser(roles = "ADMIN")
     void verifyAdminVenue_whenUserIsAdmin_thenReturnActivatedVenue() throws Exception {
         given(venueModerationService.verifyAdminVenue(VENUE_ID))
-                .willReturn(venue(VenueStatus.ACTIVE, null));
+                .willReturn(new VenueDetails(venue(VenueStatus.ACTIVE, null), null));
 
         mockMvc.perform(patch("/api/v1/admin/venues/{id}/verify", VENUE_ID)
                         .with(csrf()))
@@ -90,7 +96,10 @@ class VenueAdminControllerTest {
         final AdminModerationDecision decision = new AdminModerationDecision()
                 .reason("Address does not match coordinates");
         given(venueModerationService.rejectAdminVenue(VENUE_ID, "Address does not match coordinates"))
-                .willReturn(venue(VenueStatus.REJECTED, "Address does not match coordinates"));
+                .willReturn(new VenueDetails(
+                        venue(VenueStatus.ACTIVE, null),
+                        pendingUpdate(VenueStatus.REJECTED, "Address does not match coordinates")
+                ));
 
         mockMvc.perform(patch("/api/v1/admin/venues/{id}/reject", VENUE_ID)
                         .with(csrf())
@@ -105,24 +114,32 @@ class VenueAdminControllerTest {
             final VenueStatus status,
             final String rejectReason
     ) {
-        final User owner = new User(
-                OWNER_ID,
-                "owner@example.com",
-                "password-hash",
-                "Owner",
-                UserRole.BUSINESS_OWNER
-        );
-        final Venue venue = new Venue(
-                VENUE_ID,
-                owner,
-                "Bar One",
-                "Kazan Center, 2",
-                GeoPoint.of(55.7905, 49.1140),
-                617422037122678783L,
-                VenueCategory.ENTERTAINMENT
-        );
+        final Venue venue = Venue.builder()
+                .id(VENUE_ID)
+                .ownerId(OWNER_ID)
+                .name("Bar One")
+                .address("Kazan Center, 2")
+                .location(GeoPoint.of(55.7905, 49.1140))
+                .h3Res9(617422037122678783L)
+                .category(VenueCategory.ENTERTAINMENT)
+                .build();
         venue.setStatus(status);
         venue.setRejectReason(rejectReason);
         return venue;
+    }
+
+    private VenuePendingUpdate pendingUpdate(
+            final VenueStatus status,
+            final String rejectReason
+    ) {
+        final VenuePendingUpdate pendingUpdate = new VenuePendingUpdate(venue(VenueStatus.ACTIVE, null));
+        pendingUpdate.setName("Bar Two");
+        pendingUpdate.setAddress("Kazan Center, 5");
+        pendingUpdate.setLocation(GeoPoint.of(55.8000, 49.1300));
+        pendingUpdate.setH3Res9(617422037122678784L);
+        pendingUpdate.setCategory(VenueCategory.FOOD);
+        pendingUpdate.setStatus(status);
+        pendingUpdate.setRejectReason(rejectReason);
+        return pendingUpdate;
     }
 }

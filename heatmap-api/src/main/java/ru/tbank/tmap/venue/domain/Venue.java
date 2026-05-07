@@ -24,6 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import ru.tbank.tmap.shared.geo.GeoPoint;
+import ru.tbank.tmap.venue.application.command.VenueUpdateCommand;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -92,7 +93,7 @@ public class Venue {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 32)
     @ToString.Include
-    private VenueStatus status = VenueStatus.PENDING;
+    private VenueStatus status;
 
     @Column(name = "reject_reason", columnDefinition = "text")
     private String rejectReason;
@@ -179,5 +180,27 @@ public class Venue {
         }
         this.status = VenueStatus.REJECTED;
         this.rejectReason = reason.trim();
+    }
+
+    public void applyPendingUpdate(final VenuePendingUpdate pendingUpdate) {
+        this.name = Objects.requireNonNull(pendingUpdate.getName(), "pendingUpdate.name");
+        this.address = Objects.requireNonNull(pendingUpdate.getAddress(), "pendingUpdate.address");
+        this.location = Objects.requireNonNull(pendingUpdate.getLocation(), "pendingUpdate.location");
+        this.h3Res9 = pendingUpdate.getH3Res9();
+        this.category = Objects.requireNonNull(pendingUpdate.getCategory(), "pendingUpdate.category");
+        this.description = pendingUpdate.getDescription();
+        this.dishOfDay = pendingUpdate.getDishOfDay();
+        this.music = pendingUpdate.getMusic();
+    }
+
+    public void applyUpdate(final VenueUpdateCommand command, final long h3Res9) {
+        this.name = Objects.requireNonNull(command.name(), "command.name");
+        this.address = Objects.requireNonNull(command.address(), "command.address");
+        this.location = Objects.requireNonNull(command.location(), "command.location");
+        this.h3Res9 = h3Res9;
+        this.category = Objects.requireNonNull(command.category(), "command.category");
+        this.description = command.description();
+        this.dishOfDay = command.dishOfDay();
+        this.music = command.music();
     }
 }

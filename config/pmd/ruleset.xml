@@ -40,6 +40,8 @@
         <exclude name="DataClass"/>
         <exclude name="UseUtilityClass"/>
         <exclude name="AvoidCatchingGenericException"/>
+        <exclude name="ExcessiveImports"/>
+        <exclude name="ExcessiveParameterList"/>
     </rule>
 
     <rule ref="category/java/errorprone.xml">

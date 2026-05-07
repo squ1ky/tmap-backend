@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 
 import java.util.Optional;
 import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +20,7 @@ import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
+import ru.tbank.tmap.venue.domain.repository.VenueRepository;
 
 @ExtendWith(MockitoExtension.class)
 class VenuePhotoUpdaterTest {
@@ -145,22 +147,15 @@ class VenuePhotoUpdaterTest {
     }
 
     private Venue venue(final VenueStatus status) {
-        final User owner = new User(
-                OWNER_ID,
-                "owner@example.com",
-                "password-hash",
-                "Owner",
-                UserRole.BUSINESS_OWNER
-        );
-        final Venue venue = new Venue(
-                VENUE_ID,
-                owner,
-                "Bar One",
-                "Kazan Center, 2",
-                GeoPoint.of(55.7905, 49.1140),
-                H3_RES_9,
-                VenueCategory.ENTERTAINMENT
-        );
+        final Venue venue = Venue.builder()
+                .id(VENUE_ID)
+                .ownerId(OWNER_ID)
+                .name("Bar One")
+                .address("Kazan Center, 2")
+                .location(GeoPoint.of(55.7905, 49.1140))
+                .h3Res9(H3_RES_9)
+                .category(VenueCategory.ENTERTAINMENT)
+                .build();
         venue.setStatus(status);
         return venue;
     }

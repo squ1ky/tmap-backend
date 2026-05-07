@@ -29,6 +29,7 @@ import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 import ru.tbank.tmap.venue.application.port.VenuePhotoStorage;
+import ru.tbank.tmap.venue.domain.repository.VenueRepository;
 
 @ExtendWith(MockitoExtension.class)
 class BusinessVenuePhotoServiceTest {
@@ -177,20 +178,16 @@ class BusinessVenuePhotoServiceTest {
         );
     }
 
-    private User owner() {
-        return new User(OWNER_ID, OWNER_EMAIL, "password-hash", "Owner", UserRole.BUSINESS_OWNER);
-    }
-
     private Venue venue(final VenueStatus status, final String rejectReason) {
-        final Venue venue = new Venue(
-                VENUE_ID,
-                owner(),
-                "Bar One",
-                "Kazan Center, 2",
-                GeoPoint.of(55.7905, 49.1140),
-                H3_RES_9,
-                VenueCategory.ENTERTAINMENT
-        );
+        final Venue venue = Venue.builder()
+                .id(VENUE_ID)
+                .ownerId(OWNER_ID)
+                .name("Bar One")
+                .address("Kazan Center, 2")
+                .location(GeoPoint.of(55.7905, 49.1140))
+                .h3Res9(H3_RES_9)
+                .category(VenueCategory.ENTERTAINMENT)
+                .build();
         venue.setStatus(status);
         venue.setRejectReason(rejectReason);
         return venue;

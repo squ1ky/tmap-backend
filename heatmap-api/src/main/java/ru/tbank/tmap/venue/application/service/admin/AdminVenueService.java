@@ -13,7 +13,6 @@ import ru.tbank.tmap.venue.application.query.VenueDetails;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
-import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
 import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 import ru.tbank.tmap.venue.domain.repository.VenuePendingUpdateRepository;
 import ru.tbank.tmap.venue.domain.repository.VenueRepository;
@@ -26,7 +25,7 @@ public class AdminVenueService {
     private final VenueRepository venueRepository;
     private final VenuePendingUpdateRepository venuePendingUpdateRepository;
 
-    public Page<VenueDetails> getAdminVenues(
+    public Page<VenueDetails> getVenues(
             final VenueStatus status,
             final int page,
             final int size
@@ -42,7 +41,7 @@ public class AdminVenueService {
                 .map(venue -> new VenueDetails(venue, null));
     }
 
-    public Optional<VenueDetails> getAdminVenueById(final UUID id) {
+    public Optional<VenueDetails> getVenueById(final UUID id) {
         return venueRepository.findById(id)
                 .map(venue -> new VenueDetails(
                         venue,
@@ -52,57 +51,47 @@ public class AdminVenueService {
 
     @Transactional
     public VenueDetails verifyAdminVenue(final UUID id) {
-        final VenuePendingUpdate pendingUpdate = venuePendingUpdateRepository.findByVenueId(id).orElse(null);
-        if (pendingUpdate != null) {
-            if (pendingUpdate.getStatus() != VenueStatus.PENDING_UPDATE) {
-                throw new VenueModerationStateException(id, pendingUpdate.getStatus());
-            }
-            final Venue venue = pendingUpdate.getVenue();
-            venue.applyPendingUpdate(pendingUpdate);
-            venue.setStatus(VenueStatus.ACTIVE);
-            venue.setRejectReason(null);
-            final Venue savedVenue = venueRepository.save(venue);
-            venuePendingUpdateRepository.deleteById(pendingUpdate.getVenueId());
-            return new VenueDetails(savedVenue, null);
-        }
-
-        final Venue venue = findPendingVenue(id);
-        venue.setStatus(VenueStatus.ACTIVE);
-        venue.setRejectReason(null);
-        return new VenueDetails(venueRepository.save(venue), null);
+        return venuePendingUpdateRepository.findByVenueId(id)
+                .map(this::approvePendingUpdate)
+                .orElseGet(() -> approveNewVenue(id));
     }
 
     @Transactional
     public VenueDetails rejectAdminVenue(final UUID id, final String reason) {
-        if (reason == null || reason.isBlank()) {
-            throw new IllegalArgumentException("Reject reason must not be blank");
-        }
+        return venuePendingUpdateRepository.findByVenueId(id)
+                .map(pendingUpdate -> rejectPendingUpdate(pendingUpdate, reason))
+                .orElseGet(() -> rejectNewVenue(id, reason));
+    }
 
-        final VenuePendingUpdate pendingUpdate = venuePendingUpdateRepository.findByVenueId(id).orElse(null);
-        if (pendingUpdate != null) {
-            if (pendingUpdate.getStatus() != VenueStatus.PENDING_UPDATE) {
-                throw new VenueModerationStateException(id, pendingUpdate.getStatus());
-            }
-            pendingUpdate.setStatus(VenueStatus.REJECTED);
-            pendingUpdate.setRejectReason(reason.trim());
-            final VenuePendingUpdate savedPendingUpdate = venuePendingUpdateRepository.save(pendingUpdate);
-            return new VenueDetails(savedPendingUpdate.getVenue(), savedPendingUpdate);
-        }
+    private VenueDetails approvePendingUpdate(VenuePendingUpdate pendingUpdate) {
+        Venue venue = pendingUpdate.getVenue();
+        venue.approveWithUpdate(pendingUpdate);
+        Venue saved = venueRepository.save(venue);
+        venuePendingUpdateRepository.deleteById(pendingUpdate.getVenueId());
+        return new VenueDetails(saved, null);
+    }
 
-        final Venue venue = findPendingVenue(id);
-        venue.setStatus(VenueStatus.REJECTED);
-        venue.setRejectReason(reason.trim());
+    private VenueDetails approveNewVenue(UUID id) {
+        Venue venue = findVenue(id);
+        venue.approve();
+        Venue saved = venueRepository.save(venue);
+        return new VenueDetails(saved, null);
+    }
+
+    private VenueDetails rejectPendingUpdate(VenuePendingUpdate pendingUpdate, String reason) {
+        pendingUpdate.reject(reason);
+        VenuePendingUpdate saved = venuePendingUpdateRepository.save(pendingUpdate);
+        return new VenueDetails(saved.getVenue(), saved);
+    }
+
+    private VenueDetails rejectNewVenue(UUID id, String reason) {
+        Venue venue = findVenue(id);
+        venue.reject(reason);
         return new VenueDetails(venueRepository.save(venue), null);
     }
 
-    private Venue findPendingVenue(final UUID id) {
-        final Venue venue = venueRepository.findById(id)
+    private Venue findVenue(UUID id) {
+        return venueRepository.findById(id)
                 .orElseThrow(() -> new VenueNotFoundException(id));
-
-        if (venue.getStatus() != VenueStatus.PENDING) {
-            throw new VenueModerationStateException(id, venue.getStatus());
-        }
-
-        return venue;
     }
 }

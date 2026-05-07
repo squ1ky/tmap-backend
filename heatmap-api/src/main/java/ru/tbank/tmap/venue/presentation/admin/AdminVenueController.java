@@ -29,13 +29,13 @@ public class AdminVenueController implements AdminVenuesApi {
             final Integer size
     ) {
         return ResponseEntity.ok(venueModerationMapper.toPage(
-                venueModerationService.getAdminVenues(toVenueStatus(status), page, size)
+                venueModerationService.getVenues(toVenueStatus(status), page, size)
         ));
     }
 
     @Override
     public ResponseEntity<AdminVenueModerationResponse> getAdminVenueById(final UUID id) {
-        return venueModerationService.getAdminVenueById(id)
+        return venueModerationService.getVenueById(id)
                 .map(venueModerationMapper::toResponse)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new VenueNotFoundException(id));

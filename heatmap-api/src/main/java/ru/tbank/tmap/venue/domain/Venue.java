@@ -25,6 +25,7 @@ import lombok.Setter;
 import lombok.ToString;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.venue.application.command.VenueUpdateCommand;
+import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -169,20 +170,35 @@ public class Venue {
         }
     }
 
-    public void verify() {
+    public void approve() {
+        if (status != VenueStatus.PENDING) {
+            throw new VenueModerationStateException(id, status);
+        }
         this.status = VenueStatus.ACTIVE;
         this.rejectReason = null;
     }
 
-    public void reject(String reason) {
-        if (reason == null || reason.isBlank()) {
-            throw new IllegalArgumentException("Reject reason must not be blank");
+    public void approveWithUpdate(VenuePendingUpdate pendingUpdate) {
+        Objects.requireNonNull(pendingUpdate, "pendingUpdate");
+        if (status != VenueStatus.ACTIVE) {
+            throw new VenueModerationStateException(id, status);
         }
-        this.status = VenueStatus.REJECTED;
-        this.rejectReason = reason.trim();
+        if (pendingUpdate.getStatus() != VenueStatus.PENDING_UPDATE) {
+            throw new VenueModerationStateException(id, pendingUpdate.getStatus());
+        }
+        applyContentFrom(pendingUpdate);
+        this.rejectReason = null;
     }
 
-    public void applyPendingUpdate(final VenuePendingUpdate pendingUpdate) {
+    public void reject(String reason) {
+        if (status != VenueStatus.PENDING) {
+            throw new VenueModerationStateException(id, status);
+        }
+        this.status = VenueStatus.REJECTED;
+        this.rejectReason = reason;
+    }
+
+    public void applyContentFrom(final VenuePendingUpdate pendingUpdate) {
         this.name = Objects.requireNonNull(pendingUpdate.getName(), "pendingUpdate.name");
         this.address = Objects.requireNonNull(pendingUpdate.getAddress(), "pendingUpdate.address");
         this.location = Objects.requireNonNull(pendingUpdate.getLocation(), "pendingUpdate.location");

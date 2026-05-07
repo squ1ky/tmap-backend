@@ -26,6 +26,7 @@ import lombok.Setter;
 import lombok.ToString;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.venue.application.command.VenueUpdateCommand;
+import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
 
 @Entity
 @Table(name = "venue_pending_updates")
@@ -94,7 +95,19 @@ public class VenuePendingUpdate {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
-    public VenuePendingUpdate(final Venue venue) {
+    @PrePersist
+        /* default */ void onCreate() {
+        if (updatedAt == null) {
+            updatedAt = OffsetDateTime.now();
+        }
+    }
+
+    @PreUpdate
+        /* default */ void onUpdate() {
+        updatedAt = OffsetDateTime.now();
+    }
+
+    private VenuePendingUpdate(final Venue venue) {
         this.venue = venue;
         this.venueId = venue.getId();
     }
@@ -109,6 +122,14 @@ public class VenuePendingUpdate {
         return pendingUpdate;
     }
 
+    public void reject(String reason) {
+        if (status != VenueStatus.PENDING_UPDATE) {
+            throw new VenueModerationStateException(venueId, status);
+        }
+        this.status = VenueStatus.REJECTED;
+        this.rejectReason = reason;
+    }
+
     public void applyUpdate(final VenueUpdateCommand command, final long h3Res9) {
         this.name = command.name();
         this.address = command.address();
@@ -120,17 +141,5 @@ public class VenuePendingUpdate {
         this.music = command.music();
         this.status = VenueStatus.PENDING_UPDATE;
         this.rejectReason = null;
-    }
-
-    @PrePersist
-    /* default */ void onCreate() {
-        if (updatedAt == null) {
-            updatedAt = OffsetDateTime.now();
-        }
-    }
-
-    @PreUpdate
-    /* default */ void onUpdate() {
-        updatedAt = OffsetDateTime.now();
     }
 }

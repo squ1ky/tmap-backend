@@ -24,8 +24,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.test.security.TestSecurityConfig;
-import ru.tbank.tmap.user.domain.User;
-import ru.tbank.tmap.user.domain.UserRole;
 import ru.tbank.tmap.venue.application.service.admin.AdminVenueService;
 import ru.tbank.tmap.venue.application.query.VenueDetails;
 import ru.tbank.tmap.venue.domain.Venue;
@@ -58,7 +56,7 @@ class VenueAdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void getAdminVenues_whenUserIsAdmin_thenReturnPendingVenues() throws Exception {
-        given(venueModerationService.getAdminVenues(VenueStatus.PENDING, 0, 20))
+        given(venueModerationService.getVenues(VenueStatus.PENDING, 0, 20))
                 .willReturn(new PageImpl<>(
                         List.of(new VenueDetails(venue(VenueStatus.PENDING, null), null)),
                         PageRequest.of(0, 20),

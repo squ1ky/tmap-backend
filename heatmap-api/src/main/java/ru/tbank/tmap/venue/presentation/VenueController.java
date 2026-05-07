@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.venue.application.service.VenueQueryService;
+import ru.tbank.tmap.venue.application.service.VenueSearchService;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 

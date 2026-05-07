@@ -27,7 +27,7 @@ public class AdminVenueMapper {
     public AdminVenueModerationResponse toResponse(final Venue venue) {
         return new AdminVenueModerationResponse()
                 .id(venue.getId())
-                .ownerId(venue.getOwner().getId())
+                .ownerId(venue.getOwnerId())
                 .name(venue.getName())
                 .address(venue.getAddress())
                 .lat(venue.getLocation().getLat())

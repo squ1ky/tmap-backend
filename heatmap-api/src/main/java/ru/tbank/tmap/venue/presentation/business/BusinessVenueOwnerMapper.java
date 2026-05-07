@@ -32,7 +32,7 @@ public class BusinessVenueOwnerMapper {
                 .createdAt(venue.getCreatedAt())
                 .updatedAt(venue.getUpdatedAt())
                 .promotions(List.of())
-                .ownerId(venue.getOwner().getId())
+                .ownerId(venue.getOwnerId())
                 .h3Res9(Long.toUnsignedString(venue.getH3Res9()))
                 .moderationStatus(VenueModerationStatus.fromValue(venue.getStatus().name()))
                 .rejectReason(venue.getRejectReason());

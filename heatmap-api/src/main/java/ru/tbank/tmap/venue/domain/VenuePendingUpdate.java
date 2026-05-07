@@ -17,6 +17,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -24,6 +25,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import ru.tbank.tmap.shared.geo.GeoPoint;
+import ru.tbank.tmap.venue.business.VenueUpdateCommand;
 
 @Entity
 @Table(name = "venue_pending_updates")
@@ -38,7 +40,7 @@ public class VenuePendingUpdate {
     @Column(name = "venue_id", nullable = false)
     @EqualsAndHashCode.Include
     @ToString.Include
-    private java.util.UUID venueId;
+    private UUID venueId;
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY, optional = false)
@@ -95,6 +97,29 @@ public class VenuePendingUpdate {
     public VenuePendingUpdate(final Venue venue) {
         this.venue = venue;
         this.venueId = venue.getId();
+    }
+
+    public static VenuePendingUpdate create(
+            final Venue venue,
+            final VenueUpdateCommand command,
+            final long h3Res9
+    ) {
+        final VenuePendingUpdate pendingUpdate = new VenuePendingUpdate(venue);
+        pendingUpdate.applyUpdate(command, h3Res9);
+        return pendingUpdate;
+    }
+
+    public void applyUpdate(final VenueUpdateCommand command, final long h3Res9) {
+        this.name = command.name();
+        this.address = command.address();
+        this.location = command.location();
+        this.h3Res9 = h3Res9;
+        this.category = command.category();
+        this.description = command.description();
+        this.dishOfDay = command.dishOfDay();
+        this.music = command.music();
+        this.status = VenueStatus.PENDING_UPDATE;
+        this.rejectReason = null;
     }
 
     @PrePersist

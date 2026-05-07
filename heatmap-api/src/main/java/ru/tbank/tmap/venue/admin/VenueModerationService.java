@@ -8,7 +8,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.venue.application.VenueDetails;
-import ru.tbank.tmap.venue.business.BusinessVenueMapper;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
@@ -23,16 +22,13 @@ public class VenueModerationService {
 
     private final VenueRepository venueRepository;
     private final VenuePendingUpdateRepository venuePendingUpdateRepository;
-    private final BusinessVenueMapper businessVenueMapper;
 
     public VenueModerationService(
             final VenueRepository venueRepository,
-            final VenuePendingUpdateRepository venuePendingUpdateRepository,
-            final BusinessVenueMapper businessVenueMapper
+            final VenuePendingUpdateRepository venuePendingUpdateRepository
     ) {
         this.venueRepository = venueRepository;
         this.venuePendingUpdateRepository = venuePendingUpdateRepository;
-        this.businessVenueMapper = businessVenueMapper;
     }
 
     public Page<VenueDetails> getAdminVenues(
@@ -65,7 +61,7 @@ public class VenueModerationService {
                 throw new VenueModerationStateException(id, pendingUpdate.getStatus());
             }
             final Venue venue = pendingUpdate.getVenue();
-            businessVenueMapper.applyPendingUpdateToVenue(pendingUpdate, venue);
+            venue.applyPendingUpdate(pendingUpdate);
             venue.setStatus(VenueStatus.ACTIVE);
             venue.setRejectReason(null);
             final Venue savedVenue = venueRepository.save(venue);

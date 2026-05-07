@@ -21,10 +21,10 @@ public class VenueH3Resolver {
         );
     }
 
-    public long resolveH3Res9(final Venue venue, final GeoPoint location) {
-        if (venue.getLocation().equals(location)) {
+    public long resolveUpdatedH3Res9(final Venue venue, final GeoPoint newLocation) {
+        if (venue.getLocation().equals(newLocation)) {
             return venue.getH3Res9();
         }
-        return toH3Res9(location);
+        return toH3Res9(newLocation);
     }
 }

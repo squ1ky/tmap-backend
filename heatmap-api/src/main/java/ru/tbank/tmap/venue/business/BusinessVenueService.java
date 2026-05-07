@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,14 +29,13 @@ public class BusinessVenueService {
     private final VenueRepository venueRepository;
     private final UserRepository userRepository;
     private final VenueH3Resolver venueH3Resolver;
-    private final BusinessVenueMapper businessVenueMapper;
     private final VenuePendingUpdateRepository venuePendingUpdateRepository;
 
     @Transactional
     public VenueDetails createVenue(final UUID ownerId, final VenueCreateCommand command) {
         final User owner = findOwner(ownerId);
         final long h3Res9 = venueH3Resolver.toH3Res9(command.location());
-        final Venue venue = venueRepository.save(businessVenueMapper.toEntity(command, owner, h3Res9));
+        final Venue venue = venueRepository.save(Venue.create(UUID.randomUUID(), owner, command, h3Res9));
         return new VenueDetails(venue, null);
     }
 
@@ -44,7 +44,7 @@ public class BusinessVenueService {
         final Map<UUID, VenuePendingUpdate> pendingUpdatesByVenueId = venuePendingUpdateRepository.findByVenueIdIn(
                         venues.stream().map(Venue::getId).toList())
                 .stream()
-                .collect(java.util.stream.Collectors.toMap(VenuePendingUpdate::getVenueId, pending -> pending));
+                .collect(Collectors.toMap(VenuePendingUpdate::getVenueId, pending -> pending));
         return venues.stream()
                 .map(venue -> new VenueDetails(venue, pendingUpdatesByVenueId.get(venue.getId())))
                 .toList();
@@ -66,20 +66,20 @@ public class BusinessVenueService {
     ) {
         final Venue venue = venueRepository.findByIdAndOwnerId(venueId, ownerId)
                 .orElseThrow(() -> new ru.tbank.tmap.venue.exception.VenueNotFoundException(venueId));
-        final long h3Res9 = venueH3Resolver.resolveH3Res9(venue, command.location());
+        final long h3Res9 = venueH3Resolver.resolveUpdatedH3Res9(venue, command.location());
 
         if (venue.getStatus() == VenueStatus.ACTIVE) {
             final VenuePendingUpdate pendingUpdate = venuePendingUpdateRepository.findByVenueId(venueId)
                     .map(existing -> {
-                        businessVenueMapper.updatePendingUpdate(existing, command, h3Res9);
+                        existing.applyUpdate(command, h3Res9);
                         return existing;
                     })
-                    .orElseGet(() -> businessVenueMapper.toPendingUpdate(venue, command, h3Res9));
+                    .orElseGet(() -> VenuePendingUpdate.create(venue, command, h3Res9));
             final VenuePendingUpdate savedPendingUpdate = venuePendingUpdateRepository.save(pendingUpdate);
             return new VenueDetails(venue, savedPendingUpdate);
         }
 
-        businessVenueMapper.applyPayloadToVenue(venue, command, h3Res9);
+        venue.applyUpdate(command, h3Res9);
         if (venue.getStatus() == VenueStatus.REJECTED) {
             venue.setStatus(VenueStatus.PENDING);
             venue.setRejectReason(null);

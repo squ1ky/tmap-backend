@@ -23,6 +23,8 @@ import lombok.Setter;
 import lombok.ToString;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.domain.User;
+import ru.tbank.tmap.venue.business.VenueCreateCommand;
+import ru.tbank.tmap.venue.business.VenueUpdateCommand;
 
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -133,5 +135,48 @@ public class Venue {
         if (status == VenueStatus.ACTIVE) {
             status = VenueStatus.PENDING_UPDATE;
         }
+    }
+
+    public void applyPendingUpdate(final VenuePendingUpdate pendingUpdate) {
+        this.name = Objects.requireNonNull(pendingUpdate.getName(), "pendingUpdate.name");
+        this.address = Objects.requireNonNull(pendingUpdate.getAddress(), "pendingUpdate.address");
+        this.location = Objects.requireNonNull(pendingUpdate.getLocation(), "pendingUpdate.location");
+        this.h3Res9 = pendingUpdate.getH3Res9();
+        this.category = Objects.requireNonNull(pendingUpdate.getCategory(), "pendingUpdate.category");
+        this.description = pendingUpdate.getDescription();
+        this.dishOfDay = pendingUpdate.getDishOfDay();
+        this.music = pendingUpdate.getMusic();
+    }
+
+    public static Venue create(
+            final UUID id,
+            final User owner,
+            final VenueCreateCommand command,
+            final long h3Res9
+    ) {
+        final Venue venue = new Venue(
+                id,
+                owner,
+                command.name(),
+                command.address(),
+                command.location(),
+                h3Res9,
+                command.category()
+        );
+        venue.description = command.description();
+        venue.dishOfDay = command.dishOfDay();
+        venue.music = command.music();
+        return venue;
+    }
+
+    public void applyUpdate(final VenueUpdateCommand command, final long h3Res9) {
+        this.name = Objects.requireNonNull(command.name(), "command.name");
+        this.address = Objects.requireNonNull(command.address(), "command.address");
+        this.location = Objects.requireNonNull(command.location(), "command.location");
+        this.h3Res9 = h3Res9;
+        this.category = Objects.requireNonNull(command.category(), "command.category");
+        this.description = command.description();
+        this.dishOfDay = command.dishOfDay();
+        this.music = command.music();
     }
 }

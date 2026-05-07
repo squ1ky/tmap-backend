@@ -53,7 +53,6 @@ class BusinessVenueServiceTest {
                 venueRepository,
                 userRepository,
                 venueH3Resolver,
-                new BusinessVenueMapper(),
                 venuePendingUpdateRepository
         );
     }
@@ -137,7 +136,8 @@ class BusinessVenueServiceTest {
         );
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(Optional.of(venue));
         given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.empty());
-        given(venueH3Resolver.resolveH3Res9(venue, GeoPoint.of(55.7920, 49.1220))).willReturn(617422037122678784L);
+        given(venueH3Resolver.resolveUpdatedH3Res9(venue, GeoPoint.of(55.7920, 49.1220)))
+                .willReturn(617422037122678784L);
         given(venuePendingUpdateRepository.save(org.mockito.ArgumentMatchers.any(VenuePendingUpdate.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
 

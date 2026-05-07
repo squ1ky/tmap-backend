@@ -2,6 +2,7 @@ package ru.tbank.tmap.venue.admin;
 
 import java.util.Locale;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 import org.openapitools.model.AdminVenueModerationPage;
 import org.openapitools.model.AdminVenueModerationResponse;
 import org.openapitools.model.VenueModerationStatus;
@@ -57,8 +58,8 @@ public class VenueModerationMapper {
     }
 
     private record VenueModerationSnapshot(
-            java.util.UUID id,
-            java.util.UUID ownerId,
+            UUID id,
+            UUID ownerId,
             String name,
             String address,
             double lat,

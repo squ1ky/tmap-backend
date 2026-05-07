@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.tbank.tmap.venue.business.BusinessVenueMapper;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRole;
@@ -44,8 +43,7 @@ class VenueModerationServiceTest {
     void setUp() {
         venueModerationService = new VenueModerationService(
                 venueRepository,
-                venuePendingUpdateRepository,
-                new BusinessVenueMapper()
+                venuePendingUpdateRepository
         );
     }
 

@@ -3,6 +3,7 @@ package ru.tbank.tmap.venue.business;
 import java.util.List;
 import java.util.Locale;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.openapitools.model.VenueModerationStatus;
 import org.openapitools.model.VenueOwnerResponse;
@@ -57,8 +58,8 @@ public class VenueOwnerMapper {
     }
 
     private record VenueOwnerSnapshot(
-            java.util.UUID id,
-            java.util.UUID ownerId,
+            UUID id,
+            UUID ownerId,
             String name,
             String address,
             double lat,

@@ -13,7 +13,7 @@ import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -23,8 +23,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import ru.tbank.tmap.shared.geo.GeoPoint;
-import ru.tbank.tmap.venue.application.command.VenueUpdateCommand;
 import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
 
 import java.time.OffsetDateTime;
@@ -52,43 +50,15 @@ public class Venue {
     @Column(name = "owner_id", nullable = false)
     private UUID ownerId;
 
-    @NotBlank
-    @Size(max = 255)
-    @Column(name = "name", nullable = false, length = 255)
-    @ToString.Include
-    private String name;
-
-    @NotBlank
-    @Size(max = 255)
-    @Column(name = "address", nullable = false, length = 255)
-    private String address;
-
     @NotNull
+    @Valid
     @Embedded
-    private GeoPoint location;
-
-    @Column(name = "h3_res9", nullable = false)
-    private long h3Res9;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "category", nullable = false, length = 64)
     @ToString.Include
-    private VenueCategory category;
-
-    @Column(name = "description", columnDefinition = "text")
-    private String description;
+    private VenueContent content;
 
     @Size(max = 255)
     @Column(name = "photo_object_key", length = 255)
     private String photoObjectKey;
-
-    @Size(max = 255)
-    @Column(name = "dish_of_day", length = 255)
-    private String dishOfDay;
-
-    @Size(max = 255)
-    @Column(name = "music", length = 255)
-    private String music;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -117,25 +87,11 @@ public class Venue {
     @Builder
     public Venue(UUID id,
                  UUID ownerId,
-                 String name,
-                 String address,
-                 GeoPoint location,
-                 long h3Res9,
-                 VenueCategory category,
-                 String description,
-                 String dishOfDay,
-                 String music,
+                 VenueContent content,
                  VenueStatus status) {
         this.id = Objects.requireNonNull(id, "id");
         this.ownerId = Objects.requireNonNull(ownerId, "ownerId");
-        this.name = Objects.requireNonNull(name, "name");
-        this.address = Objects.requireNonNull(address, "address");
-        this.location = Objects.requireNonNull(location, "location");
-        this.h3Res9 = h3Res9;
-        this.category = Objects.requireNonNull(category, "category");
-        this.description = description;
-        this.dishOfDay = dishOfDay;
-        this.music = music;
+        this.content = Objects.requireNonNull(content, "content");
         this.status = status != null ? status : VenueStatus.PENDING;
     }
 
@@ -186,7 +142,7 @@ public class Venue {
         if (pendingUpdate.getStatus() != VenueStatus.PENDING_UPDATE) {
             throw new VenueModerationStateException(id, pendingUpdate.getStatus());
         }
-        applyContentFrom(pendingUpdate);
+        this.content = Objects.requireNonNull(pendingUpdate.getContent(), "pendingUpdate.content");
         this.rejectReason = null;
     }
 
@@ -198,25 +154,7 @@ public class Venue {
         this.rejectReason = reason;
     }
 
-    public void applyContentFrom(final VenuePendingUpdate pendingUpdate) {
-        this.name = Objects.requireNonNull(pendingUpdate.getName(), "pendingUpdate.name");
-        this.address = Objects.requireNonNull(pendingUpdate.getAddress(), "pendingUpdate.address");
-        this.location = Objects.requireNonNull(pendingUpdate.getLocation(), "pendingUpdate.location");
-        this.h3Res9 = pendingUpdate.getH3Res9();
-        this.category = Objects.requireNonNull(pendingUpdate.getCategory(), "pendingUpdate.category");
-        this.description = pendingUpdate.getDescription();
-        this.dishOfDay = pendingUpdate.getDishOfDay();
-        this.music = pendingUpdate.getMusic();
-    }
-
-    public void applyUpdate(final VenueUpdateCommand command, final long h3Res9) {
-        this.name = Objects.requireNonNull(command.name(), "command.name");
-        this.address = Objects.requireNonNull(command.address(), "command.address");
-        this.location = Objects.requireNonNull(command.location(), "command.location");
-        this.h3Res9 = h3Res9;
-        this.category = Objects.requireNonNull(command.category(), "command.category");
-        this.description = command.description();
-        this.dishOfDay = command.dishOfDay();
-        this.music = command.music();
+    public void applyContent(final VenueContent content) {
+        this.content = Objects.requireNonNull(content, "content");
     }
 }

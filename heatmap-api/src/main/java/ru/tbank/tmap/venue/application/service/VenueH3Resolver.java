@@ -22,8 +22,8 @@ public class VenueH3Resolver {
     }
 
     public long resolveUpdatedH3Res9(final Venue venue, final GeoPoint newLocation) {
-        if (venue.getLocation().equals(newLocation)) {
-            return venue.getH3Res9();
+        if (venue.getContent().location().equals(newLocation)) {
+            return venue.getContent().h3Res9();
         }
         return toH3Res9(newLocation);
     }

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.repository;
+package ru.tbank.tmap.venue.infrastructure.db.jdbc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,7 +17,6 @@ import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.venue.application.query.VenueProjection;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.repository.VenueQueryRepository;
-import ru.tbank.tmap.venue.infrastructure.db.jdbc.JdbcVenueQueryRepository;
 
 @JdbcTest
 @Import({TestcontainersConfiguration.class, JdbcVenueQueryRepository.class})

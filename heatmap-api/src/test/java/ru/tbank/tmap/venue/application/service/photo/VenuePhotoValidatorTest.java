@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.business.photo;
+package ru.tbank.tmap.venue.application.service.photo;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-import ru.tbank.tmap.venue.application.service.photo.VenuePhotoValidator;
 import ru.tbank.tmap.venue.domain.exception.InvalidVenuePhotoException;
 
 class VenuePhotoValidatorTest {

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.admin;
+package ru.tbank.tmap.venue.presentation.admin;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -22,16 +22,13 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
-import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.test.security.TestSecurityConfig;
 import ru.tbank.tmap.venue.application.service.admin.AdminVenueService;
 import ru.tbank.tmap.venue.application.query.VenueDetails;
 import ru.tbank.tmap.venue.domain.Venue;
-import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
-import ru.tbank.tmap.venue.presentation.admin.AdminVenueController;
-import ru.tbank.tmap.venue.presentation.admin.AdminVenueMapper;
+import ru.tbank.tmap.venue.domain.VenueTestFactory;
 
 @WebMvcTest(AdminVenueController.class)
 @Import({
@@ -39,10 +36,9 @@ import ru.tbank.tmap.venue.presentation.admin.AdminVenueMapper;
         GlobalExceptionHandler.class,
         AdminVenueMapper.class,
 })
-class VenueAdminControllerTest {
+class AdminVenueControllerTest {
 
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
-    private static final UUID OWNER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     @Autowired
     private MockMvc mockMvc;
@@ -51,14 +47,15 @@ class VenueAdminControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private AdminVenueService venueModerationService;
+    private AdminVenueService adminVenueService;
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void getAdminVenues_whenUserIsAdmin_thenReturnPendingVenues() throws Exception {
-        given(venueModerationService.getVenues(VenueStatus.PENDING, 0, 20))
+        final Venue venue = VenueTestFactory.createVenue(VenueStatus.PENDING, null);
+        given(adminVenueService.getVenues(VenueStatus.PENDING, 0, 20))
                 .willReturn(new PageImpl<>(
-                        List.of(new VenueDetails(venue(VenueStatus.PENDING, null), null)),
+                        List.of(new VenueDetails(venue, null)),
                         PageRequest.of(0, 20),
                         1
                 ));
@@ -79,8 +76,9 @@ class VenueAdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void verifyAdminVenue_whenUserIsAdmin_thenReturnActivatedVenue() throws Exception {
-        given(venueModerationService.verifyAdminVenue(VENUE_ID))
-                .willReturn(new VenueDetails(venue(VenueStatus.ACTIVE, null), null));
+        final Venue venue = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
+        given(adminVenueService.verifyAdminVenue(VENUE_ID))
+                .willReturn(new VenueDetails(venue, null));
 
         mockMvc.perform(patch("/api/v1/admin/venues/{id}/verify", VENUE_ID)
                         .with(csrf()))
@@ -91,12 +89,21 @@ class VenueAdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void rejectAdminVenue_whenUserIsAdmin_thenReturnRejectedVenue() throws Exception {
+        final String rejectReason = "Address does not match coordinates";
+        final Venue venue = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
+        final VenuePendingUpdate pendingUpdate =
+                VenueTestFactory.createPendingUpdate(
+                        venue,
+                        VenueStatus.REJECTED,
+                        rejectReason,
+                        VenueTestFactory.defaultUpdatedContent()
+                );
         final AdminModerationDecision decision = new AdminModerationDecision()
-                .reason("Address does not match coordinates");
-        given(venueModerationService.rejectAdminVenue(VENUE_ID, "Address does not match coordinates"))
+                .reason(rejectReason);
+        given(adminVenueService.rejectAdminVenue(VENUE_ID, rejectReason))
                 .willReturn(new VenueDetails(
-                        venue(VenueStatus.ACTIVE, null),
-                        pendingUpdate(VenueStatus.REJECTED, "Address does not match coordinates")
+                        venue,
+                        pendingUpdate
                 ));
 
         mockMvc.perform(patch("/api/v1/admin/venues/{id}/reject", VENUE_ID)
@@ -105,39 +112,6 @@ class VenueAdminControllerTest {
                         .content(objectMapper.writeValueAsString(decision)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.moderationStatus").value("REJECTED"))
-                .andExpect(jsonPath("$.rejectReason").value("Address does not match coordinates"));
-    }
-
-    private Venue venue(
-            final VenueStatus status,
-            final String rejectReason
-    ) {
-        final Venue venue = Venue.builder()
-                .id(VENUE_ID)
-                .ownerId(OWNER_ID)
-                .name("Bar One")
-                .address("Kazan Center, 2")
-                .location(GeoPoint.of(55.7905, 49.1140))
-                .h3Res9(617422037122678783L)
-                .category(VenueCategory.ENTERTAINMENT)
-                .build();
-        venue.setStatus(status);
-        venue.setRejectReason(rejectReason);
-        return venue;
-    }
-
-    private VenuePendingUpdate pendingUpdate(
-            final VenueStatus status,
-            final String rejectReason
-    ) {
-        final VenuePendingUpdate pendingUpdate = new VenuePendingUpdate(venue(VenueStatus.ACTIVE, null));
-        pendingUpdate.setName("Bar Two");
-        pendingUpdate.setAddress("Kazan Center, 5");
-        pendingUpdate.setLocation(GeoPoint.of(55.8000, 49.1300));
-        pendingUpdate.setH3Res9(617422037122678784L);
-        pendingUpdate.setCategory(VenueCategory.FOOD);
-        pendingUpdate.setStatus(status);
-        pendingUpdate.setRejectReason(rejectReason);
-        return pendingUpdate;
+                .andExpect(jsonPath("$.rejectReason").value(rejectReason));
     }
 }

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue;
+package ru.tbank.tmap.venue.presentation;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -24,8 +24,6 @@ import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.venue.application.query.VenueProjection;
 import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
-import ru.tbank.tmap.venue.presentation.VenueController;
-import ru.tbank.tmap.venue.presentation.VenueMapper;
 
 @WebMvcTest(VenueController.class)
 @AutoConfigureMockMvc(addFilters = false)

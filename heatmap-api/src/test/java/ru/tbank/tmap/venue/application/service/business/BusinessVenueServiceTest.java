@@ -1,7 +1,8 @@
-package ru.tbank.tmap.venue.business;
+package ru.tbank.tmap.venue.application.service.business;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import java.util.List;
@@ -15,16 +16,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.api.UserView;
-import ru.tbank.tmap.user.domain.UserRepository;
 import ru.tbank.tmap.venue.application.command.VenueCreateCommand;
 import ru.tbank.tmap.venue.application.command.VenueUpdateCommand;
-import ru.tbank.tmap.venue.application.service.business.BusinessVenueService;
 import ru.tbank.tmap.venue.application.query.VenueDetails;
 import ru.tbank.tmap.venue.application.service.VenueH3Resolver;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
+import ru.tbank.tmap.venue.domain.VenueTestFactory;
 import ru.tbank.tmap.venue.domain.repository.VenuePendingUpdateRepository;
 import ru.tbank.tmap.venue.domain.repository.VenueRepository;
 
@@ -33,7 +33,6 @@ class BusinessVenueServiceTest {
 
     private static final UUID OWNER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
-    private static final String OWNER_EMAIL = "owner@example.com";
     private static final long H3_RES_9 = 617422037122678783L;
 
     @Mock
@@ -43,10 +42,10 @@ class BusinessVenueServiceTest {
     private VenueRepository venueRepository;
 
     @Mock
-    private VenueH3Resolver venueH3Resolver;
+    private VenuePendingUpdateRepository venuePendingUpdateRepository;
 
     @Mock
-    private VenuePendingUpdateRepository venuePendingUpdateRepository;
+    private VenueH3Resolver venueH3Resolver;
 
     private BusinessVenueService businessVenueService;
 
@@ -63,10 +62,10 @@ class BusinessVenueServiceTest {
     @Test
     void getMyVenues_whenOwnerHasVenuesWithDifferentStatuses_thenReturnsAllOwnedVenues() {
         final List<Venue> venues = List.of(
-                venue(VenueStatus.PENDING, null),
-                venue(VenueStatus.ACTIVE, null),
-                venue(VenueStatus.REJECTED, "Address does not match coordinates"),
-                venue(VenueStatus.PENDING_UPDATE, null)
+                VenueTestFactory.createVenue(VenueStatus.PENDING, null),
+                VenueTestFactory.createVenue(VenueStatus.ACTIVE, null),
+                VenueTestFactory.createVenue(VenueStatus.REJECTED, "Address does not match coordinates"),
+                VenueTestFactory.createVenue(VenueStatus.PENDING_UPDATE, null)
         );
         given(venueRepository.findByOwnerIdOrderByNameAscIdAsc(OWNER_ID)).willReturn(venues);
         given(venuePendingUpdateRepository.findByVenueIdIn(List.of(VENUE_ID, VENUE_ID, VENUE_ID, VENUE_ID)))
@@ -87,7 +86,10 @@ class BusinessVenueServiceTest {
 
     @Test
     void getMyVenueById_whenVenueBelongsToOwner_thenReturnsVenueRegardlessOfStatus() {
-        final Venue rejectedVenue = venue(VenueStatus.REJECTED, "Address does not match coordinates");
+        final Venue rejectedVenue = VenueTestFactory.createVenue(
+                VenueStatus.REJECTED,
+                "Address does not match coordinates"
+        );
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(Optional.of(rejectedVenue));
         given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.empty());
 
@@ -100,16 +102,20 @@ class BusinessVenueServiceTest {
 
     @Test
     void createVenue_whenRequestIsValid_thenCreatesPendingVenueForCurrentUser() {
+        String venueName = "Cafe Pending";
+        String venueDescription = "Fresh coffee";
+
         final VenueCreateCommand command = new VenueCreateCommand(
-                "Cafe Pending",
+                venueName,
                 "Kazan Center, 1",
                 GeoPoint.of(55.7905, 49.1140),
                 VenueCategory.FOOD,
-                "Fresh coffee",
+                venueDescription,
                 null,
                 null
         );
 
+        given(userAccountFacade.findById(OWNER_ID)).willReturn(Optional.of(mock(UserView.class)));
         given(venueH3Resolver.toH3Res9(GeoPoint.of(55.7905, 49.1140))).willReturn(H3_RES_9);
         given(venueRepository.save(org.mockito.ArgumentMatchers.any(Venue.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
@@ -118,15 +124,15 @@ class BusinessVenueServiceTest {
 
         assertThat(result.venue().getOwnerId()).isEqualTo(OWNER_ID);
         assertThat(result.venue().getStatus()).isEqualTo(VenueStatus.PENDING);
-        assertThat(result.venue().getName()).isEqualTo("Cafe Pending");
-        assertThat(result.venue().getH3Res9()).isEqualTo(H3_RES_9);
-        assertThat(result.venue().getDescription()).isEqualTo("Fresh coffee");
+        assertThat(result.venue().getContent().name()).isEqualTo(venueName);
+        assertThat(result.venue().getContent().h3Res9()).isEqualTo(H3_RES_9);
+        assertThat(result.venue().getContent().description()).isEqualTo(venueDescription);
         assertThat(result.pendingUpdate()).isNull();
     }
 
     @Test
     void updateVenue_whenVenueIsActive_thenStoresPendingUpdateAndKeepsPublishedData() {
-        final Venue venue = venue(VenueStatus.ACTIVE, null);
+        final Venue venue = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
         final VenueUpdateCommand command = new VenueUpdateCommand(
                 "Bar Two",
                 "Kazan Center, 5",
@@ -145,20 +151,22 @@ class BusinessVenueServiceTest {
 
         final VenueDetails result = businessVenueService.updateVenue(OWNER_ID, VENUE_ID, command);
 
-        assertThat(result.venue().getName()).isEqualTo("Bar One");
+        assertThat(result.venue().getContent().name()).isEqualTo("Bar One");
         assertThat(result.venue().getStatus()).isEqualTo(VenueStatus.ACTIVE);
         assertThat(result.pendingUpdate()).isNotNull();
-        assertThat(result.pendingUpdate().getName()).isEqualTo("Bar Two");
-        assertThat(result.pendingUpdate().getCategory()).isEqualTo(VenueCategory.FOOD);
+        assertThat(result.pendingUpdate().getContent().name()).isEqualTo("Bar Two");
+        assertThat(result.pendingUpdate().getContent().category()).isEqualTo(VenueCategory.FOOD);
         assertThat(result.pendingUpdate().getStatus()).isEqualTo(VenueStatus.PENDING_UPDATE);
     }
 
     @Test
     void updateVenue_whenVenueIsPending_thenUpdatesPublishedVenueInPlace() {
-        final Venue venue = venue(VenueStatus.PENDING, null);
+        final String venueName = "Bar Pending Updated";
+        final String venueAddress = "Kazan Center, 3";
+        final Venue venue = VenueTestFactory.createVenue(VenueStatus.PENDING, null);
         final VenueUpdateCommand command = new VenueUpdateCommand(
-                "Bar Pending Updated",
-                "Kazan Center, 3",
+                venueName,
+                venueAddress,
                 GeoPoint.of(55.7905, 49.1140),
                 VenueCategory.ENTERTAINMENT,
                 "Fresh draft",
@@ -171,17 +179,18 @@ class BusinessVenueServiceTest {
         final VenueDetails result = businessVenueService.updateVenue(OWNER_ID, VENUE_ID, command);
 
         assertThat(result.pendingUpdate()).isNull();
-        assertThat(result.venue().getName()).isEqualTo("Bar Pending Updated");
-        assertThat(result.venue().getAddress()).isEqualTo("Kazan Center, 3");
+        assertThat(result.venue().getContent().name()).isEqualTo(venueName);
+        assertThat(result.venue().getContent().address()).isEqualTo(venueAddress);
         assertThat(result.venue().getStatus()).isEqualTo(VenueStatus.PENDING);
     }
 
     @Test
     void updateVenue_whenVenueIsRejected_thenResubmitsUpdatedVenueForModeration() {
-        final Venue venue = venue(VenueStatus.REJECTED, "Old reason");
+        final String venueAddress = "Kazan Center, 5";
+        final Venue venue = VenueTestFactory.createVenue(VenueStatus.REJECTED, "Old reason");
         final VenueUpdateCommand command = new VenueUpdateCommand(
                 "Bar One",
-                "Kazan Center, 5",
+                venueAddress,
                 GeoPoint.of(55.7905, 49.1140),
                 VenueCategory.ENTERTAINMENT,
                 "Updated description",
@@ -194,24 +203,8 @@ class BusinessVenueServiceTest {
         final VenueDetails result = businessVenueService.updateVenue(OWNER_ID, VENUE_ID, command);
 
         assertThat(result.pendingUpdate()).isNull();
-        assertThat(result.venue().getAddress()).isEqualTo("Kazan Center, 5");
+        assertThat(result.venue().getContent().address()).isEqualTo(venueAddress);
         assertThat(result.venue().getStatus()).isEqualTo(VenueStatus.PENDING);
         assertThat(result.venue().getRejectReason()).isNull();
-    }
-
-    private Venue venue(final VenueStatus status, final String rejectReason) {
-        final Venue venue = Venue.builder()
-                .id(VENUE_ID)
-                .ownerId(OWNER_ID)
-                .name("Bar One")
-                .description("Kazan Center, 2")
-                .location(GeoPoint.of(55.7905, 49.1140))
-                .h3Res9(H3_RES_9)
-                .category(VenueCategory.ENTERTAINMENT)
-                .build();
-
-        venue.setStatus(status);
-        venue.setRejectReason(rejectReason);
-        return venue;
     }
 }

@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.business.photo;
+package ru.tbank.tmap.venue.application.service.business.photo;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -12,23 +12,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.tbank.tmap.shared.geo.GeoPoint;
-import ru.tbank.tmap.user.domain.User;
-import ru.tbank.tmap.user.domain.UserRole;
-import ru.tbank.tmap.venue.application.service.business.photo.BusinessVenuePhotoUpdater;
 import ru.tbank.tmap.venue.domain.Venue;
-import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
+import ru.tbank.tmap.venue.domain.VenueTestFactory;
 import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 import ru.tbank.tmap.venue.domain.repository.VenueRepository;
 
 @ExtendWith(MockitoExtension.class)
-class VenuePhotoUpdaterTest {
+class BusinessVenuePhotoUpdaterTest {
 
     private static final UUID OWNER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
-    private static final long H3_RES_9 = 617422037122678783L;
-
     private static final String NEW_KEY = "venues/" + VENUE_ID + "/new.jpg";
     private static final String OLD_KEY = "venues/" + VENUE_ID + "/old.jpg";
 
@@ -44,7 +38,7 @@ class VenuePhotoUpdaterTest {
 
     @Test
     void swapPhotoKey_whenVenueIsActive_thenMovesToPendingUpdateAndReturnsOldKey() {
-        final Venue existing = venue(VenueStatus.ACTIVE);
+        final Venue existing = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
         existing.setPhotoObjectKey(OLD_KEY);
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.of(existing));
@@ -58,7 +52,7 @@ class VenuePhotoUpdaterTest {
 
     @Test
     void swapPhotoKey_whenVenueIsPending_thenKeepsStatusAndReturnsNullOldKey() {
-        final Venue existing = venue(VenueStatus.PENDING);
+        final Venue existing = VenueTestFactory.createVenue(VenueStatus.PENDING, null);
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.of(existing));
 
@@ -71,7 +65,7 @@ class VenuePhotoUpdaterTest {
 
     @Test
     void swapPhotoKey_whenVenueIsRejected_thenKeepsStatus() {
-        final Venue existing = venue(VenueStatus.REJECTED);
+        final Venue existing = VenueTestFactory.createVenue(VenueStatus.REJECTED, null);
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.of(existing));
 
@@ -82,7 +76,7 @@ class VenuePhotoUpdaterTest {
 
     @Test
     void swapPhotoKey_whenVenueIsAlreadyPendingUpdate_thenKeepsStatus() {
-        final Venue existing = venue(VenueStatus.PENDING_UPDATE);
+        final Venue existing = VenueTestFactory.createVenue(VenueStatus.PENDING_UPDATE, null);
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.of(existing));
 
@@ -102,7 +96,7 @@ class VenuePhotoUpdaterTest {
 
     @Test
     void clearPhotoKey_whenVenueHadPhoto_thenClearsKeyAndReturnsOldKey() {
-        final Venue existing = venue(VenueStatus.ACTIVE);
+        final Venue existing = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
         existing.setPhotoObjectKey(OLD_KEY);
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.of(existing));
@@ -115,7 +109,7 @@ class VenuePhotoUpdaterTest {
 
     @Test
     void clearPhotoKey_whenVenueHadNoPhoto_thenReturnsNull() {
-        final Venue existing = venue(VenueStatus.ACTIVE);
+        final Venue existing = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.of(existing));
 
@@ -127,7 +121,7 @@ class VenuePhotoUpdaterTest {
 
     @Test
     void clearPhotoKey_whenVenueIsActive_thenDoesNotChangeStatus() {
-        final Venue existing = venue(VenueStatus.ACTIVE);
+        final Venue existing = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
         existing.setPhotoObjectKey(OLD_KEY);
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.of(existing));
@@ -144,19 +138,5 @@ class VenuePhotoUpdaterTest {
 
         assertThatThrownBy(() -> venuePhotoUpdater.clearPhotoKey(VENUE_ID, OWNER_ID))
                 .isInstanceOf(VenueNotFoundException.class);
-    }
-
-    private Venue venue(final VenueStatus status) {
-        final Venue venue = Venue.builder()
-                .id(VENUE_ID)
-                .ownerId(OWNER_ID)
-                .name("Bar One")
-                .address("Kazan Center, 2")
-                .location(GeoPoint.of(55.7905, 49.1140))
-                .h3Res9(H3_RES_9)
-                .category(VenueCategory.ENTERTAINMENT)
-                .build();
-        venue.setStatus(status);
-        return venue;
     }
 }

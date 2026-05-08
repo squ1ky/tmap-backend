@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.business.photo;
+package ru.tbank.tmap.venue.application.service.business.photo;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -18,15 +18,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-import ru.tbank.tmap.shared.geo.GeoPoint;
-import ru.tbank.tmap.user.domain.User;
-import ru.tbank.tmap.user.domain.UserRole;
-import ru.tbank.tmap.venue.application.service.business.photo.BusinessVenuePhotoService;
-import ru.tbank.tmap.venue.application.service.business.photo.BusinessVenuePhotoUpdater;
 import ru.tbank.tmap.venue.application.service.photo.VenuePhotoValidator;
 import ru.tbank.tmap.venue.domain.Venue;
-import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueStatus;
+import ru.tbank.tmap.venue.domain.VenueTestFactory;
 import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 import ru.tbank.tmap.venue.application.port.VenuePhotoStorage;
 import ru.tbank.tmap.venue.domain.repository.VenueRepository;
@@ -36,7 +31,6 @@ class BusinessVenuePhotoServiceTest {
 
     private static final UUID OWNER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
-    private static final String OWNER_EMAIL = "owner@example.com";
     private static final long H3_RES_9 = 617422037122678783L;
 
     private static final String NEW_KEY = "venues/" + VENUE_ID + "/new.jpg";
@@ -68,14 +62,15 @@ class BusinessVenuePhotoServiceTest {
 
     @Test
     void uploadVenuePhoto_whenVenueHadNoPhoto_thenUploadsAndReturnsUpdatedVenue() {
-        final Venue existing = venue(VenueStatus.ACTIVE, null);
-        final Venue updated = venue(VenueStatus.PENDING_UPDATE, null);
+        final Venue existing = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
+        final Venue updated = VenueTestFactory.createVenue(VenueStatus.PENDING_UPDATE, null);
         updated.setPhotoObjectKey(NEW_KEY);
         final MultipartFile file = jpegFile();
 
         given(venuePhotoValidator.validateAndGetExtension(file)).willReturn("jpg");
+        given(venueRepository.existsByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(true);
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
-                .willReturn(Optional.of(existing), Optional.of(updated));
+                .willReturn(Optional.of(updated));
         given(venuePhotoStorage.upload(eq(VENUE_ID), any(), anyLong(), eq("image/jpeg"), eq("jpg")))
                 .willReturn(NEW_KEY);
         given(venuePhotoUpdater.swapPhotoKey(VENUE_ID, OWNER_ID, NEW_KEY))
@@ -90,13 +85,14 @@ class BusinessVenuePhotoServiceTest {
 
     @Test
     void uploadVenuePhoto_whenVenueHadPreviousPhoto_thenDeletesOldObject() {
-        final Venue existing = venue(VenueStatus.ACTIVE, null);
+        final Venue existing = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
         existing.setPhotoObjectKey(OLD_KEY);
-        final Venue updated = venue(VenueStatus.PENDING_UPDATE, null);
+        final Venue updated = VenueTestFactory.createVenue(VenueStatus.PENDING_UPDATE, null);
         updated.setPhotoObjectKey(NEW_KEY);
         final MultipartFile file = jpegFile();
 
         given(venuePhotoValidator.validateAndGetExtension(file)).willReturn("jpg");
+        given(venueRepository.existsByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(true);
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.of(existing), Optional.of(updated));
         given(venuePhotoStorage.upload(eq(VENUE_ID), any(), anyLong(), eq("image/jpeg"), eq("jpg")))
@@ -111,12 +107,10 @@ class BusinessVenuePhotoServiceTest {
 
     @Test
     void uploadVenuePhoto_whenDbUpdateFails_thenDeletesNewlyUploadedObject() {
-        final Venue existing = venue(VenueStatus.ACTIVE, null);
         final MultipartFile file = jpegFile();
 
         given(venuePhotoValidator.validateAndGetExtension(file)).willReturn("jpg");
-        given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
-                .willReturn(Optional.of(existing));
+        given(venueRepository.existsByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(true);
         given(venuePhotoStorage.upload(eq(VENUE_ID), any(), anyLong(), eq("image/jpeg"), eq("jpg")))
                 .willReturn(NEW_KEY);
         given(venuePhotoUpdater.swapPhotoKey(VENUE_ID, OWNER_ID, NEW_KEY))
@@ -132,9 +126,7 @@ class BusinessVenuePhotoServiceTest {
     void uploadVenuePhoto_whenVenueDoesNotBelongToOwner_thenThrowsAndDoesNotTouchStorage() {
         final MultipartFile file = jpegFile();
 
-        given(venuePhotoValidator.validateAndGetExtension(file)).willReturn("jpg");
-        given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
-                .willReturn(Optional.empty());
+        given(venueRepository.existsByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(false);
 
         assertThatThrownBy(() -> businessVenuePhotoService.uploadVenuePhoto(OWNER_ID, VENUE_ID, file))
                 .isInstanceOf(VenueNotFoundException.class);
@@ -144,7 +136,7 @@ class BusinessVenuePhotoServiceTest {
 
     @Test
     void deleteVenuePhoto_whenVenueHadPhoto_thenClearsKeyAndDeletesObject() {
-        final Venue updated = venue(VenueStatus.ACTIVE, null);
+        final Venue updated = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
 
         given(venuePhotoUpdater.clearPhotoKey(VENUE_ID, OWNER_ID)).willReturn(OLD_KEY);
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
@@ -158,7 +150,7 @@ class BusinessVenuePhotoServiceTest {
 
     @Test
     void deleteVenuePhoto_whenVenueHadNoPhoto_thenDoesNotCallStorage() {
-        final Venue updated = venue(VenueStatus.ACTIVE, null);
+        final Venue updated = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
 
         given(venuePhotoUpdater.clearPhotoKey(VENUE_ID, OWNER_ID)).willReturn(null);
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
@@ -176,20 +168,5 @@ class BusinessVenuePhotoServiceTest {
                 "image/jpeg",
                 new byte[]{1, 2, 3, 4}
         );
-    }
-
-    private Venue venue(final VenueStatus status, final String rejectReason) {
-        final Venue venue = Venue.builder()
-                .id(VENUE_ID)
-                .ownerId(OWNER_ID)
-                .name("Bar One")
-                .address("Kazan Center, 2")
-                .location(GeoPoint.of(55.7905, 49.1140))
-                .h3Res9(H3_RES_9)
-                .category(VenueCategory.ENTERTAINMENT)
-                .build();
-        venue.setStatus(status);
-        venue.setRejectReason(rejectReason);
-        return venue;
     }
 }

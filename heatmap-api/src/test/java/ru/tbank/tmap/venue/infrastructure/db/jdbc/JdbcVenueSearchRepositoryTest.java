@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.search;
+package ru.tbank.tmap.venue.infrastructure.db.jdbc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -16,7 +16,6 @@ import ru.tbank.tmap.TestcontainersConfiguration;
 import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.repository.VenueSearchRepository;
-import ru.tbank.tmap.venue.infrastructure.db.jdbc.JdbcVenueSearchRepository;
 
 @JdbcTest
 @Import({TestcontainersConfiguration.class, JdbcVenueSearchRepository.class})

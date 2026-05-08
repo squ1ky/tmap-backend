@@ -114,7 +114,7 @@ public class BusinessVenueService {
     }
 
     private Venue findOwnedVenue(final UUID userId, final UUID venueId) {
-        return venueRepository.findByIdAndOwnerId(userId, venueId)
+        return venueRepository.findByIdAndOwnerId(venueId, userId)
                 .orElseThrow(() -> new VenueNotFoundException(venueId));
     }
 

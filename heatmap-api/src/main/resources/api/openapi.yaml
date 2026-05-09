@@ -1847,10 +1847,14 @@ components:
     # ── Admin DTOs ────────────────────────────
     AdminModerationDecision:
       type: object
+      required:
+        - reason
       properties:
         reason:
           type: string
+          minLength: 1
           maxLength: 1000
+          pattern: '^(?!\s*$).+'
           example: "Заведение нарушает правила размещения (спам в названии)"
 
     AdminVenueModerationResponse:

@@ -1,0 +1,55 @@
+package ru.tbank.tmap.venue.presentation.admin;
+
+import java.util.Locale;
+import org.openapitools.model.AdminVenueModerationPage;
+import org.openapitools.model.AdminVenueModerationResponse;
+import org.openapitools.model.VenueModerationStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Component;
+import ru.tbank.tmap.venue.application.query.VenueDetails;
+import ru.tbank.tmap.venue.domain.Venue;
+import ru.tbank.tmap.venue.domain.VenueContent;
+import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
+import ru.tbank.tmap.venue.domain.VenueStatus;
+
+@Component
+public class AdminVenueMapper {
+
+    public AdminVenueModerationPage toPage(final Page<VenueDetails> venues) {
+        return new AdminVenueModerationPage()
+                .items(venues.stream()
+                        .map(this::toResponse)
+                        .toList())
+                .page(venues.getNumber())
+                .size(venues.getSize())
+                .totalPages(venues.getTotalPages())
+                .totalElements(venues.getTotalElements());
+    }
+
+    public AdminVenueModerationResponse toResponse(final Venue venue) {
+        return toResponse(new VenueDetails(venue, null));
+    }
+
+    public AdminVenueModerationResponse toResponse(final VenueDetails details) {
+        final Venue venue = details.venue();
+        final VenuePendingUpdate pendingUpdate = details.pendingUpdate();
+        final VenueContent content = details.displayContent();
+        final VenueStatus moderationStatus = details.displayStatus();
+        final String rejectReason = details.displayRejectReason();
+
+        return new AdminVenueModerationResponse()
+                .id(venue.getId())
+                .ownerId(venue.getOwnerId())
+                .name(content.name())
+                .address(content.address())
+                .lat(content.location().getLat())
+                .lng(content.location().getLng())
+                .h3Res9(Long.toUnsignedString(content.h3Res9()))
+                .category(AdminVenueModerationResponse.CategoryEnum.fromValue(
+                        content.category().name().toLowerCase(Locale.ROOT)))
+                .moderationStatus(VenueModerationStatus.fromValue(moderationStatus.name()))
+                .rejectReason(rejectReason)
+                .createdAt(venue.getCreatedAt())
+                .updatedAt(pendingUpdate != null ? pendingUpdate.getUpdatedAt() : venue.getUpdatedAt());
+    }
+}

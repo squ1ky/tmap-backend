@@ -3,11 +3,12 @@ package ru.tbank.tmap.user.application;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.user.api.UserAccountFacade;
+import ru.tbank.tmap.user.api.UserView;
 import ru.tbank.tmap.user.api.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRepository;
-import ru.tbank.tmap.user.api.UserAccountFacade;
-import ru.tbank.tmap.user.api.UserView;
+import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -44,6 +45,14 @@ public class InternalUserAccountFacade implements UserAccountFacade {
         }
         final User user = User.create(email, passwordHash, nickname);
         return toView(userRepository.save(user));
+    }
+
+    @Override
+    public UserView promoteToBusinessOwner(UUID id) {
+        final User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id.toString()));
+        user.promoteToBusinessOwner();
+        return toView(user);
     }
 
     private UserView toView(User user) {

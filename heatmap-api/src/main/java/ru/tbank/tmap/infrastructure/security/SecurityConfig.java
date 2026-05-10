@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -41,6 +42,7 @@ public class SecurityConfig {
 
     private static final String ADMIN_ENDPOINTS = "/api/v1/admin/**";
     private static final String BUSINESS_OWNER_ENDPOINTS = "/api/v1/business/**";
+    private static final String BUSINESS_VENUE_CREATION_ENDPOINT = "/api/v1/business/venues";
     private static final String ROLE_ADMIN = "ADMIN";
     private static final String ROLE_BUSINESS_OWNER = "BUSINESS_OWNER";
 
@@ -65,6 +67,7 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_AUTH_ENDPOINTS).permitAll()
                         .requestMatchers(PUBLIC_READ_ENDPOINTS).permitAll()
                         .requestMatchers(PUBLIC_INFRA_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.POST, BUSINESS_VENUE_CREATION_ENDPOINT).authenticated()
                         .requestMatchers(ADMIN_ENDPOINTS).hasRole(ROLE_ADMIN)
                         .requestMatchers(BUSINESS_OWNER_ENDPOINTS).hasRole(ROLE_BUSINESS_OWNER)
                         .anyRequest().authenticated())

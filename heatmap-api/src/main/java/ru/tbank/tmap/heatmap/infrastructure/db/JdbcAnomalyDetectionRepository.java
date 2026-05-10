@@ -21,7 +21,7 @@ public class JdbcAnomalyDetectionRepository implements AnomalyDetectionRepositor
                     SUM(ch.tx_count) AS tx_count
                 FROM cluster_history ch
                 WHERE ch.resolution  = :resolution
-                  AND ch.hour_bucket = :hourBucket
+                  AND ch.hour_bucket = CAST(:hourBucket AS TIMESTAMPTZ)
                 GROUP BY ch.h3_index
             ),
             baseline_per_day AS (
@@ -31,8 +31,8 @@ public class JdbcAnomalyDetectionRepository implements AnomalyDetectionRepositor
                     SUM(ch.tx_count) AS tx_count
                 FROM cluster_history ch
                 WHERE ch.resolution = :resolution
-                  AND ch.hour_bucket >= :hourBucket - INTERVAL '7 days'
-                  AND ch.hour_bucket <  :hourBucket
+                  AND ch.hour_bucket >= CAST(:hourBucket AS TIMESTAMPTZ) - INTERVAL '7 days'
+                  AND ch.hour_bucket <  CAST(:hourBucket AS TIMESTAMPTZ)
                   AND EXTRACT(HOUR FROM ch.hour_bucket) = EXTRACT(HOUR FROM CAST(:hourBucket AS TIMESTAMPTZ))
                 GROUP BY ch.h3_index, ch.hour_bucket
             ),
@@ -51,7 +51,7 @@ public class JdbcAnomalyDetectionRepository implements AnomalyDetectionRepositor
             SELECT
                 c.h3_index,
                 :resolution,
-                :hourBucket,
+                CAST(:hourBucket AS TIMESTAMPTZ),
                 c.tx_count,
                 b.baseline_avg,
                 c.tx_count::numeric / NULLIF(b.baseline_avg, 0) AS ratio,

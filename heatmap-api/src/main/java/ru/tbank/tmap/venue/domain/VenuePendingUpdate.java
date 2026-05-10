@@ -10,6 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -24,6 +26,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.domain.Persistable;
+import jakarta.persistence.Transient;
 import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
 
 @Entity
@@ -33,7 +37,7 @@ import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
-public class VenuePendingUpdate {
+public class VenuePendingUpdate implements Persistable<UUID> {
 
     @Id
     @Column(name = "venue_id", nullable = false)
@@ -65,6 +69,9 @@ public class VenuePendingUpdate {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
+    @Transient
+    private boolean newEntity = true;
+
     @PrePersist
         /* default */ void onCreate() {
         if (updatedAt == null) {
@@ -77,6 +84,12 @@ public class VenuePendingUpdate {
         updatedAt = OffsetDateTime.now();
     }
 
+    @PostPersist
+    @PostLoad
+        /* default */ void markNotNew() {
+        newEntity = false;
+    }
+
     private VenuePendingUpdate(final Venue venue, final VenueContent content) {
         this.venue = venue;
         this.venueId = venue.getId();
@@ -87,6 +100,16 @@ public class VenuePendingUpdate {
         Objects.requireNonNull(venue, "venue");
         Objects.requireNonNull(content, "content");
         return new VenuePendingUpdate(venue, content);
+    }
+
+    @Override
+    public UUID getId() {
+        return venueId;
+    }
+
+    @Override
+    public boolean isNew() {
+        return newEntity;
     }
 
     public void reject(String reason) {

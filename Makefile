@@ -79,4 +79,4 @@ lint-pmd:
 
 .PHONY: test
 test:
-	./mvnw test --no-transfer-progress
+	./mvnw clean prepare-package --no-transfer-progress

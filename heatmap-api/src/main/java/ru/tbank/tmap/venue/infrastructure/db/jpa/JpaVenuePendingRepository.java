@@ -17,14 +17,14 @@ public interface JpaVenuePendingRepository
         extends JpaRepository<VenuePendingUpdate, UUID>, VenuePendingUpdateRepository {
 
     @Override
-    @EntityGraph(attributePaths = {"venue", "venue.owner"})
+    @EntityGraph(attributePaths = { "venue" })
     Optional<VenuePendingUpdate> findByVenueId(UUID venueId);
 
     @Override
-    @EntityGraph(attributePaths = {"venue", "venue.owner"})
+    @EntityGraph(attributePaths = { "venue" })
     List<VenuePendingUpdate> findByVenueIdIn(Collection<UUID> venueIds);
 
     @Override
-    @EntityGraph(attributePaths = {"venue", "venue.owner"})
+    @EntityGraph(attributePaths = { "venue" })
     Page<VenuePendingUpdate> findByStatus(VenueStatus status, Pageable pageable);
 }

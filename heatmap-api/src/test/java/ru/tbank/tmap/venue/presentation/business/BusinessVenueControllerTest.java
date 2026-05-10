@@ -3,6 +3,7 @@ package ru.tbank.tmap.venue.presentation.business;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.openapitools.model.VenueCreateRequest;
 import org.openapitools.model.VenueUpdateRequest;
 import org.openapitools.model.VenueOwnerResponse;
 import org.openapitools.model.VenueModerationStatus;
@@ -59,6 +61,37 @@ class BusinessVenueControllerTest {
     private BusinessVenueOwnerMapper venueOwnerMapper;
 
     @Test
+    void createVenue_whenUserAuthenticated_thenReturnsCreated() throws Exception {
+        final Venue venue = VenueTestFactory.createVenue(VenueStatus.PENDING, null);
+        given(businessVenueService.createVenue(
+                org.mockito.ArgumentMatchers.eq(OWNER_ID),
+                org.mockito.ArgumentMatchers.any(ru.tbank.tmap.venue.application.command.VenueCreateCommand.class)
+        )).willReturn(new VenueDetails(venue, null));
+        given(venueOwnerMapper.toResponse(org.mockito.ArgumentMatchers.any(VenueDetails.class)))
+                .willReturn(new VenueOwnerResponse()
+                        .id(VENUE_ID)
+                        .name("Bar One")
+                        .moderationStatus(VenueModerationStatus.PENDING));
+
+        final VenueCreateRequest request = new VenueCreateRequest()
+                .name("Bar One")
+                .address("Kazan Center, 1")
+                .description("Fresh coffee")
+                .lat(55.7905)
+                .lng(49.1140)
+                .category(VenueCreateRequest.CategoryEnum.FOOD);
+
+        mockMvc.perform(post("/api/v1/business/venues")
+                        .with(user(userPrincipal()))
+                        .with(csrf())
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("Bar One"))
+                .andExpect(jsonPath("$.moderationStatus").value("PENDING"));
+    }
+
+    @Test
     void updateVenue_whenOwnerAuthenticated_thenReturnsPublishedDataWithPendingStatus() throws Exception {
         final Venue venue = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
         final VenuePendingUpdate pendingUpdate = VenueTestFactory.createPendingUpdate(venue, VenueStatus.PENDING_UPDATE);
@@ -91,6 +124,21 @@ class BusinessVenueControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Bar One"))
                 .andExpect(jsonPath("$.moderationStatus").value("PENDING_UPDATE"));
+    }
+
+    private CustomUserDetails userPrincipal() {
+        return new CustomUserDetails(
+                OWNER_ID,
+                "user@example.com",
+                "password-hash",
+                true,
+                true,
+                true,
+                true,
+                java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                        "ROLE_USER"
+                ))
+        );
     }
 
     private CustomUserDetails ownerPrincipal() {

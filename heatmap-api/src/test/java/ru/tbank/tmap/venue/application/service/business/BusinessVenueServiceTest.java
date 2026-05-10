@@ -3,6 +3,7 @@ package ru.tbank.tmap.venue.application.service.business;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import java.util.List;
@@ -128,6 +129,7 @@ class BusinessVenueServiceTest {
         assertThat(result.venue().getContent().h3Res9()).isEqualTo(H3_RES_9);
         assertThat(result.venue().getContent().description()).isEqualTo(venueDescription);
         assertThat(result.pendingUpdate()).isNull();
+        verify(userAccountFacade, never()).promoteToBusinessOwner(OWNER_ID);
     }
 
     @Test

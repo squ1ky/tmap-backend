@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.venue.application.query.VenueDetails;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
@@ -28,6 +29,9 @@ class AdminVenueServiceTest {
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
 
     @Mock
+    private UserAccountFacade userAccountFacade;
+
+    @Mock
     private VenueRepository venueRepository;
 
     @Mock
@@ -38,6 +42,7 @@ class AdminVenueServiceTest {
     @BeforeEach
     void setUp() {
         adminVenueService = new AdminVenueService(
+                userAccountFacade,
                 venueRepository,
                 venuePendingUpdateRepository
         );
@@ -55,6 +60,7 @@ class AdminVenueServiceTest {
         assertThat(venue.getStatus()).isEqualTo(VenueStatus.ACTIVE);
         assertThat(venue.getRejectReason()).isNull();
         assertThat(response.venue().getStatus()).isEqualTo(VenueStatus.ACTIVE);
+        verify(userAccountFacade).promoteToBusinessOwner(venue.getOwnerId());
         verify(venueRepository).save(venue);
     }
 
@@ -121,6 +127,7 @@ class AdminVenueServiceTest {
         assertThat(response.pendingUpdate()).isNull();
         assertThat(response.venue().getContent().name()).isEqualTo("Bar Two");
         assertThat(response.venue().getStatus()).isEqualTo(VenueStatus.ACTIVE);
+        org.mockito.Mockito.verifyNoInteractions(userAccountFacade);
         verify(venuePendingUpdateRepository).deleteById(pendingUpdate.getVenueId());
     }
 

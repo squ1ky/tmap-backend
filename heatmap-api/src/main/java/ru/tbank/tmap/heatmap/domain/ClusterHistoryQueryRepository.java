@@ -14,8 +14,14 @@ public interface ClusterHistoryQueryRepository {
     List<HeatmapClusterAggregate> findClusters(
             BoundingBox boundingBox,
             H3Resolution resolution,
-            Instant from
+            Instant from,
+            Instant currentHour
     );
 
-    Optional<ClusterDetailsAggregate> findClusterDetails(long h3Index, H3Resolution resolution, Instant from);
+    Optional<ClusterDetailsAggregate> findClusterDetails(
+            long h3Index,
+            H3Resolution resolution,
+            Instant from,
+            Instant currentHour
+    );
 }

@@ -1332,7 +1332,7 @@ components:
 
     ClusterDTO:
       type: object
-      required: [h3Index, txCount, avgCheck]
+      required: [h3Index, txCount, avgCheck, isAnomaly]
       properties:
         h3Index:
           type: string
@@ -1347,10 +1347,23 @@ components:
           format: double
           description: Average check amount
           example: 850.00
+        isAnomaly:
+          type: boolean
+          description: True if zone is currently showing anomalous activity
+          default: false
+          example: false
+        anomalyRatio:
+          type: number
+          format: double
+          description: |
+              How many times higher current activity is compared to the 7-day baseline.
+              Present only when isAnomaly=true.
+          nullable: true
+          example: 3.4
 
     ClusterDetailsResponse:
       type: object
-      required: [h3Index, resolution, districtName, districtImageUrl, txCount, avgCheck]
+      required: [h3Index, resolution, districtName, districtImageUrl, txCount, avgCheck, isAnomaly]
       properties:
         h3Index:
           type: string
@@ -1383,6 +1396,23 @@ components:
         createdAt:
           type: string
           format: date-time
+        isAnomaly:
+          type: boolean
+          description: True if zone is currently showing anomalous activity
+          default: false
+          example: true
+        anomalyRatio:
+          type: number
+          format: double
+          description: How many times higher current activity is compared to baseline. Null if not anomalous.
+          nullable: true
+          example: 3.4
+        baselineAvg:
+          type: number
+          format: double
+          description: Average tx_count for the same hour over the last 7 days. Null if not anomalous.
+          nullable: true
+          example: 100.5
 
     # ── Venue DTOs ────────────────────────────
     VenueCreateRequest:

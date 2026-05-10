@@ -34,7 +34,10 @@ public class H3HeatmapService {
             final H3Resolution resolution,
             final int window
     ) {
+        final Instant now = Instant.now(clock);
         final Instant from = Instant.now(clock).minus(window, ChronoUnit.MINUTES);
+        final Instant currentHour = now.truncatedTo(ChronoUnit.HOURS);
+
         return new HeatmapClusters(
                 OffsetDateTime.ofInstant(Instant.now(clock), ZoneOffset.UTC),
                 REFRESH_INTERVAL_MINUTES,
@@ -42,15 +45,20 @@ public class H3HeatmapService {
                 heatmapQueryRepository.findClusters(
                         boundingBox,
                         resolution,
-                        from
+                        from,
+                        currentHour
                 )
         );
     }
 
     public Optional<ClusterDetailsAggregate> getClusterDetails(final String h3Index, final H3Resolution resolution) {
+        final Instant now = Instant.now(clock);
         final Instant from = Instant.now(clock).minus(DEFAULT_WINDOW_MINUTES, ChronoUnit.MINUTES);
+        final Instant currentHour = now.truncatedTo(ChronoUnit.HOURS);
+
         final long dbH3Index = parseH3Index(h3Index);
-        return heatmapQueryRepository.findClusterDetails(dbH3Index, resolution, from)
+
+        return heatmapQueryRepository.findClusterDetails(dbH3Index, resolution, from, currentHour)
                 .map(this::resolveDistrictImageUrl);
     }
 

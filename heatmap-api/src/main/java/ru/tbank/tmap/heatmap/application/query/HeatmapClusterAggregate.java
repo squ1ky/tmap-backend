@@ -10,6 +10,8 @@ public record HeatmapClusterAggregate(
         int txCount,
         BigDecimal avgCheck,
         BigDecimal sumAmount,
-        Instant updatedAt
+        Instant updatedAt,
+        boolean isAnomaly,
+        BigDecimal anomalyRatio
 ) {
 }

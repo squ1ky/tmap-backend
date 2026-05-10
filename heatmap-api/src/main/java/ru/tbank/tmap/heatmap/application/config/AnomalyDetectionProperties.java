@@ -8,18 +8,23 @@ public record AnomalyDetectionProperties(
         int minBaseline,
         int minBaselineDays
 ) {
+    private static final double MIN_RATIO_THRESHOLD = 1.0;
+    private static final int MIN_BASELINE_VALUE = 1;
+    private static final int MIN_DAYS = 1;
+    private static final int MAX_DAYS = 7;
+
     public AnomalyDetectionProperties {
-        if (ratioThreshold <= 1.0) {
+        if (ratioThreshold <= MIN_RATIO_THRESHOLD) {
             throw new IllegalArgumentException(
-                    "ratioThreshold must be > 1.0, got " + ratioThreshold);
+                    "ratioThreshold must be > " + MIN_RATIO_THRESHOLD + ", got " + ratioThreshold);
         }
-        if (minBaseline < 1) {
+        if (minBaseline < MIN_BASELINE_VALUE) {
             throw new IllegalArgumentException(
-                    "minBaseline must be >= 1, got " + minBaseline);
+                    "minBaseline must be >= " + MIN_BASELINE_VALUE + ", got " + minBaseline);
         }
-        if (minBaselineDays < 1 || minBaselineDays > 7) {
+        if (minBaselineDays < MIN_DAYS || minBaselineDays > MAX_DAYS) {
             throw new IllegalArgumentException(
-                    "minBaselineDays must be in [1, 7], got " + minBaselineDays);
+                    "minBaselineDays must be in [" + MIN_DAYS + ", " + MAX_DAYS + "], got " + minBaselineDays);
         }
     }
 }

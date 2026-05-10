@@ -1358,7 +1358,6 @@ components:
           description: |
               How many times higher current activity is compared to the 7-day baseline.
               Present only when isAnomaly=true.
-          nullable: true
           example: 3.4
 
     ClusterDetailsResponse:
@@ -1405,13 +1404,11 @@ components:
           type: number
           format: double
           description: How many times higher current activity is compared to baseline. Null if not anomalous.
-          nullable: true
           example: 3.4
         baselineAvg:
           type: number
           format: double
           description: Average tx_count for the same hour over the last 7 days. Null if not anomalous.
-          nullable: true
           example: 100.5
 
     # ── Venue DTOs ────────────────────────────

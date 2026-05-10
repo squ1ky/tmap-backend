@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap.application;
+package ru.tbank.tmap.heatmap.application.service;
 
 import java.time.Clock;
 import java.time.temporal.ChronoUnit;

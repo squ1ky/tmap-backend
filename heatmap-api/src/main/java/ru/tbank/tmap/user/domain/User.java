@@ -83,4 +83,10 @@ public class User {
                 UserRole.USER
         );
     }
+
+    public void promoteToBusinessOwner() {
+        if (role == UserRole.USER) {
+            role = UserRole.BUSINESS_OWNER;
+        }
+    }
 }

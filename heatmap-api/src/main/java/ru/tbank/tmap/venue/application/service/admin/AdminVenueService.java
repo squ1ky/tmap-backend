@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.venue.application.query.VenueDetails;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
@@ -22,6 +23,7 @@ import ru.tbank.tmap.venue.domain.repository.VenueRepository;
 @Transactional(readOnly = true)
 public class AdminVenueService {
 
+    private final UserAccountFacade userAccountFacade;
     private final VenueRepository venueRepository;
     private final VenuePendingUpdateRepository venuePendingUpdateRepository;
 
@@ -74,6 +76,7 @@ public class AdminVenueService {
     private VenueDetails approveNewVenue(UUID id) {
         Venue venue = findVenue(id);
         venue.approve();
+        userAccountFacade.promoteToBusinessOwner(venue.getOwnerId());
         Venue saved = venueRepository.save(venue);
         return new VenueDetails(saved, null);
     }

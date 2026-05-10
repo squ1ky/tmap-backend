@@ -12,4 +12,6 @@ public interface UserAccountFacade {
     Optional<UserView> findById(UUID id);
 
     UserView register(String email, String passwordHash, String nickname);
+
+    UserView promoteToBusinessOwner(UUID id);
 }

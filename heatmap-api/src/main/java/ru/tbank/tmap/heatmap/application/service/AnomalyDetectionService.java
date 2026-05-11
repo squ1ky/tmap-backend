@@ -13,7 +13,7 @@ import java.time.Instant;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class AnomalyDetector {
+public class AnomalyDetectionService {
 
     private final AnomalyDetectionRepository anomalyRepository;
     private final AnomalyDetectionProperties anomalyDetectionProperties;

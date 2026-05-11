@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.heatmap.application.service.ClusterHistoryAggregator;
-import ru.tbank.tmap.heatmap.application.service.AnomalyDetector;
+import ru.tbank.tmap.heatmap.application.service.AnomalyDetectionService;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -20,7 +20,7 @@ public class HeatmapScheduler {
     private static final int WINDOW_UPPER_BOUND_OFFSET_HOURS = 1;
 
     private final ClusterHistoryAggregator historyAggregator;
-    private final AnomalyDetector anomalyDetector;
+    private final AnomalyDetectionService anomalyDetectionService;
     private final Clock clock;
 
     @Value("${app.aggregation.lookback-hours:1}")
@@ -48,7 +48,7 @@ public class HeatmapScheduler {
 
         int anomaliesDetected = 0;
         try {
-            anomaliesDetected = anomalyDetector.detectFor(currentHour);
+            anomaliesDetected = anomalyDetectionService.detectFor(currentHour);
         } catch (RuntimeException e) {
             log.error("Anomaly detection failed for hour={}, will retry next cycle",
                     currentHour, e);

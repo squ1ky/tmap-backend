@@ -19,7 +19,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
-import ru.tbank.tmap.heatmap.application.service.AnomalyDetector;
+import ru.tbank.tmap.heatmap.application.service.AnomalyDetectionService;
 import ru.tbank.tmap.heatmap.application.service.ClusterHistoryAggregator;
 
 class HeatmapSchedulerTest {
@@ -35,7 +35,7 @@ class HeatmapSchedulerTest {
     private ClusterHistoryAggregator historyAggregator;
 
     @Mock
-    private AnomalyDetector anomalyDetector;
+    private AnomalyDetectionService anomalyDetectionService;
 
     private HeatmapScheduler scheduler;
 
@@ -44,7 +44,7 @@ class HeatmapSchedulerTest {
         MockitoAnnotations.openMocks(this);
         scheduler = new HeatmapScheduler(
                 historyAggregator,
-                anomalyDetector,
+                anomalyDetectionService,
                 Clock.fixed(FIXED_NOW, ZoneOffset.UTC)
         );
         ReflectionTestUtils.setField(scheduler, "lookbackHours", LOOKBACK_HOURS);
@@ -53,25 +53,25 @@ class HeatmapSchedulerTest {
     @Test
     void refresh_whenBothStepsSucceed_thenAggregatesThenDetectsAnomalies() {
         given(historyAggregator.aggregate(WINDOW_FROM, WINDOW_TO)).willReturn(10);
-        given(anomalyDetector.detectFor(CURRENT_HOUR)).willReturn(3);
+        given(anomalyDetectionService.detectFor(CURRENT_HOUR)).willReturn(3);
 
         scheduler.refresh();
 
-        final InOrder inOrder = Mockito.inOrder(historyAggregator, anomalyDetector);
+        final InOrder inOrder = Mockito.inOrder(historyAggregator, anomalyDetectionService);
         inOrder.verify(historyAggregator).aggregate(WINDOW_FROM, WINDOW_TO);
-        inOrder.verify(anomalyDetector).detectFor(CURRENT_HOUR);
+        inOrder.verify(anomalyDetectionService).detectFor(CURRENT_HOUR);
     }
 
     @Test
     void refresh_whenAnomalyDetectorThrows_thenSwallowsExceptionAndCompletes() {
         given(historyAggregator.aggregate(WINDOW_FROM, WINDOW_TO)).willReturn(10);
-        given(anomalyDetector.detectFor(CURRENT_HOUR))
+        given(anomalyDetectionService.detectFor(CURRENT_HOUR))
                 .willThrow(new RuntimeException("exception"));
 
         assertThatCode(() -> scheduler.refresh()).doesNotThrowAnyException();
 
         verify(historyAggregator).aggregate(WINDOW_FROM, WINDOW_TO);
-        verify(anomalyDetector).detectFor(CURRENT_HOUR);
+        verify(anomalyDetectionService).detectFor(CURRENT_HOUR);
     }
 
     @Test
@@ -84,19 +84,19 @@ class HeatmapSchedulerTest {
                 .hasMessage("aggregation failed");
 
         verify(historyAggregator).aggregate(WINDOW_FROM, WINDOW_TO);
-        verifyNoInteractions(anomalyDetector);
+        verifyNoInteractions(anomalyDetectionService);
     }
 
     @Test
     void refresh_whenInvokedMultipleTimes_thenComputesWindowFromCurrentClockEachTime() {
         given(historyAggregator.aggregate(any(), any())).willReturn(0);
-        given(anomalyDetector.detectFor(any())).willReturn(0);
+        given(anomalyDetectionService.detectFor(any())).willReturn(0);
 
         scheduler.refresh();
         scheduler.refresh();
 
         verify(historyAggregator, times(2)).aggregate(WINDOW_FROM, WINDOW_TO);
-        verify(anomalyDetector, times(2)).detectFor(CURRENT_HOUR);
+        verify(anomalyDetectionService, times(2)).detectFor(CURRENT_HOUR);
     }
 
     @Test
@@ -105,12 +105,12 @@ class HeatmapSchedulerTest {
         final Instant widerFrom = Instant.parse("2026-04-17T07:00:00Z"); // currentHour - 3h
 
         given(historyAggregator.aggregate(widerFrom, WINDOW_TO)).willReturn(0);
-        given(anomalyDetector.detectFor(CURRENT_HOUR)).willReturn(0);
+        given(anomalyDetectionService.detectFor(CURRENT_HOUR)).willReturn(0);
 
         scheduler.refresh();
 
         verify(historyAggregator).aggregate(widerFrom, WINDOW_TO);
-        verify(anomalyDetector).detectFor(CURRENT_HOUR);
-        verify(anomalyDetector, never()).detectFor(WINDOW_FROM);
+        verify(anomalyDetectionService).detectFor(CURRENT_HOUR);
+        verify(anomalyDetectionService, never()).detectFor(WINDOW_FROM);
     }
 }

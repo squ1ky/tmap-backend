@@ -21,7 +21,7 @@ import ru.tbank.tmap.heatmap.application.config.AnomalyDetectionProperties;
 import ru.tbank.tmap.heatmap.domain.AnomalyDetectionRepository;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 
-class AnomalyDetectorTest {
+class AnomalyDetectionServiceTest {
 
     private static final Instant HOUR_BUCKET = Instant.parse("2026-04-17T10:00:00Z");
 
@@ -32,7 +32,7 @@ class AnomalyDetectorTest {
     @Mock
     private AnomalyDetectionRepository anomalyRepository;
 
-    private AnomalyDetector anomalyDetector;
+    private AnomalyDetectionService anomalyDetectionService;
 
     @BeforeEach
     void setUp() {
@@ -40,7 +40,7 @@ class AnomalyDetectorTest {
         final AnomalyDetectionProperties properties = new AnomalyDetectionProperties(
                 RATIO_THRESHOLD, MIN_BASELINE, MIN_BASELINE_DAYS
         );
-        anomalyDetector = new AnomalyDetector(anomalyRepository, properties);
+        anomalyDetectionService = new AnomalyDetectionService(anomalyRepository, properties);
     }
 
     @Test
@@ -48,7 +48,7 @@ class AnomalyDetectorTest {
         given(anomalyRepository.recompute(any(), any(), anyDouble(), anyInt(), anyInt()))
                 .willReturn(0);
 
-        anomalyDetector.detectFor(HOUR_BUCKET);
+        anomalyDetectionService.detectFor(HOUR_BUCKET);
 
         for (H3Resolution resolution : H3Resolution.values()) {
             verify(anomalyRepository).recompute(
@@ -64,7 +64,7 @@ class AnomalyDetectorTest {
         given(anomalyRepository.recompute(any(), any(), anyDouble(), anyInt(), anyInt()))
                 .willReturn(0);
 
-        anomalyDetector.detectFor(HOUR_BUCKET);
+        anomalyDetectionService.detectFor(HOUR_BUCKET);
 
         verify(anomalyRepository, times(H3Resolution.values().length))
                 .recompute(any(), eq(HOUR_BUCKET),
@@ -80,7 +80,7 @@ class AnomalyDetectorTest {
         given(anomalyRepository.recompute(eq(H3Resolution.RES_9), any(), anyDouble(), anyInt(), anyInt()))
                 .willReturn(3);
 
-        final int total = anomalyDetector.detectFor(HOUR_BUCKET);
+        final int total = anomalyDetectionService.detectFor(HOUR_BUCKET);
 
         assertThat(total).isEqualTo(10);
     }
@@ -90,7 +90,7 @@ class AnomalyDetectorTest {
         given(anomalyRepository.recompute(any(), any(), anyDouble(), anyInt(), anyInt()))
                 .willReturn(0);
 
-        final int total = anomalyDetector.detectFor(HOUR_BUCKET);
+        final int total = anomalyDetectionService.detectFor(HOUR_BUCKET);
 
         assertThat(total).isZero();
     }
@@ -100,7 +100,7 @@ class AnomalyDetectorTest {
         given(anomalyRepository.recompute(any(), any(), anyDouble(), anyInt(), anyInt()))
                 .willThrow(new RuntimeException("db error"));
 
-        assertThatThrownBy(() -> anomalyDetector.detectFor(HOUR_BUCKET))
+        assertThatThrownBy(() -> anomalyDetectionService.detectFor(HOUR_BUCKET))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("db error");
     }

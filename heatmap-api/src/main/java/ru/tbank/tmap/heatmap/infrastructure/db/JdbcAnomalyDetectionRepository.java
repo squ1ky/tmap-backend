@@ -14,7 +14,13 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class JdbcAnomalyDetectionRepository implements AnomalyDetectionRepository {
 
-    private static final String RECOMPUTE_SQL = """
+    private static final String DELETE_SQL = """
+            DELETE FROM cluster_anomalies
+            WHERE resolution  = :resolution
+              AND hour_bucket = CAST(:hourBucket AS TIMESTAMPTZ)
+            """;
+
+    private static final String INSERT_SQL = """
             WITH current_activity AS (
                 SELECT
                     ch.h3_index,
@@ -54,18 +60,13 @@ public class JdbcAnomalyDetectionRepository implements AnomalyDetectionRepositor
                 CAST(:hourBucket AS TIMESTAMPTZ),
                 c.tx_count,
                 b.baseline_avg,
-                c.tx_count::numeric / NULLIF(b.baseline_avg, 0) AS ratio,
+                c.tx_count::numeric / NULLIF(b.baseline_avg, 0),
                 now()
             FROM current_activity c
             JOIN baseline b USING (h3_index)
             WHERE b.days_with_data >= :minBaselineDays
               AND b.baseline_avg   >= :minBaseline
               AND c.tx_count::numeric / NULLIF(b.baseline_avg, 0) >= :ratioThreshold
-            ON CONFLICT (h3_index, resolution, hour_bucket) DO UPDATE
-            SET tx_count     = EXCLUDED.tx_count,
-                baseline_avg = EXCLUDED.baseline_avg,
-                ratio        = EXCLUDED.ratio,
-                computed_at  = EXCLUDED.computed_at
             """;
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
@@ -85,6 +86,7 @@ public class JdbcAnomalyDetectionRepository implements AnomalyDetectionRepositor
                 .addValue("minBaseline", minBaseline)
                 .addValue("minBaselineDays", minBaselineDays);
 
-        return jdbcTemplate.update(RECOMPUTE_SQL, params);
+        jdbcTemplate.update(DELETE_SQL, params);
+        return jdbcTemplate.update(INSERT_SQL, params);
     }
 }

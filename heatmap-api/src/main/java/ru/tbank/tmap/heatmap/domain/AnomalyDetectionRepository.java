@@ -15,15 +15,16 @@ public interface AnomalyDetectionRepository {
     /**
      * Recalculates anomalies for a given resolution and hour.
      * <p>
-     * Calling this function again with the same {@code hourBucket} will overwrite
-     * existing records with the current values.
+     * Fully replaces the set of anomalies stored for the pair
+     * ({@code resolution}, {@code hourBucket}): zones that no longer pass
+     * the threshold are removed, zones that pass are inserted with current values.
      *
      * @param resolution     H3-resolution,
      * @param hourBucket     the hour for which activity is calculated (truncated to the hour)
      * @param ratioThreshold the minimum current/baseline ratio for detecting an anomaly
      * @param minBaseline    minimum baseline_avg value for zone consideration (noise filtering)
      * @param minBaselineDays minimum number of days with data in the 7-day window (cold start)
-     @return number of records added or updated in cluster_anomalies
+     * @return number of anomalies stored for this (resolution, hourBucket) after recomputation
      */
     int recompute(
             H3Resolution resolution,

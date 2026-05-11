@@ -38,7 +38,7 @@ public class HeatmapScheduler {
 
         final long started = System.currentTimeMillis();
 
-        int rowsUpserted = 0;
+        int rowsUpserted;
         try {
             rowsUpserted = historyAggregator.aggregate(from, to);
         } catch (RuntimeException e) {

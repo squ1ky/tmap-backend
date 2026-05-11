@@ -214,6 +214,60 @@ class JdbcAnomalyDetectionRepositoryTest {
         assertThat(rowsInserted).isZero();
     }
 
+    @Test
+    void recompute_whenAnomalyExistsAndCurrentDrops_thenRemovesAnomaly() {
+        // baseline: 50, current: 200, ratio = 4.0 -> anomaly
+        for (int day = 1; day <= 7; day++) {
+            insertHistory(H3_INDEX_HEX, 9, CURRENT_HOUR.minus(Duration.ofDays(day)), 50);
+        }
+        insertHistory(H3_INDEX_HEX, 9, CURRENT_HOUR, 200);
+
+        anomalyRepository.recompute(H3Resolution.RES_9, CURRENT_HOUR,
+                RATIO_THRESHOLD, MIN_BASELINE, MIN_BASELINE_DAYS);
+
+        assertThat(countAnomalies()).isEqualTo(1);
+
+        // current: 80, ratio = 1.6 < threshold -> no anomaly
+        insertHistory(H3_INDEX_HEX, 9, CURRENT_HOUR, 80);
+
+        final int rowsAfter = anomalyRepository.recompute(
+                H3Resolution.RES_9, CURRENT_HOUR,
+                RATIO_THRESHOLD, MIN_BASELINE, MIN_BASELINE_DAYS
+        );
+
+        assertThat(rowsAfter).isZero();
+        assertThat(fetchAnomaly(H3_INDEX, 9, CURRENT_HOUR)).isNull();
+        assertThat(countAnomalies()).isZero();
+    }
+
+    @Test
+    void recompute_whenAnomalyExistsAndBaselineGrows_thenRemovesAnomaly() {
+        // baseline: 50, current: 120, ratio = 2.4 -> anomaly
+        for (int day = 1; day <= 7; day++) {
+            insertHistory(H3_INDEX_HEX, 9, CURRENT_HOUR.minus(Duration.ofDays(day)), 50);
+        }
+        insertHistory(H3_INDEX_HEX, 9, CURRENT_HOUR, 120);
+
+        anomalyRepository.recompute(H3Resolution.RES_9, CURRENT_HOUR,
+                RATIO_THRESHOLD, MIN_BASELINE, MIN_BASELINE_DAYS);
+
+        assertThat(countAnomalies()).isEqualTo(1);
+
+        // baseline: 100, current: 120
+        // ratio = 1.2 < threshold -> no anomaly
+        for (int day = 1; day <= 7; day++) {
+            insertHistory(H3_INDEX_HEX, 9, CURRENT_HOUR.minus(Duration.ofDays(day)), 100);
+        }
+
+        final int rowsAfter = anomalyRepository.recompute(
+                H3Resolution.RES_9, CURRENT_HOUR,
+                RATIO_THRESHOLD, MIN_BASELINE, MIN_BASELINE_DAYS
+        );
+
+        assertThat(rowsAfter).isZero();
+        assertThat(fetchAnomaly(H3_INDEX, 9, CURRENT_HOUR)).isNull();
+    }
+
     private void insertHistory(
             final String h3Index, final int resolution,
             final Instant hourBucket, final int txCount

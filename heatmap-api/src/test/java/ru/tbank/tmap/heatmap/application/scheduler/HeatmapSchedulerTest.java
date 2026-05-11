@@ -80,8 +80,7 @@ class HeatmapSchedulerTest {
                 .willThrow(new RuntimeException("aggregation failed"));
 
         assertThatCode(() -> scheduler.refresh())
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("aggregation failed");
+                .doesNotThrowAnyException();
 
         verify(historyAggregator).aggregate(WINDOW_FROM, WINDOW_TO);
         verifyNoInteractions(anomalyDetectionService);

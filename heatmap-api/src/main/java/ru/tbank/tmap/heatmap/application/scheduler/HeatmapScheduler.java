@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.heatmap.application.service.ClusterHistoryAggregator;
 import ru.tbank.tmap.heatmap.application.service.AnomalyDetector;
 
@@ -31,7 +30,6 @@ public class HeatmapScheduler {
             fixedDelayString = "${app.aggregation.interval-ms:60000}",
             initialDelayString = "${app.aggregation.initial-delay-ms}"
     )
-    @Transactional
     public void refresh() {
         final Instant now = Instant.now(clock);
         final Instant currentHour = now.truncatedTo(ChronoUnit.HOURS);
@@ -40,7 +38,13 @@ public class HeatmapScheduler {
 
         final long started = System.currentTimeMillis();
 
-        final int rowsUpserted = historyAggregator.aggregate(from, to);
+        int rowsUpserted = 0;
+        try {
+            rowsUpserted = historyAggregator.aggregate(from, to);
+        } catch (RuntimeException e) {
+            log.error("Aggregation failed for window=[{}..{})", from, to, e);
+            return;
+        }
 
         int anomaliesDetected = 0;
         try {

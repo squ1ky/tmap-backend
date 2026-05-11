@@ -34,6 +34,10 @@ app:
     lookback-hours: 1
     initial-delay-ms: 10000
     interval-ms: 60000
+  anomaly:
+    ratio-threshold: 2.0
+    min-baseline: 10
+    min-baseline-days: 3
   kafka:
     transactions-topic: test-transactions-topic
   minio:

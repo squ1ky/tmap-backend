@@ -7,7 +7,7 @@ import org.openapitools.model.HeatmapResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.tbank.tmap.heatmap.application.H3HeatmapService;
+import ru.tbank.tmap.heatmap.application.service.H3HeatmapService;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 import ru.tbank.tmap.heatmap.domain.exception.ClusterNotFoundException;

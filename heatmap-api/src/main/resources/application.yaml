@@ -10,6 +10,9 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+  jackson:
+    default-property-inclusion: non_null
+
   # ===== Database =====
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable
@@ -90,6 +93,10 @@ app:
     lookback-hours: 1
     initial-delay-ms: 10000
     interval-ms: 60000
+  anomaly:
+    ratio-threshold: 2.0
+    min-baseline: 10
+    min-baseline-days: 3
   kafka:
     transactions-topic: ${KAFKA_TRANSACTIONS_TOPIC}
   minio:

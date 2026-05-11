@@ -14,7 +14,10 @@ public record ClusterDetailsAggregate(
         int txCount,
         BigDecimal avgCheck,
         BigDecimal sumAmount,
-        Instant updatedAt
+        Instant updatedAt,
+        boolean isAnomaly,
+        BigDecimal anomalyRatio,
+        BigDecimal baselineAvg
 ) {
     public ClusterDetailsAggregate withDistrictImageUrl(final String newDistrictImageUrl) {
         return new ClusterDetailsAggregate(
@@ -26,7 +29,10 @@ public record ClusterDetailsAggregate(
                 txCount,
                 avgCheck,
                 sumAmount,
-                updatedAt
+                updatedAt,
+                isAnomaly,
+                anomalyRatio,
+                baselineAvg
         );
     }
 }

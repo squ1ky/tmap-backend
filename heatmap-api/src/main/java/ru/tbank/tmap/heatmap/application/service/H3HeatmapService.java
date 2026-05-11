@@ -1,4 +1,4 @@
-package ru.tbank.tmap.heatmap.application;
+package ru.tbank.tmap.heatmap.application.service;
 
 import java.time.Clock;
 import java.time.temporal.ChronoUnit;
@@ -34,23 +34,31 @@ public class H3HeatmapService {
             final H3Resolution resolution,
             final int window
     ) {
-        final Instant from = Instant.now(clock).minus(window, ChronoUnit.MINUTES);
+        final Instant now = Instant.now(clock);
+        final Instant from = now.minus(window, ChronoUnit.MINUTES);
+        final Instant currentHour = now.truncatedTo(ChronoUnit.HOURS);
+
         return new HeatmapClusters(
-                OffsetDateTime.ofInstant(Instant.now(clock), ZoneOffset.UTC),
+                OffsetDateTime.ofInstant(now, ZoneOffset.UTC),
                 REFRESH_INTERVAL_MINUTES,
                 window,
                 heatmapQueryRepository.findClusters(
                         boundingBox,
                         resolution,
-                        from
+                        from,
+                        currentHour
                 )
         );
     }
 
     public Optional<ClusterDetailsAggregate> getClusterDetails(final String h3Index, final H3Resolution resolution) {
-        final Instant from = Instant.now(clock).minus(DEFAULT_WINDOW_MINUTES, ChronoUnit.MINUTES);
+        final Instant now = Instant.now(clock);
+        final Instant from = now.minus(DEFAULT_WINDOW_MINUTES, ChronoUnit.MINUTES);
+        final Instant currentHour = now.truncatedTo(ChronoUnit.HOURS);
+
         final long dbH3Index = parseH3Index(h3Index);
-        return heatmapQueryRepository.findClusterDetails(dbH3Index, resolution, from)
+
+        return heatmapQueryRepository.findClusterDetails(dbH3Index, resolution, from, currentHour)
                 .map(this::resolveDistrictImageUrl);
     }
 

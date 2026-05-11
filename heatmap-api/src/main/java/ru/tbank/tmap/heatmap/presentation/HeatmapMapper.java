@@ -33,14 +33,25 @@ public class HeatmapMapper {
                 .txCount(cluster.txCount())
                 .avgCheck(cluster.avgCheck().doubleValue())
                 .sumAmount(cluster.sumAmount().doubleValue())
-                .createdAt(OffsetDateTime.ofInstant(cluster.updatedAt(), ZoneOffset.UTC));
+                .createdAt(OffsetDateTime.ofInstant(cluster.updatedAt(), ZoneOffset.UTC))
+                .isAnomaly(cluster.isAnomaly())
+                .anomalyRatio(cluster.anomalyRatio() != null
+                        ? cluster.anomalyRatio().doubleValue()
+                        : null)
+                .baselineAvg(cluster.baselineAvg() != null
+                        ? cluster.baselineAvg().doubleValue()
+                        : null);
     }
 
     private ClusterDTO toCluster(final HeatmapClusterAggregate cluster) {
         return new ClusterDTO(
                 Long.toHexString(cluster.h3Index()),
                 cluster.txCount(),
-                cluster.avgCheck().doubleValue()
-        );
+                cluster.avgCheck().doubleValue(),
+                cluster.isAnomaly()
+        )
+                .anomalyRatio(cluster.anomalyRatio() != null
+                        ? cluster.anomalyRatio().doubleValue()
+                        : null);
     }
 }

@@ -1911,6 +1911,15 @@ components:
         category:
           type: string
           enum: [food, entertainment, shopping]
+        photoUrl:
+          type: string
+          format: uri
+        dishOfDay:
+          type: string
+          example: "Нитро кофе + Круассан"
+        music:
+          type: string
+          example: "Indie Pop"
         moderationStatus:
           $ref: '#/components/schemas/VenueModerationStatus'
         rejectReason:

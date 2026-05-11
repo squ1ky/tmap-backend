@@ -21,19 +21,23 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.test.security.TestSecurityConfig;
 import ru.tbank.tmap.venue.application.service.admin.AdminVenueService;
 import ru.tbank.tmap.venue.application.query.VenueDetails;
+import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.domain.VenueTestFactory;
+import ru.tbank.tmap.venue.presentation.VenueMapper;
 
 @WebMvcTest(AdminVenueController.class)
 @Import({
         TestSecurityConfig.class,
         GlobalExceptionHandler.class,
+        VenueMapper.class,
         AdminVenueMapper.class,
 })
 class AdminVenueControllerTest {
@@ -48,6 +52,9 @@ class AdminVenueControllerTest {
 
     @MockitoBean
     private AdminVenueService adminVenueService;
+
+    @MockitoBean
+    private MinioUrlBuilder minioUrlBuilder;
 
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -76,14 +83,34 @@ class AdminVenueControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void verifyAdminVenue_whenUserIsAdmin_thenReturnActivatedVenue() throws Exception {
-        final Venue venue = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
+        final Venue venue = VenueTestFactory.createVenue(
+                VenueStatus.ACTIVE,
+                null,
+                VenueTestFactory.content(
+                        "Bar One",
+                        "Kazan Center, 2",
+                        VenueTestFactory.defaultContent().location(),
+                        VenueTestFactory.H3_RES_9,
+                        VenueCategory.ENTERTAINMENT,
+                        "Default description",
+                        "Nitro Coffee",
+                        "House Mix"
+                )
+        );
+        venue.setPhotoObjectKey("venues/" + VENUE_ID + "/photo.jpg");
         given(adminVenueService.verifyAdminVenue(VENUE_ID))
                 .willReturn(new VenueDetails(venue, null));
+        given(minioUrlBuilder.buildPublicUrl("venues/" + VENUE_ID + "/photo.jpg"))
+                .willReturn("http://localhost:9000/tmap-test/venues/" + VENUE_ID + "/photo.jpg");
 
         mockMvc.perform(patch("/api/v1/admin/venues/{id}/verify", VENUE_ID)
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.moderationStatus").value("ACTIVE"));
+                .andExpect(jsonPath("$.moderationStatus").value("ACTIVE"))
+                .andExpect(jsonPath("$.dishOfDay").value("Nitro Coffee"))
+                .andExpect(jsonPath("$.music").value("House Mix"))
+                .andExpect(jsonPath("$.photoUrl")
+                        .value("http://localhost:9000/tmap-test/venues/" + VENUE_ID + "/photo.jpg"));
     }
 
     @Test

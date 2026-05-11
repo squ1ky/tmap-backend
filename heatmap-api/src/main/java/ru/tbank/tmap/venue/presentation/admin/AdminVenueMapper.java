@@ -1,6 +1,7 @@
 package ru.tbank.tmap.venue.presentation.admin;
 
 import java.util.Locale;
+import lombok.RequiredArgsConstructor;
 import org.openapitools.model.AdminVenueModerationPage;
 import org.openapitools.model.AdminVenueModerationResponse;
 import org.openapitools.model.VenueModerationStatus;
@@ -11,9 +12,13 @@ import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueContent;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
+import ru.tbank.tmap.venue.presentation.VenueMapper;
 
 @Component
+@RequiredArgsConstructor
 public class AdminVenueMapper {
+
+    private final VenueMapper venueMapper;
 
     public AdminVenueModerationPage toPage(final Page<VenueDetails> venues) {
         return new AdminVenueModerationPage()
@@ -47,6 +52,9 @@ public class AdminVenueMapper {
                 .h3Res9(Long.toUnsignedString(content.h3Res9()))
                 .category(AdminVenueModerationResponse.CategoryEnum.fromValue(
                         content.category().name().toLowerCase(Locale.ROOT)))
+                .photoUrl(venueMapper.toPublicPhotoUri(venue.getPhotoObjectKey()))
+                .dishOfDay(content.dishOfDay())
+                .music(content.music())
                 .moderationStatus(VenueModerationStatus.fromValue(moderationStatus.name()))
                 .rejectReason(rejectReason)
                 .createdAt(venue.getCreatedAt())

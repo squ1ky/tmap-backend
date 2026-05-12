@@ -393,6 +393,46 @@ paths:
           $ref: '#/components/responses/NotFound'
 
   # ── Profile (current user) ──────────────────
+  /profile:
+    get:
+      tags: [Profile]
+      summary: Get current user profile
+      operationId: getMyProfile
+      x-required-roles: [USER, BUSINESS_OWNER, ADMIN]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /profile/password:
+    patch:
+      tags: [Profile]
+      summary: Change current user password
+      operationId: changeMyPassword
+      x-required-roles: [USER, BUSINESS_OWNER, ADMIN]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Password changed successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /profile/loyalty/qr:
     get:
       tags: [Profile]
@@ -1302,6 +1342,40 @@ components:
         accessToken:
           type: string
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    ProfileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        email:
+          type: string
+          format: email
+          example: "kazan_guest@example.com"
+        nickname:
+          type: string
+          example: "Tatarin116"
+        role:
+          $ref: '#/components/schemas/UserRole'
+        createdAt:
+          type: string
+          format: date-time
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+          minLength: 8
+          example: "Echak123!"
+        newPassword:
+          type: string
+          minLength: 8
+          pattern: '^(?=.*\d).{8,}$'
+          example: "NewPass123!"
 
     UserRole:
       type: string

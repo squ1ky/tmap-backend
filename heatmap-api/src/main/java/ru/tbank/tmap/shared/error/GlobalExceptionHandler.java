@@ -18,6 +18,7 @@ import ru.tbank.tmap.heatmap.domain.exception.ClusterNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleStateException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleUpdateValidationException;
+import ru.tbank.tmap.profile.application.exception.ProfilePasswordValidationException;
 import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 import ru.tbank.tmap.venue.domain.exception.InvalidVenuePhotoException;
 import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
@@ -137,6 +138,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(final IllegalArgumentException ex) {
         log.warn("Validation error: {}", ex.getMessage());
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse(ErrorCode.VALIDATION_ERROR, ex.getMessage()));
+    }
+
+    @ExceptionHandler(ProfilePasswordValidationException.class)
+    public ResponseEntity<ErrorResponse> handleProfilePasswordValidation(
+            final ProfilePasswordValidationException ex
+    ) {
+        log.warn("Profile password validation error: {}", ex.getMessage());
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse(ErrorCode.VALIDATION_ERROR, ex.getMessage()));
     }

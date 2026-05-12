@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.auth.application.service.RefreshTokenService;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
+import ru.tbank.tmap.profile.application.exception.ProfilePasswordValidationException;
 import ru.tbank.tmap.profile.application.query.ProfileLoyaltyHistoryProjection;
 import ru.tbank.tmap.profile.application.query.ProfileLoyaltyQr;
 import ru.tbank.tmap.profile.application.query.ProfileUsedPromoProjection;
@@ -22,6 +23,9 @@ import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ProfileService {
+
+    // Temporary payload until the loyalty QR format is finalized and integrated end-to-end.
+    private static final String LOYALTY_QR_STUB_PAYLOAD = "profile-loyalty-qr-stub";
 
     private final UserAccountFacade userAccountFacade;
     private final ProfileRepository profileRepository;
@@ -41,7 +45,7 @@ public class ProfileService {
             throw new InvalidCredentialsException();
         }
         if (passwordEncoder.matches(request.getNewPassword(), user.passwordHash())) {
-            throw new IllegalArgumentException("New password must be different from current password");
+            throw new ProfilePasswordValidationException();
         }
 
         userAccountFacade.updatePasswordHash(userId, passwordEncoder.encode(request.getNewPassword()));
@@ -50,7 +54,7 @@ public class ProfileService {
 
     public ProfileLoyaltyQr getLoyaltyQr(final UUID userId) {
         getProfile(userId);
-        return new ProfileLoyaltyQr(userId, "usr_" + userId.toString().replace("-", ""));
+        return new ProfileLoyaltyQr(userId, LOYALTY_QR_STUB_PAYLOAD);
     }
 
     public Page<ProfileLoyaltyHistoryProjection> getLoyaltyHistory(final UUID userId, final int page, final int size) {

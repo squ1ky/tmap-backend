@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.tbank.tmap.auth.application.service.RefreshTokenService;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
+import ru.tbank.tmap.profile.application.exception.ProfilePasswordValidationException;
 import ru.tbank.tmap.profile.application.query.ProfileLoyaltyHistoryProjection;
 import ru.tbank.tmap.profile.application.query.ProfileUsedPromoProjection;
 import ru.tbank.tmap.profile.domain.repository.ProfileRepository;
@@ -114,7 +115,7 @@ class ProfileServiceTest {
         given(passwordEncoder.matches("NewPass123!", CURRENT_HASH)).willReturn(true);
 
         assertThatThrownBy(() -> profileService.changePassword(USER_ID, request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ProfilePasswordValidationException.class)
                 .hasMessage("New password must be different from current password");
     }
 

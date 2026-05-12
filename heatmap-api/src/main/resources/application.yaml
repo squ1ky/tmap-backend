@@ -94,9 +94,9 @@ app:
     initial-delay-ms: 10000
     interval-ms: 60000
   anomaly:
-    ratio-threshold: 2.0
-    min-baseline: 10
-    min-baseline-days: 3
+    ratio-threshold: 0.5
+    min-baseline: 1
+    min-baseline-days: 1
   kafka:
     transactions-topic: ${KAFKA_TRANSACTIONS_TOPIC}
   minio:

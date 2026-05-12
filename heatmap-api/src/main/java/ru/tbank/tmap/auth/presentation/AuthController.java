@@ -63,6 +63,8 @@ public class AuthController implements AuthApi {
     private ResponseEntity<AuthResponse> buildAuthResponse(final AuthResult result, final HttpStatus status) {
         final AuthResponse body = new AuthResponse()
                 .userId(result.userId())
+                .email(result.email())
+                .nickname(result.nickname())
                 .role(UserRole.fromValue(result.role()))
                 .accessToken(result.accessToken());
 

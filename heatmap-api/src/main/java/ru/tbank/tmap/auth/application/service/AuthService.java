@@ -63,6 +63,8 @@ public class AuthService {
 
         return new AuthResult(
                 user.id(),
+                user.email(),
+                user.nickname(),
                 user.role().name(),
                 accessToken,
                 plainRefreshToken

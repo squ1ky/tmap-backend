@@ -70,6 +70,8 @@ class AuthServiceTest {
         final AuthResult result = authService.register(EMAIL, PASSWORD, NICKNAME);
 
         assertThat(result.userId()).isEqualTo(userId);
+        assertThat(result.email()).isEqualTo(EMAIL);
+        assertThat(result.nickname()).isEqualTo(NICKNAME);
         assertThat(result.role()).isEqualTo(UserRole.USER.name());
         assertThat(result.accessToken()).isEqualTo(ACCESS_TOKEN);
         assertThat(result.plainRefreshToken()).isEqualTo(REFRESH_TOKEN);
@@ -140,6 +142,8 @@ class AuthServiceTest {
         AuthResult result = authService.login(EMAIL, PASSWORD);
 
         assertThat(result.userId()).isEqualTo(userId);
+        assertThat(result.email()).isEqualTo(EMAIL);
+        assertThat(result.nickname()).isEqualTo(NICKNAME);
         assertThat(result.role()).isEqualTo(UserRole.USER.name());
         assertThat(result.accessToken()).isEqualTo(ACCESS_TOKEN);
         assertThat(result.plainRefreshToken()).isEqualTo(REFRESH_TOKEN);
@@ -162,6 +166,8 @@ class AuthServiceTest {
         final AuthResult result = authService.refresh(plainRefresh);
 
         assertThat(result.userId()).isEqualTo(userId);
+        assertThat(result.email()).isEqualTo(EMAIL);
+        assertThat(result.nickname()).isEqualTo(NICKNAME);
         assertThat(result.accessToken()).isEqualTo(ACCESS_TOKEN);
         assertThat(result.plainRefreshToken()).isEqualTo(newRefresh);
     }

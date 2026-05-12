@@ -1,5 +1,6 @@
 package ru.tbank.tmap.heatmap.application.service;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,14 @@ public class AnomalyDetectionService {
 
     private final AnomalyDetectionRepository anomalyRepository;
     private final AnomalyDetectionProperties anomalyDetectionProperties;
+
+    @PostConstruct
+    /* default */ void logProperties() {
+        log.info("Anomaly detection configured with: ratioThreshold={}, minBaseline={}, minBaselineDays={}",
+                anomalyDetectionProperties.ratioThreshold(),
+                anomalyDetectionProperties.minBaseline(),
+                anomalyDetectionProperties.minBaselineDays());
+    }
 
     @Transactional
     public int detectFor(final Instant hourBucket) {

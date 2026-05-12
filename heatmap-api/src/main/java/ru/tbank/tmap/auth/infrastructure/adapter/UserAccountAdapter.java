@@ -29,4 +29,9 @@ public class UserAccountAdapter implements UserAccountPort {
     public UserView register(String email, String passwordHash, String nickname) {
         return userAccountFacade.register(email, passwordHash, nickname);
     }
+
+    @Override
+    public UserView updatePasswordHash(final UUID id, final String passwordHash) {
+        return userAccountFacade.updatePasswordHash(id, passwordHash);
+    }
 }

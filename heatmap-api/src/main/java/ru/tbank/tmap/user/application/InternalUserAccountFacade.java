@@ -28,6 +28,12 @@ public class InternalUserAccountFacade implements UserAccountFacade {
 
     @Override
     @Transactional(readOnly = true)
+    public boolean existsById(final UUID id) {
+        return userRepository.existsById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<UserView> findByEmail(String email) {
         return userRepository.findByEmail(email).map(this::toView);
     }
@@ -52,6 +58,14 @@ public class InternalUserAccountFacade implements UserAccountFacade {
         final User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id.toString()));
         user.promoteToBusinessOwner();
+        return toView(user);
+    }
+
+    @Override
+    public UserView updatePasswordHash(final UUID id, final String passwordHash) {
+        final User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id.toString()));
+        user.setPasswordHash(passwordHash);
         return toView(user);
     }
 

@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.tbank.tmap.auth.application.AuthResult;
+import ru.tbank.tmap.auth.application.exception.PasswordChangeValidationException;
 import ru.tbank.tmap.auth.application.port.TokenIssuer;
 import ru.tbank.tmap.auth.application.port.UserAccountPort;
 import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;
@@ -70,6 +71,8 @@ class AuthServiceTest {
         final AuthResult result = authService.register(EMAIL, PASSWORD, NICKNAME);
 
         assertThat(result.userId()).isEqualTo(userId);
+        assertThat(result.email()).isEqualTo(EMAIL);
+        assertThat(result.nickname()).isEqualTo(NICKNAME);
         assertThat(result.role()).isEqualTo(UserRole.USER.name());
         assertThat(result.accessToken()).isEqualTo(ACCESS_TOKEN);
         assertThat(result.plainRefreshToken()).isEqualTo(REFRESH_TOKEN);
@@ -140,6 +143,8 @@ class AuthServiceTest {
         AuthResult result = authService.login(EMAIL, PASSWORD);
 
         assertThat(result.userId()).isEqualTo(userId);
+        assertThat(result.email()).isEqualTo(EMAIL);
+        assertThat(result.nickname()).isEqualTo(NICKNAME);
         assertThat(result.role()).isEqualTo(UserRole.USER.name());
         assertThat(result.accessToken()).isEqualTo(ACCESS_TOKEN);
         assertThat(result.plainRefreshToken()).isEqualTo(REFRESH_TOKEN);
@@ -162,6 +167,8 @@ class AuthServiceTest {
         final AuthResult result = authService.refresh(plainRefresh);
 
         assertThat(result.userId()).isEqualTo(userId);
+        assertThat(result.email()).isEqualTo(EMAIL);
+        assertThat(result.nickname()).isEqualTo(NICKNAME);
         assertThat(result.accessToken()).isEqualTo(ACCESS_TOKEN);
         assertThat(result.plainRefreshToken()).isEqualTo(newRefresh);
     }
@@ -206,6 +213,56 @@ class AuthServiceTest {
 
         verify(refreshTokenService).revokeSpecificToken(userId, plainRefresh);
         verifyNoInteractions(userAccountPort, tokenIssuer, passwordEncoder);
+    }
+
+    @Test
+    @DisplayName("changePassword: ошибка, если текущий пароль неверный")
+    void changePassword_whenCurrentPasswordInvalid_thenThrowInvalidCredentials() {
+        final UUID userId = UUID.randomUUID();
+        final UserView user = userView(userId, false);
+
+        given(userAccountPort.findById(userId)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("wrong-pass", ENCODED_PASSWORD)).willReturn(false);
+
+        assertThatThrownBy(() -> authService.changePassword(userId, "wrong-pass", "new-pass"))
+                .isInstanceOf(InvalidCredentialsException.class);
+
+        verify(userAccountPort, never()).updatePasswordHash(any(), org.mockito.ArgumentMatchers.anyString());
+        verify(refreshTokenService, never()).revokeAllForUser(any());
+    }
+
+    @Test
+    @DisplayName("changePassword: ошибка, если новый пароль совпадает с текущим")
+    void changePassword_whenNewPasswordMatchesCurrent_thenThrowValidation() {
+        final UUID userId = UUID.randomUUID();
+        final UserView user = userView(userId, false);
+
+        given(userAccountPort.findById(userId)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("current-pass", ENCODED_PASSWORD)).willReturn(true);
+        given(passwordEncoder.matches("new-pass", ENCODED_PASSWORD)).willReturn(true);
+
+        assertThatThrownBy(() -> authService.changePassword(userId, "current-pass", "new-pass"))
+                .isInstanceOf(PasswordChangeValidationException.class);
+
+        verify(userAccountPort, never()).updatePasswordHash(any(), org.mockito.ArgumentMatchers.anyString());
+        verify(refreshTokenService, never()).revokeAllForUser(any());
+    }
+
+    @Test
+    @DisplayName("changePassword: обновляет хеш и отзывает все refresh токены")
+    void changePassword_whenValidRequest_thenUpdateHashAndRevokeTokens() {
+        final UUID userId = UUID.randomUUID();
+        final UserView user = userView(userId, false);
+
+        given(userAccountPort.findById(userId)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("current-pass", ENCODED_PASSWORD)).willReturn(true);
+        given(passwordEncoder.matches("new-pass", ENCODED_PASSWORD)).willReturn(false);
+        given(passwordEncoder.encode("new-pass")).willReturn("new-hash");
+
+        authService.changePassword(userId, "current-pass", "new-pass");
+
+        verify(userAccountPort).updatePasswordHash(userId, "new-hash");
+        verify(refreshTokenService).revokeAllForUser(userId);
     }
 
     private static UUID any() {

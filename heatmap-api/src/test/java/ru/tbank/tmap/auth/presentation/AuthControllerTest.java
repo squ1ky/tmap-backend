@@ -88,7 +88,14 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
-        authResult = new AuthResult(USER_ID, "USER", ACCESS_TOKEN, REFRESH_TOKEN);
+        authResult = new AuthResult(
+                USER_ID,
+                VALID_EMAIL,
+                VALID_NICKNAME,
+                "USER",
+                ACCESS_TOKEN,
+                REFRESH_TOKEN
+        );
 
         final ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, REFRESH_TOKEN)
                 .httpOnly(true)
@@ -114,6 +121,8 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.userId").value(USER_ID.toString()))
+                .andExpect(jsonPath("$.email").value(VALID_EMAIL))
+                .andExpect(jsonPath("$.nickname").value(VALID_NICKNAME))
                 .andExpect(jsonPath("$.role").value("USER"))
                 .andExpect(jsonPath("$.accessToken").value(ACCESS_TOKEN))
                 .andExpect(cookie().exists(REFRESH_TOKEN_COOKIE_NAME))
@@ -208,6 +217,8 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(USER_ID.toString()))
+                .andExpect(jsonPath("$.email").value(VALID_EMAIL))
+                .andExpect(jsonPath("$.nickname").value(VALID_NICKNAME))
                 .andExpect(jsonPath("$.role").value("USER"))
                 .andExpect(jsonPath("$.accessToken").value(ACCESS_TOKEN))
                 .andExpect(cookie().exists(REFRESH_TOKEN_COOKIE_NAME))
@@ -258,6 +269,8 @@ class AuthControllerTest {
                         .cookie(new Cookie(REFRESH_TOKEN_COOKIE_NAME, oldRefreshToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(USER_ID.toString()))
+                .andExpect(jsonPath("$.email").value(VALID_EMAIL))
+                .andExpect(jsonPath("$.nickname").value(VALID_NICKNAME))
                 .andExpect(jsonPath("$.role").value("USER"))
                 .andExpect(jsonPath("$.accessToken").value(ACCESS_TOKEN))
                 .andExpect(cookie().exists(REFRESH_TOKEN_COOKIE_NAME))

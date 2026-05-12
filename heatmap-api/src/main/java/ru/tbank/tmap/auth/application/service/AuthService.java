@@ -5,6 +5,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.auth.application.AuthResult;
+import ru.tbank.tmap.auth.application.exception.PasswordChangeValidationException;
 import ru.tbank.tmap.auth.application.port.TokenIssuer;
 import ru.tbank.tmap.auth.application.port.UserAccountPort;
 import ru.tbank.tmap.user.api.UserView;
@@ -53,6 +54,21 @@ public class AuthService {
         refreshTokenService.revokeSpecificToken(userId, plainRefreshToken);
     }
 
+    public void changePassword(final UUID userId, final String currentPassword, final String newPassword) {
+        final UserView user = userAccountPort.findById(userId)
+                .orElseThrow(InvalidCredentialsException::new);
+
+        if (!passwordEncoder.matches(currentPassword, user.passwordHash())) {
+            throw new InvalidCredentialsException();
+        }
+        if (passwordEncoder.matches(newPassword, user.passwordHash())) {
+            throw new PasswordChangeValidationException();
+        }
+
+        userAccountPort.updatePasswordHash(userId, passwordEncoder.encode(newPassword));
+        refreshTokenService.revokeAllForUser(userId);
+    }
+
     private AuthResult issueTokens(UserView user) {
         final String plainRefreshToken = refreshTokenService.issue(user.id());
         final String accessToken = tokenIssuer.generateAccessToken(
@@ -63,6 +79,8 @@ public class AuthService {
 
         return new AuthResult(
                 user.id(),
+                user.email(),
+                user.nickname(),
                 user.role().name(),
                 accessToken,
                 plainRefreshToken

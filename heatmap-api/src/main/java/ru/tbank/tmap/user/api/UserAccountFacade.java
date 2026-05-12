@@ -7,6 +7,8 @@ public interface UserAccountFacade {
 
     boolean existsByEmail(String email);
 
+    boolean existsById(UUID id);
+
     Optional<UserView> findByEmail(String email);
 
     Optional<UserView> findById(UUID id);
@@ -14,4 +16,6 @@ public interface UserAccountFacade {
     UserView register(String email, String passwordHash, String nickname);
 
     UserView promoteToBusinessOwner(UUID id);
+
+    UserView updatePasswordHash(UUID id, String passwordHash);
 }

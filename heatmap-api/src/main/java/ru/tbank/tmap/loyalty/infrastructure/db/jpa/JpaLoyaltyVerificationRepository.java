@@ -1,15 +1,14 @@
-package ru.tbank.tmap.loyalty.infrastructure.db;
+package ru.tbank.tmap.loyalty.infrastructure.db.jpa;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleUsageCount;
 import ru.tbank.tmap.loyalty.domain.LoyaltyVerification;
 import ru.tbank.tmap.loyalty.domain.LoyaltyVerificationRepository;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
 
 public interface JpaLoyaltyVerificationRepository
         extends JpaRepository<LoyaltyVerification, UUID>, LoyaltyVerificationRepository {

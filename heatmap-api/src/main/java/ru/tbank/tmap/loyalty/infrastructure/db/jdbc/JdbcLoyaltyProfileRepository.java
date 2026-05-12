@@ -1,4 +1,4 @@
-package ru.tbank.tmap.profile.infrastructure.db.jdbc;
+package ru.tbank.tmap.loyalty.infrastructure.db.jdbc;
 
 import java.util.List;
 import java.util.Map;
@@ -9,25 +9,25 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import ru.tbank.tmap.profile.application.query.ProfileLoyaltyHistoryProjection;
-import ru.tbank.tmap.profile.application.query.ProfileUsedPromoProjection;
-import ru.tbank.tmap.profile.domain.repository.ProfileRepository;
+import ru.tbank.tmap.loyalty.application.query.LoyaltyHistoryProjection;
+import ru.tbank.tmap.loyalty.application.query.UsedPromoProjection;
+import ru.tbank.tmap.loyalty.domain.repository.LoyaltyProfileRepository;
 
 @Repository
-public class JdbcProfileRepository implements ProfileRepository {
+public class JdbcLoyaltyProfileRepository implements LoyaltyProfileRepository {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
-    private final DataClassRowMapper<ProfileLoyaltyHistoryProjection> loyaltyHistoryRowMapper =
-            new DataClassRowMapper<>(ProfileLoyaltyHistoryProjection.class);
-    private final DataClassRowMapper<ProfileUsedPromoProjection> usedPromoRowMapper =
-            new DataClassRowMapper<>(ProfileUsedPromoProjection.class);
+    private final DataClassRowMapper<LoyaltyHistoryProjection> loyaltyHistoryRowMapper =
+            new DataClassRowMapper<>(LoyaltyHistoryProjection.class);
+    private final DataClassRowMapper<UsedPromoProjection> usedPromoRowMapper =
+            new DataClassRowMapper<>(UsedPromoProjection.class);
 
-    public JdbcProfileRepository(final NamedParameterJdbcTemplate jdbcTemplate) {
+    public JdbcLoyaltyProfileRepository(final NamedParameterJdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
-    public Page<ProfileLoyaltyHistoryProjection> findLoyaltyHistoryByUserId(
+    public Page<LoyaltyHistoryProjection> findUserLoyaltyHistory(
             final UUID userId,
             final Pageable pageable
     ) {
@@ -52,13 +52,13 @@ public class JdbcProfileRepository implements ProfileRepository {
                 "limit", pageable.getPageSize(),
                 "offset", pageable.getOffset()
         );
-        final List<ProfileLoyaltyHistoryProjection> items = jdbcTemplate.query(sql, params, loyaltyHistoryRowMapper);
+        final List<LoyaltyHistoryProjection> items = jdbcTemplate.query(sql, params, loyaltyHistoryRowMapper);
 
         return new PageImpl<>(items, pageable, countByUserId(userId));
     }
 
     @Override
-    public Page<ProfileUsedPromoProjection> findUsedPromosByUserId(final UUID userId, final Pageable pageable) {
+    public Page<UsedPromoProjection> findUserUsedPromos(final UUID userId, final Pageable pageable) {
         final String sql = """
                 SELECT
                     v.name AS venueName,
@@ -77,7 +77,7 @@ public class JdbcProfileRepository implements ProfileRepository {
                 "limit", pageable.getPageSize(),
                 "offset", pageable.getOffset()
         );
-        final List<ProfileUsedPromoProjection> items = jdbcTemplate.query(sql, params, usedPromoRowMapper);
+        final List<UsedPromoProjection> items = jdbcTemplate.query(sql, params, usedPromoRowMapper);
 
         return new PageImpl<>(items, pageable, countByUserId(userId));
     }

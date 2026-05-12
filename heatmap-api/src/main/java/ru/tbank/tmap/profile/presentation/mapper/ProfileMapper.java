@@ -8,10 +8,10 @@ import org.openapitools.model.UsedPromoPage;
 import org.openapitools.model.UsedPromoResponse;
 import org.openapitools.model.UserRole;
 import org.springframework.data.domain.Page;
+import ru.tbank.tmap.loyalty.application.query.LoyaltyHistoryProjection;
+import ru.tbank.tmap.loyalty.application.query.UsedPromoProjection;
 import org.springframework.stereotype.Component;
-import ru.tbank.tmap.profile.application.query.ProfileLoyaltyHistoryProjection;
 import ru.tbank.tmap.profile.application.query.ProfileLoyaltyQr;
-import ru.tbank.tmap.profile.application.query.ProfileUsedPromoProjection;
 import ru.tbank.tmap.user.api.UserView;
 
 @Component
@@ -31,7 +31,7 @@ public class ProfileMapper {
                 .qrPayload(qrView.qrPayload());
     }
 
-    public LoyaltyVerificationPage toHistoryPageResponse(final Page<ProfileLoyaltyHistoryProjection> pageView) {
+    public LoyaltyVerificationPage toHistoryPageResponse(final Page<LoyaltyHistoryProjection> pageView) {
         return new LoyaltyVerificationPage()
                 .items(pageView.getContent().stream().map(this::toResponse).toList())
                 .page(pageView.getNumber())
@@ -40,7 +40,7 @@ public class ProfileMapper {
                 .totalElements(pageView.getTotalElements());
     }
 
-    public UsedPromoPage toUsedPromoPageResponse(final Page<ProfileUsedPromoProjection> pageView) {
+    public UsedPromoPage toUsedPromoPageResponse(final Page<UsedPromoProjection> pageView) {
         return new UsedPromoPage()
                 .items(pageView.getContent().stream().map(this::toResponse).toList())
                 .page(pageView.getNumber())
@@ -49,7 +49,7 @@ public class ProfileMapper {
                 .totalElements(pageView.getTotalElements());
     }
 
-    private LoyaltyVerificationResponse toResponse(final ProfileLoyaltyHistoryProjection item) {
+    private LoyaltyVerificationResponse toResponse(final LoyaltyHistoryProjection item) {
         return new LoyaltyVerificationResponse()
                 .id(item.id())
                 .venueId(item.venueId())
@@ -60,7 +60,7 @@ public class ProfileMapper {
                 .verifiedAt(item.verifiedAt());
     }
 
-    private UsedPromoResponse toResponse(final ProfileUsedPromoProjection item) {
+    private UsedPromoResponse toResponse(final UsedPromoProjection item) {
         return new UsedPromoResponse()
                 .venueName(item.venueName())
                 .description(item.description())

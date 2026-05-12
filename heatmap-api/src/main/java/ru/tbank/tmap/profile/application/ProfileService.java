@@ -10,11 +10,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.auth.application.service.RefreshTokenService;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
+import ru.tbank.tmap.loyalty.api.LoyaltyProfileFacade;
+import ru.tbank.tmap.loyalty.application.query.LoyaltyHistoryProjection;
+import ru.tbank.tmap.loyalty.application.query.UsedPromoProjection;
 import ru.tbank.tmap.profile.application.exception.ProfilePasswordValidationException;
-import ru.tbank.tmap.profile.application.query.ProfileLoyaltyHistoryProjection;
 import ru.tbank.tmap.profile.application.query.ProfileLoyaltyQr;
-import ru.tbank.tmap.profile.application.query.ProfileUsedPromoProjection;
-import ru.tbank.tmap.profile.domain.repository.ProfileRepository;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.api.UserView;
 import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
@@ -28,7 +28,7 @@ public class ProfileService {
     private static final String LOYALTY_QR_STUB_PAYLOAD = "profile-loyalty-qr-stub";
 
     private final UserAccountFacade userAccountFacade;
-    private final ProfileRepository profileRepository;
+    private final LoyaltyProfileFacade loyaltyProfileFacade;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
 
@@ -57,17 +57,11 @@ public class ProfileService {
         return new ProfileLoyaltyQr(userId, LOYALTY_QR_STUB_PAYLOAD);
     }
 
-    public Page<ProfileLoyaltyHistoryProjection> getLoyaltyHistory(final UUID userId, final int page, final int size) {
-        return profileRepository.findLoyaltyHistoryByUserId(
-                userId,
-                PageRequest.of(page, size)
-        );
+    public Page<LoyaltyHistoryProjection> getLoyaltyHistory(final UUID userId, final int page, final int size) {
+        return loyaltyProfileFacade.findUserLoyaltyHistory(userId, PageRequest.of(page, size));
     }
 
-    public Page<ProfileUsedPromoProjection> getUsedPromosHistory(final UUID userId, final int page, final int size) {
-        return profileRepository.findUsedPromosByUserId(
-                userId,
-                PageRequest.of(page, size)
-        );
+    public Page<UsedPromoProjection> getUsedPromosHistory(final UUID userId, final int page, final int size) {
+        return loyaltyProfileFacade.findUserUsedPromos(userId, PageRequest.of(page, size));
     }
 }

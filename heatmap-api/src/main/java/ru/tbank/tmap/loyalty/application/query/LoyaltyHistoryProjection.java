@@ -1,9 +1,9 @@
-package ru.tbank.tmap.profile.application.query;
+package ru.tbank.tmap.loyalty.application.query;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-public record ProfileLoyaltyHistoryProjection(
+public record LoyaltyHistoryProjection(
         UUID id,
         UUID venueId,
         String venueName,

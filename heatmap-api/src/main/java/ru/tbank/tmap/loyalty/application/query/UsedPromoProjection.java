@@ -1,8 +1,8 @@
-package ru.tbank.tmap.profile.application.query;
+package ru.tbank.tmap.loyalty.application.query;
 
 import java.time.OffsetDateTime;
 
-public record ProfileUsedPromoProjection(
+public record UsedPromoProjection(
         String venueName,
         String description,
         Integer discountPercent,

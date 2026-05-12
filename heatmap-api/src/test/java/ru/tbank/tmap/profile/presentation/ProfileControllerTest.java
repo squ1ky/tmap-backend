@@ -15,9 +15,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.tbank.tmap.auth.application.exception.PasswordChangeValidationException;
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
 import ru.tbank.tmap.profile.application.ProfileService;
-import ru.tbank.tmap.profile.application.exception.ProfilePasswordValidationException;
 import ru.tbank.tmap.profile.presentation.mapper.ProfileMapper;
 import ru.tbank.tmap.test.security.TestSecurityConfig;
 import ru.tbank.tmap.user.api.UserView;
@@ -136,7 +136,7 @@ class ProfileControllerTest {
         final ChangePasswordRequest request = new ChangePasswordRequest()
                 .currentPassword("Echak123!")
                 .newPassword("NewPass123!");
-        willThrow(new ProfilePasswordValidationException())
+        willThrow(new PasswordChangeValidationException())
                 .given(profileService).changePassword(eq(USER_ID), any(ChangePasswordRequest.class));
 
         mockMvc.perform(patch(PASSWORD_URL)

@@ -5,15 +5,12 @@ import lombok.RequiredArgsConstructor;
 import org.openapitools.model.ChangePasswordRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.tbank.tmap.auth.application.service.RefreshTokenService;
-import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
+import ru.tbank.tmap.auth.api.AuthAccountFacade;
 import ru.tbank.tmap.loyalty.api.LoyaltyProfileFacade;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyHistoryProjection;
 import ru.tbank.tmap.loyalty.application.query.UsedPromoProjection;
-import ru.tbank.tmap.profile.application.exception.ProfilePasswordValidationException;
 import ru.tbank.tmap.profile.application.query.ProfileLoyaltyQr;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.api.UserView;
@@ -28,9 +25,8 @@ public class ProfileService {
     private static final String LOYALTY_QR_STUB_PAYLOAD = "profile-loyalty-qr-stub";
 
     private final UserAccountFacade userAccountFacade;
+    private final AuthAccountFacade authAccountFacade;
     private final LoyaltyProfileFacade loyaltyProfileFacade;
-    private final PasswordEncoder passwordEncoder;
-    private final RefreshTokenService refreshTokenService;
 
     public UserView getProfile(final UUID userId) {
         return userAccountFacade.findById(userId)
@@ -39,21 +35,13 @@ public class ProfileService {
 
     @Transactional
     public void changePassword(final UUID userId, final ChangePasswordRequest request) {
-        final UserView user = getProfile(userId);
-
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.passwordHash())) {
-            throw new InvalidCredentialsException();
-        }
-        if (passwordEncoder.matches(request.getNewPassword(), user.passwordHash())) {
-            throw new ProfilePasswordValidationException();
-        }
-
-        userAccountFacade.updatePasswordHash(userId, passwordEncoder.encode(request.getNewPassword()));
-        refreshTokenService.revokeAllForUser(userId);
+        authAccountFacade.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
     }
 
     public ProfileLoyaltyQr getLoyaltyQr(final UUID userId) {
-        getProfile(userId);
+        if (!userAccountFacade.existsById(userId)) {
+            throw new UserNotFoundException(userId.toString());
+        }
         return new ProfileLoyaltyQr(userId, LOYALTY_QR_STUB_PAYLOAD);
     }
 

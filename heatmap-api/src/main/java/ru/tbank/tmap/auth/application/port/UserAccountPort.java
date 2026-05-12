@@ -16,4 +16,6 @@ public interface UserAccountPort {
      *         if a user with the given email already exists
      */
     UserView register(String email, String passwordHash, String nickname);
+
+    UserView updatePasswordHash(UUID id, String passwordHash);
 }

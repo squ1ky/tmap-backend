@@ -28,6 +28,12 @@ public class InternalUserAccountFacade implements UserAccountFacade {
 
     @Override
     @Transactional(readOnly = true)
+    public boolean existsById(final UUID id) {
+        return userRepository.existsById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<UserView> findByEmail(String email) {
         return userRepository.findByEmail(email).map(this::toView);
     }

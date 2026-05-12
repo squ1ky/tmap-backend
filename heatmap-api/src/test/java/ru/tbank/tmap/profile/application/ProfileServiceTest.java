@@ -11,23 +11,20 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.openapitools.model.ChangePasswordRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import ru.tbank.tmap.auth.application.service.RefreshTokenService;
-import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
+import ru.tbank.tmap.auth.api.AuthAccountFacade;
 import ru.tbank.tmap.loyalty.api.LoyaltyProfileFacade;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyHistoryProjection;
 import ru.tbank.tmap.loyalty.application.query.UsedPromoProjection;
-import ru.tbank.tmap.profile.application.exception.ProfilePasswordValidationException;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.api.UserView;
 import ru.tbank.tmap.user.domain.UserRole;
+import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,10 +44,7 @@ class ProfileServiceTest {
     private LoyaltyProfileFacade loyaltyProfileFacade;
 
     @Mock
-    private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private RefreshTokenService refreshTokenService;
+    private AuthAccountFacade authAccountFacade;
 
     @Mock
     private LoyaltyHistoryProjection loyaltyHistoryProjection;
@@ -64,9 +58,8 @@ class ProfileServiceTest {
     void setUp() {
         profileService = new ProfileService(
                 userAccountFacade,
-                loyaltyProfileFacade,
-                passwordEncoder,
-                refreshTokenService
+                authAccountFacade,
+                loyaltyProfileFacade
         );
     }
 
@@ -90,50 +83,32 @@ class ProfileServiceTest {
     }
 
     @Test
-    void changePassword_whenCurrentPasswordInvalid_thenThrowUnauthorized() {
-        final ChangePasswordRequest request = new ChangePasswordRequest()
-                .currentPassword("wrong-pass")
-                .newPassword("NewPass123!");
-
-        given(userAccountFacade.findById(USER_ID)).willReturn(Optional.of(testUserView()));
-        given(passwordEncoder.matches("wrong-pass", CURRENT_HASH)).willReturn(false);
-
-        assertThatThrownBy(() -> profileService.changePassword(USER_ID, request))
-                .isInstanceOf(InvalidCredentialsException.class);
-
-        verify(passwordEncoder, never()).encode(any());
-        verify(refreshTokenService, never()).revokeAllForUser(any());
-    }
-
-    @Test
-    void changePassword_whenNewPasswordMatchesCurrent_thenThrowBadRequest() {
+    void changePassword_whenRequestValid_thenDelegateToAuthFacade() {
         final ChangePasswordRequest request = new ChangePasswordRequest()
                 .currentPassword("Echak123!")
                 .newPassword("NewPass123!");
-        given(userAccountFacade.findById(USER_ID)).willReturn(Optional.of(testUserView()));
-        given(passwordEncoder.matches("Echak123!", CURRENT_HASH)).willReturn(true);
-        given(passwordEncoder.matches("NewPass123!", CURRENT_HASH)).willReturn(true);
-
-        assertThatThrownBy(() -> profileService.changePassword(USER_ID, request))
-                .isInstanceOf(ProfilePasswordValidationException.class)
-                .hasMessage("New password must be different from current password");
-    }
-
-    @Test
-    void changePassword_whenRequestValid_thenUpdateHashAndRevokeTokens() {
-        final ChangePasswordRequest request = new ChangePasswordRequest()
-                .currentPassword("Echak123!")
-                .newPassword("NewPass123!");
-
-        given(userAccountFacade.findById(USER_ID)).willReturn(Optional.of(testUserView()));
-        given(passwordEncoder.matches("Echak123!", CURRENT_HASH)).willReturn(true);
-        given(passwordEncoder.matches("NewPass123!", CURRENT_HASH)).willReturn(false);
-        given(passwordEncoder.encode("NewPass123!")).willReturn(NEW_HASH);
 
         profileService.changePassword(USER_ID, request);
 
-        verify(userAccountFacade).updatePasswordHash(USER_ID, NEW_HASH);
-        verify(refreshTokenService).revokeAllForUser(USER_ID);
+        verify(authAccountFacade).changePassword(USER_ID, "Echak123!", "NewPass123!");
+    }
+
+    @Test
+    void getLoyaltyQr_whenUserExists_thenReturnStubPayload() {
+        given(userAccountFacade.existsById(USER_ID)).willReturn(true);
+
+        final var response = profileService.getLoyaltyQr(USER_ID);
+
+        assertThat(response.userId()).isEqualTo(USER_ID);
+        assertThat(response.qrPayload()).isEqualTo("profile-loyalty-qr-stub");
+    }
+
+    @Test
+    void getLoyaltyQr_whenUserMissing_thenThrowUserNotFound() {
+        given(userAccountFacade.existsById(USER_ID)).willReturn(false);
+
+        assertThatThrownBy(() -> profileService.getLoyaltyQr(USER_ID))
+                .isInstanceOf(UserNotFoundException.class);
     }
 
     @Test
@@ -158,9 +133,5 @@ class ProfileServiceTest {
 
         assertThat(response.getContent()).hasSize(1);
         assertThat(response.getContent().get(0).description()).isEqualTo("Скидка 15% на капучино");
-    }
-
-    private UserView testUserView() {
-        return new UserView(USER_ID, "user@tmap.local", CURRENT_HASH, "user", UserRole.USER, false);
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
+import ru.tbank.tmap.auth.application.exception.PasswordChangeValidationException;
 import ru.tbank.tmap.user.api.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;
@@ -18,7 +19,6 @@ import ru.tbank.tmap.heatmap.domain.exception.ClusterNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleStateException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleUpdateValidationException;
-import ru.tbank.tmap.profile.application.exception.ProfilePasswordValidationException;
 import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 import ru.tbank.tmap.venue.domain.exception.InvalidVenuePhotoException;
 import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
@@ -142,11 +142,11 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(ErrorCode.VALIDATION_ERROR, ex.getMessage()));
     }
 
-    @ExceptionHandler(ProfilePasswordValidationException.class)
-    public ResponseEntity<ErrorResponse> handleProfilePasswordValidation(
-            final ProfilePasswordValidationException ex
+    @ExceptionHandler(PasswordChangeValidationException.class)
+    public ResponseEntity<ErrorResponse> handlePasswordChangeValidation(
+            final PasswordChangeValidationException ex
     ) {
-        log.warn("Profile password validation error: {}", ex.getMessage());
+        log.warn("Password change validation error: {}", ex.getMessage());
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse(ErrorCode.VALIDATION_ERROR, ex.getMessage()));
     }

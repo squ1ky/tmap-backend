@@ -7,6 +7,8 @@ public interface UserAccountFacade {
 
     boolean existsByEmail(String email);
 
+    boolean existsById(UUID id);
+
     Optional<UserView> findByEmail(String email);
 
     Optional<UserView> findById(UUID id);

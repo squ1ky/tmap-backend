@@ -14,4 +14,6 @@ public interface UserAccountFacade {
     UserView register(String email, String passwordHash, String nickname);
 
     UserView promoteToBusinessOwner(UUID id);
+
+    UserView updatePasswordHash(UUID id, String passwordHash);
 }

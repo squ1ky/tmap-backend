@@ -19,8 +19,6 @@ import ru.tbank.tmap.profile.application.query.ProfileUsedPromoProjection;
 import ru.tbank.tmap.profile.domain.repository.ProfileRepository;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.api.UserView;
-import ru.tbank.tmap.user.domain.User;
-import ru.tbank.tmap.user.domain.UserRepository;
 import ru.tbank.tmap.user.domain.UserRole;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,9 +43,6 @@ class ProfileServiceTest {
     private UserAccountFacade userAccountFacade;
 
     @Mock
-    private UserRepository userRepository;
-
-    @Mock
     private ProfileRepository profileRepository;
 
     @Mock
@@ -68,7 +63,6 @@ class ProfileServiceTest {
     void setUp() {
         profileService = new ProfileService(
                 userAccountFacade,
-                userRepository,
                 profileRepository,
                 passwordEncoder,
                 refreshTokenService
@@ -100,7 +94,7 @@ class ProfileServiceTest {
                 .currentPassword("wrong-pass")
                 .newPassword("NewPass123!");
 
-        given(userRepository.findById(USER_ID)).willReturn(Optional.of(testUser()));
+        given(userAccountFacade.findById(USER_ID)).willReturn(Optional.of(testUserView()));
         given(passwordEncoder.matches("wrong-pass", CURRENT_HASH)).willReturn(false);
 
         assertThatThrownBy(() -> profileService.changePassword(USER_ID, request))
@@ -115,7 +109,7 @@ class ProfileServiceTest {
         final ChangePasswordRequest request = new ChangePasswordRequest()
                 .currentPassword("Echak123!")
                 .newPassword("NewPass123!");
-        given(userRepository.findById(USER_ID)).willReturn(Optional.of(testUser()));
+        given(userAccountFacade.findById(USER_ID)).willReturn(Optional.of(testUserView()));
         given(passwordEncoder.matches("Echak123!", CURRENT_HASH)).willReturn(true);
         given(passwordEncoder.matches("NewPass123!", CURRENT_HASH)).willReturn(true);
 
@@ -129,16 +123,15 @@ class ProfileServiceTest {
         final ChangePasswordRequest request = new ChangePasswordRequest()
                 .currentPassword("Echak123!")
                 .newPassword("NewPass123!");
-        final User user = testUser();
 
-        given(userRepository.findById(USER_ID)).willReturn(Optional.of(user));
+        given(userAccountFacade.findById(USER_ID)).willReturn(Optional.of(testUserView()));
         given(passwordEncoder.matches("Echak123!", CURRENT_HASH)).willReturn(true);
         given(passwordEncoder.matches("NewPass123!", CURRENT_HASH)).willReturn(false);
         given(passwordEncoder.encode("NewPass123!")).willReturn(NEW_HASH);
 
         profileService.changePassword(USER_ID, request);
 
-        assertThat(user.getPasswordHash()).isEqualTo(NEW_HASH);
+        verify(userAccountFacade).updatePasswordHash(USER_ID, NEW_HASH);
         verify(refreshTokenService).revokeAllForUser(USER_ID);
     }
 
@@ -166,7 +159,7 @@ class ProfileServiceTest {
         assertThat(response.getContent().get(0).description()).isEqualTo("Скидка 15% на капучино");
     }
 
-    private User testUser() {
-        return new User(USER_ID, "user@tmap.local", CURRENT_HASH, "user", UserRole.USER);
+    private UserView testUserView() {
+        return new UserView(USER_ID, "user@tmap.local", CURRENT_HASH, "user", UserRole.USER, false);
     }
 }

@@ -10,7 +10,7 @@ import org.openapitools.model.UserRole;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.profile.application.query.ProfileLoyaltyHistoryProjection;
-import ru.tbank.tmap.profile.application.query.ProfileLoyaltyQrView;
+import ru.tbank.tmap.profile.application.query.ProfileLoyaltyQr;
 import ru.tbank.tmap.profile.application.query.ProfileUsedPromoProjection;
 import ru.tbank.tmap.user.api.UserView;
 
@@ -25,7 +25,7 @@ public class ProfileMapper {
                 .role(UserRole.fromValue(profile.role().name()));
     }
 
-    public LoyaltyQrResponse toResponse(final ProfileLoyaltyQrView qrView) {
+    public LoyaltyQrResponse toResponse(final ProfileLoyaltyQr qrView) {
         return new LoyaltyQrResponse()
                 .userId(qrView.userId())
                 .qrPayload(qrView.qrPayload());

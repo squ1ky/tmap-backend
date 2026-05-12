@@ -1,4 +1,4 @@
-package ru.tbank.tmap.profile.infrastructure.db;
+package ru.tbank.tmap.profile.infrastructure.db.jdbc;
 
 import java.util.List;
 import java.util.Map;

@@ -55,6 +55,14 @@ public class InternalUserAccountFacade implements UserAccountFacade {
         return toView(user);
     }
 
+    @Override
+    public UserView updatePasswordHash(final UUID id, final String passwordHash) {
+        final User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id.toString()));
+        user.setPasswordHash(passwordHash);
+        return toView(user);
+    }
+
     private UserView toView(User user) {
         return new UserView(
                 user.getId(),

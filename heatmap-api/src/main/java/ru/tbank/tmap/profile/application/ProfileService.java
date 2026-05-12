@@ -11,13 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.auth.application.service.RefreshTokenService;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
 import ru.tbank.tmap.profile.application.query.ProfileLoyaltyHistoryProjection;
-import ru.tbank.tmap.profile.application.query.ProfileLoyaltyQrView;
+import ru.tbank.tmap.profile.application.query.ProfileLoyaltyQr;
 import ru.tbank.tmap.profile.application.query.ProfileUsedPromoProjection;
 import ru.tbank.tmap.profile.domain.repository.ProfileRepository;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.api.UserView;
-import ru.tbank.tmap.user.domain.User;
-import ru.tbank.tmap.user.domain.UserRepository;
 import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 
 @Service
@@ -26,7 +24,6 @@ import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 public class ProfileService {
 
     private final UserAccountFacade userAccountFacade;
-    private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
@@ -38,22 +35,22 @@ public class ProfileService {
 
     @Transactional
     public void changePassword(final UUID userId, final ChangePasswordRequest request) {
-        final User user = getUserOrThrow(userId);
+        final UserView user = getProfile(userId);
 
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.passwordHash())) {
             throw new InvalidCredentialsException();
         }
-        if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
+        if (passwordEncoder.matches(request.getNewPassword(), user.passwordHash())) {
             throw new IllegalArgumentException("New password must be different from current password");
         }
 
-        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userAccountFacade.updatePasswordHash(userId, passwordEncoder.encode(request.getNewPassword()));
         refreshTokenService.revokeAllForUser(userId);
     }
 
-    public ProfileLoyaltyQrView getLoyaltyQr(final UUID userId) {
-        getUserOrThrow(userId);
-        return new ProfileLoyaltyQrView(userId, "usr_" + userId.toString().replace("-", ""));
+    public ProfileLoyaltyQr getLoyaltyQr(final UUID userId) {
+        getProfile(userId);
+        return new ProfileLoyaltyQr(userId, "usr_" + userId.toString().replace("-", ""));
     }
 
     public Page<ProfileLoyaltyHistoryProjection> getLoyaltyHistory(final UUID userId, final int page, final int size) {
@@ -68,10 +65,5 @@ public class ProfileService {
                 userId,
                 PageRequest.of(page, size)
         );
-    }
-
-    private User getUserOrThrow(final UUID userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
     }
 }

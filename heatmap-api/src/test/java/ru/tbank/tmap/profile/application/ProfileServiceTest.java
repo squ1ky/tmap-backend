@@ -14,9 +14,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.tbank.tmap.auth.application.service.RefreshTokenService;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
-import ru.tbank.tmap.loyalty.infrastructure.db.JpaLoyaltyVerificationRepository;
 import ru.tbank.tmap.profile.application.query.ProfileLoyaltyHistoryProjection;
 import ru.tbank.tmap.profile.application.query.ProfileUsedPromoProjection;
+import ru.tbank.tmap.profile.domain.repository.ProfileRepository;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.api.UserView;
 import ru.tbank.tmap.user.domain.User;
@@ -48,7 +48,7 @@ class ProfileServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private JpaLoyaltyVerificationRepository loyaltyVerificationRepository;
+    private ProfileRepository profileRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -69,7 +69,7 @@ class ProfileServiceTest {
         profileService = new ProfileService(
                 userAccountFacade,
                 userRepository,
-                loyaltyVerificationRepository,
+                profileRepository,
                 passwordEncoder,
                 refreshTokenService
         );
@@ -144,26 +144,26 @@ class ProfileServiceTest {
 
     @Test
     void getLoyaltyHistory_returnsProjectionPage() {
-        given(loyaltyHistoryProjection.getVenueName()).willReturn("Cafe One");
-        given(loyaltyVerificationRepository.findProfileHistoryByUserId(eq(USER_ID), any()))
+        given(loyaltyHistoryProjection.venueName()).willReturn("Cafe One");
+        given(profileRepository.findLoyaltyHistoryByUserId(eq(USER_ID), any()))
                 .willReturn(new PageImpl<>(List.of(loyaltyHistoryProjection)));
 
         final Page<ProfileLoyaltyHistoryProjection> response = profileService.getLoyaltyHistory(USER_ID, 0, 20);
 
         assertThat(response.getContent()).hasSize(1);
-        assertThat(response.getContent().get(0).getVenueName()).isEqualTo("Cafe One");
+        assertThat(response.getContent().get(0).venueName()).isEqualTo("Cafe One");
     }
 
     @Test
     void getUsedPromosHistory_returnsProjectionPage() {
-        given(usedPromoProjection.getDescription()).willReturn("Скидка 15% на капучино");
-        given(loyaltyVerificationRepository.findUsedPromosByUserId(eq(USER_ID), any()))
+        given(usedPromoProjection.description()).willReturn("Скидка 15% на капучино");
+        given(profileRepository.findUsedPromosByUserId(eq(USER_ID), any()))
                 .willReturn(new PageImpl<>(List.of(usedPromoProjection)));
 
         final Page<ProfileUsedPromoProjection> response = profileService.getUsedPromosHistory(USER_ID, 0, 20);
 
         assertThat(response.getContent()).hasSize(1);
-        assertThat(response.getContent().get(0).getDescription()).isEqualTo("Скидка 15% на капучино");
+        assertThat(response.getContent().get(0).description()).isEqualTo("Скидка 15% на капучино");
     }
 
     private User testUser() {

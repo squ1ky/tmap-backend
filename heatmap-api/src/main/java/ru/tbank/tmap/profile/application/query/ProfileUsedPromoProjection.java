@@ -2,13 +2,10 @@ package ru.tbank.tmap.profile.application.query;
 
 import java.time.OffsetDateTime;
 
-public interface ProfileUsedPromoProjection {
-
-    String getVenueName();
-
-    String getDescription();
-
-    Integer getDiscountPercent();
-
-    OffsetDateTime getUsedAt();
+public record ProfileUsedPromoProjection(
+        String venueName,
+        String description,
+        Integer discountPercent,
+        OffsetDateTime usedAt
+) {
 }

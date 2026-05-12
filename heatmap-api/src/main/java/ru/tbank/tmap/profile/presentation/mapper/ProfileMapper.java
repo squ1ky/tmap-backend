@@ -51,20 +51,20 @@ public class ProfileMapper {
 
     private LoyaltyVerificationResponse toResponse(final ProfileLoyaltyHistoryProjection item) {
         return new LoyaltyVerificationResponse()
-                .id(item.getId())
-                .venueId(item.getVenueId())
-                .venueName(item.getVenueName())
-                .ruleId(item.getRuleId())
-                .ruleDescription(item.getRuleDescription())
-                .discountApplied(item.getDiscountApplied())
-                .verifiedAt(item.getVerifiedAt());
+                .id(item.id())
+                .venueId(item.venueId())
+                .venueName(item.venueName())
+                .ruleId(item.ruleId())
+                .ruleDescription(item.ruleDescription())
+                .discountApplied(item.discountApplied())
+                .verifiedAt(item.verifiedAt());
     }
 
     private UsedPromoResponse toResponse(final ProfileUsedPromoProjection item) {
         return new UsedPromoResponse()
-                .venueName(item.getVenueName())
-                .description(item.getDescription())
-                .discountPercent(item.getDiscountPercent())
-                .usedAt(item.getUsedAt());
+                .venueName(item.venueName())
+                .description(item.description())
+                .discountPercent(item.discountPercent())
+                .usedAt(item.usedAt());
     }
 }

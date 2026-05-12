@@ -10,10 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.auth.application.service.RefreshTokenService;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
-import ru.tbank.tmap.loyalty.infrastructure.db.JpaLoyaltyVerificationRepository;
 import ru.tbank.tmap.profile.application.query.ProfileLoyaltyHistoryProjection;
 import ru.tbank.tmap.profile.application.query.ProfileLoyaltyQrView;
 import ru.tbank.tmap.profile.application.query.ProfileUsedPromoProjection;
+import ru.tbank.tmap.profile.domain.repository.ProfileRepository;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.api.UserView;
 import ru.tbank.tmap.user.domain.User;
@@ -27,7 +27,7 @@ public class ProfileService {
 
     private final UserAccountFacade userAccountFacade;
     private final UserRepository userRepository;
-    private final JpaLoyaltyVerificationRepository loyaltyVerificationRepository;
+    private final ProfileRepository profileRepository;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
 
@@ -57,14 +57,14 @@ public class ProfileService {
     }
 
     public Page<ProfileLoyaltyHistoryProjection> getLoyaltyHistory(final UUID userId, final int page, final int size) {
-        return loyaltyVerificationRepository.findProfileHistoryByUserId(
+        return profileRepository.findLoyaltyHistoryByUserId(
                 userId,
                 PageRequest.of(page, size)
         );
     }
 
     public Page<ProfileUsedPromoProjection> getUsedPromosHistory(final UUID userId, final int page, final int size) {
-        return loyaltyVerificationRepository.findUsedPromosByUserId(
+        return profileRepository.findUsedPromosByUserId(
                 userId,
                 PageRequest.of(page, size)
         );

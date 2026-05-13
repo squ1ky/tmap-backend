@@ -1,5 +1,6 @@
 package ru.tbank.tmap.venue.infrastructure.db.jdbc;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,6 +30,10 @@ public class JdbcVenueQueryRepository implements VenueQueryRepository {
             final BoundingBox boundingBox,
             final List<VenueCategory> categories
     ) {
+        if (categories == null || categories.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         final StringBuilder sql = baseSelect().append("""
                 WHERE status = :status
                   AND lat BETWEEN :swLat AND :neLat

@@ -6,12 +6,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 import ru.tbank.tmap.auth.application.exception.PasswordChangeValidationException;
+import ru.tbank.tmap.auth.infrastructure.security.cookie.RefreshTokenCookieFactory;
 import ru.tbank.tmap.user.api.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;
@@ -186,6 +188,22 @@ public class GlobalExceptionHandler {
         log.warn("Invalid refresh token: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponse(ErrorCode.UNAUTHORIZED, ex.getMessage()));
+    }
+
+    @ExceptionHandler(MissingRequestCookieException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestCookie(final MissingRequestCookieException ex) {
+        String cookieName = ex.getCookieName();
+        log.warn("Missing required cookie: {}", cookieName);
+
+        String message = String.format("Required cookie '%s' is missing", cookieName);
+
+        if (RefreshTokenCookieFactory.COOKIE_NAME.equals(cookieName)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorResponse(ErrorCode.UNAUTHORIZED, message));
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(ErrorCode.BAD_REQUEST, message));
     }
 
     @ExceptionHandler(Exception.class)

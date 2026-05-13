@@ -13,6 +13,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 import ru.tbank.tmap.auth.application.exception.PasswordChangeValidationException;
+import ru.tbank.tmap.auth.infrastructure.security.cookie.RefreshTokenCookieFactory;
 import ru.tbank.tmap.user.api.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;
@@ -191,9 +192,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingRequestCookieException.class)
     public ResponseEntity<ErrorResponse> handleMissingRequestCookie(final MissingRequestCookieException ex) {
-        log.warn("Missing required cookie: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse(ErrorCode.UNAUTHORIZED, ex.getMessage()));
+        String cookieName = ex.getCookieName();
+        log.warn("Missing required cookie: {}", cookieName);
+
+        String message = String.format("Required cookie '%s' is missing", cookieName);
+
+        if (RefreshTokenCookieFactory.COOKIE_NAME.equals(cookieName)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorResponse(ErrorCode.UNAUTHORIZED, message));
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(ErrorCode.BAD_REQUEST, message));
     }
 
     @ExceptionHandler(Exception.class)

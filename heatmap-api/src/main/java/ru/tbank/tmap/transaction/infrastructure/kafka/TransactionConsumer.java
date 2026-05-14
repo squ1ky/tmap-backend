@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.listener.BatchListenerFailedException;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.transaction.application.TransactionIngestService;
 import ru.tbank.tmap.transaction.application.command.TransactionEvent;
 import ru.tbank.tmap.transaction.application.exception.InvalidTransactionEventException;
@@ -24,12 +23,11 @@ public class TransactionConsumer {
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "transactionKafkaListenerContainerFactory"
     )
-    @Transactional
     public void onBatch(List<TransactionEvent> events) {
         try {
             ingestService.ingest(events);
         } catch (InvalidTransactionEventException e) {
-            throw new BatchListenerFailedException(e.getMessage(), e.getCause(), e.batchIndex());
+            throw new BatchListenerFailedException(e.getMessage(), e, e.getBatchIndex());
         }
     }
 }

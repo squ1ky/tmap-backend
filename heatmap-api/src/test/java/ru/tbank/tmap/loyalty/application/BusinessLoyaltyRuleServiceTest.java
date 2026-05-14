@@ -18,12 +18,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.openapitools.model.LoyaltyActivationStatus;
 import org.springframework.dao.DataIntegrityViolationException;
+import ru.tbank.tmap.loyalty.domain.LoyaltyQrSession;
 import ru.tbank.tmap.loyalty.application.command.RedeemLoyaltyRuleCommand;
 import ru.tbank.tmap.loyalty.application.command.LoyaltyActivationResult;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
 import ru.tbank.tmap.loyalty.application.exception.VenueAccessDeniedException;
 import ru.tbank.tmap.loyalty.application.port.VenueOwnershipPort;
+import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleDetails;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleUsageCount;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRuleRepository;
@@ -31,8 +33,6 @@ import ru.tbank.tmap.loyalty.domain.LoyaltyVerification;
 import ru.tbank.tmap.loyalty.domain.LoyaltyVerificationRepository;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleStateException;
-import ru.tbank.tmap.loyalty.presentation.dto.BusinessLoyaltyRuleDetails;
-import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 
 @ExtendWith(MockitoExtension.class)
 class BusinessLoyaltyRuleServiceTest {
@@ -41,8 +41,9 @@ class BusinessLoyaltyRuleServiceTest {
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
     private static final UUID RULE_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
     private static final UUID USER_ID = UUID.fromString("55555555-5555-5555-5555-555555555555");
+    private static final String QR_PAYLOAD = "lqr:1:test-token";
     private static final RedeemLoyaltyRuleCommand REDEEM_COMMAND =
-            new RedeemLoyaltyRuleCommand(OWNER_ID, RULE_ID, USER_ID, VENUE_ID);
+            new RedeemLoyaltyRuleCommand(OWNER_ID, RULE_ID, QR_PAYLOAD);
 
     @Mock
     private LoyaltyRuleRepository loyaltyRuleRepository;
@@ -53,6 +54,9 @@ class BusinessLoyaltyRuleServiceTest {
     @Mock
     private VenueOwnershipPort venueOwnershipPort;
 
+    @Mock
+    private LoyaltyQrService loyaltyQrService;
+
     private BusinessLoyaltyRuleService businessLoyaltyRuleService;
 
     @BeforeEach
@@ -61,7 +65,7 @@ class BusinessLoyaltyRuleServiceTest {
                 loyaltyRuleRepository,
                 loyaltyVerificationRepository,
                 venueOwnershipPort,
-                new BusinessLoyaltyRuleMapper()
+                loyaltyQrService
         );
     }
 
@@ -81,7 +85,7 @@ class BusinessLoyaltyRuleServiceTest {
 
         given(loyaltyRuleRepository.save(any(LoyaltyRule.class))).willReturn(savedRule);
 
-        final BusinessLoyaltyRuleDetails result = businessLoyaltyRuleService.createRule(OWNER_ID, VENUE_ID, command);
+        final LoyaltyRuleDetails result = businessLoyaltyRuleService.createRule(OWNER_ID, VENUE_ID, command);
 
         assertThat(result.rule().getVenueId()).isEqualTo(VENUE_ID);
         assertThat(result.rule().getDescription()).isEqualTo("Discount 15%");
@@ -129,10 +133,10 @@ class BusinessLoyaltyRuleServiceTest {
                         usageCount(secondRuleId, 2L)
                 ));
 
-        final List<BusinessLoyaltyRuleDetails> result = businessLoyaltyRuleService.getVenueRules(OWNER_ID, VENUE_ID);
+        final List<LoyaltyRuleDetails> result = businessLoyaltyRuleService.getVenueRules(OWNER_ID, VENUE_ID);
 
         assertThat(result)
-                .extracting(details -> details.rule().getId(), BusinessLoyaltyRuleDetails::currentUsages)
+                .extracting(details -> details.rule().getId(), LoyaltyRuleDetails::currentUsages)
                 .containsExactly(
                         tuple(RULE_ID, 7L),
                         tuple(secondRuleId, 2L)
@@ -146,7 +150,7 @@ class BusinessLoyaltyRuleServiceTest {
         given(loyaltyRuleRepository.findById(RULE_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(9L);
 
-        final Optional<BusinessLoyaltyRuleDetails> result = businessLoyaltyRuleService.getRuleById(OWNER_ID, RULE_ID);
+        final Optional<LoyaltyRuleDetails> result = businessLoyaltyRuleService.getRuleById(OWNER_ID, RULE_ID);
 
         assertThat(result).isPresent();
         assertThat(result.orElseThrow().currentUsages()).isEqualTo(9);
@@ -197,7 +201,7 @@ class BusinessLoyaltyRuleServiceTest {
         given(loyaltyRuleRepository.findById(RULE_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(4L);
 
-        final BusinessLoyaltyRuleDetails result = businessLoyaltyRuleService.updateRule(
+        final LoyaltyRuleDetails result = businessLoyaltyRuleService.updateRule(
                 OWNER_ID,
                 RULE_ID,
                 new BusinessLoyaltyRuleUpdateCommand(
@@ -251,7 +255,7 @@ class BusinessLoyaltyRuleServiceTest {
         given(loyaltyRuleRepository.findById(RULE_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(4L);
 
-        final BusinessLoyaltyRuleDetails result = businessLoyaltyRuleService.updateRule(
+        final LoyaltyRuleDetails result = businessLoyaltyRuleService.updateRule(
                 OWNER_ID,
                 RULE_ID,
                 new BusinessLoyaltyRuleUpdateCommand(
@@ -272,6 +276,7 @@ class BusinessLoyaltyRuleServiceTest {
     @Test
     void redeemLoyaltyRule_whenUserAlreadyUsedRule_thenReturnsAlreadyUsedStatus() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
+        given(loyaltyQrService.resolveActiveSessionForUpdate(QR_PAYLOAD)).willReturn(qrSession());
         given(loyaltyRuleRepository.findByIdForUpdate(RULE_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.existsByRuleIdAndUserId(RULE_ID, USER_ID)).willReturn(true);
 
@@ -285,6 +290,7 @@ class BusinessLoyaltyRuleServiceTest {
     @Test
     void redeemLoyaltyRule_whenMaxUsagesReached_thenReturnsLimitExceededStatus() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 2, true);
+        given(loyaltyQrService.resolveActiveSessionForUpdate(QR_PAYLOAD)).willReturn(qrSession());
         given(loyaltyRuleRepository.findByIdForUpdate(RULE_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.existsByRuleIdAndUserId(RULE_ID, USER_ID)).willReturn(false);
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(2L);
@@ -308,6 +314,7 @@ class BusinessLoyaltyRuleServiceTest {
         );
         savedVerification.setVerifiedAt(OffsetDateTime.parse("2026-04-27T09:00:00+03:00"));
 
+        given(loyaltyQrService.resolveActiveSessionForUpdate(QR_PAYLOAD)).willReturn(qrSession());
         given(loyaltyRuleRepository.findByIdForUpdate(RULE_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.existsByRuleIdAndUserId(RULE_ID, USER_ID)).willReturn(false);
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(1L);
@@ -321,22 +328,28 @@ class BusinessLoyaltyRuleServiceTest {
     }
 
     @Test
-    void redeemLoyaltyRule_whenVenueDoesNotMatchRule_thenThrowsValidationError() {
+    void redeemLoyaltyRule_whenQrBelongsToAnotherRule_thenThrowsValidationError() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
+        final LoyaltyQrSession wrongRuleSession = new LoyaltyQrSession(
+                UUID.randomUUID(),
+                "hash",
+                USER_ID,
+                VENUE_ID,
+                UUID.fromString("77777777-7777-7777-7777-777777777777"),
+                OffsetDateTime.parse("2026-05-14T10:05:00Z")
+        );
+        given(loyaltyQrService.resolveActiveSessionForUpdate(QR_PAYLOAD)).willReturn(wrongRuleSession);
         given(loyaltyRuleRepository.findByIdForUpdate(RULE_ID)).willReturn(Optional.of(rule));
 
-        final RedeemLoyaltyRuleCommand wrongVenueCommand =
-                new RedeemLoyaltyRuleCommand(OWNER_ID, RULE_ID, USER_ID,
-                        UUID.fromString("77777777-7777-7777-7777-777777777777"));
-
-        assertThatThrownBy(() -> businessLoyaltyRuleService.redeemLoyaltyRule(wrongVenueCommand))
+        assertThatThrownBy(() -> businessLoyaltyRuleService.redeemLoyaltyRule(REDEEM_COMMAND))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Rule does not belong to requested venue");
+                .hasMessage("QR does not belong to requested loyalty rule");
     }
 
     @Test
     void redeemLoyaltyRule_whenConcurrentInsertViolatesUniqueConstraint_thenReturnsAlreadyUsed() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
+        given(loyaltyQrService.resolveActiveSessionForUpdate(QR_PAYLOAD)).willReturn(qrSession());
         given(loyaltyRuleRepository.findByIdForUpdate(RULE_ID)).willReturn(Optional.of(rule));
         given(loyaltyVerificationRepository.existsByRuleIdAndUserId(RULE_ID, USER_ID)).willReturn(false);
         given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(1L);
@@ -364,5 +377,16 @@ class BusinessLoyaltyRuleServiceTest {
 
     private LoyaltyRuleUsageCount usageCount(final UUID ruleId, final long usages) {
         return new LoyaltyRuleUsageCount(ruleId, usages);
+    }
+
+    private LoyaltyQrSession qrSession() {
+        return new LoyaltyQrSession(
+                UUID.fromString("77777777-7777-7777-7777-777777777777"),
+                "hash",
+                USER_ID,
+                VENUE_ID,
+                RULE_ID,
+                OffsetDateTime.parse("2026-05-14T10:05:00Z")
+        );
     }
 }

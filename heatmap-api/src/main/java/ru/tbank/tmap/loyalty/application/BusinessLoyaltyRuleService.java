@@ -16,13 +16,14 @@ import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateComman
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
 import ru.tbank.tmap.loyalty.application.command.LoyaltyActivationResult;
 import ru.tbank.tmap.loyalty.application.port.VenueOwnershipPort;
+import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleDetails;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleUsageCount;
+import ru.tbank.tmap.loyalty.domain.LoyaltyQrSession;
 import ru.tbank.tmap.loyalty.domain.LoyaltyVerification;
-import ru.tbank.tmap.loyalty.presentation.dto.BusinessLoyaltyRuleDetails;
-import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRuleRepository;
 import ru.tbank.tmap.loyalty.domain.LoyaltyVerificationRepository;
+import ru.tbank.tmap.loyalty.domain.exception.LoyaltyQrValidationException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleStateException;
 
@@ -34,10 +35,10 @@ public class BusinessLoyaltyRuleService {
     private final LoyaltyRuleRepository loyaltyRuleRepository;
     private final LoyaltyVerificationRepository loyaltyVerificationRepository;
     private final VenueOwnershipPort venueOwnershipPort;
-    private final BusinessLoyaltyRuleMapper businessLoyaltyRuleMapper;
+    private final LoyaltyQrService loyaltyQrService;
 
     @Transactional
-    public BusinessLoyaltyRuleDetails createRule(
+    public LoyaltyRuleDetails createRule(
             final UUID ownerId,
             final UUID venueId,
             final BusinessLoyaltyRuleCreateCommand command
@@ -54,23 +55,26 @@ public class BusinessLoyaltyRuleService {
         );
         final LoyaltyRule savedRule = loyaltyRuleRepository.save(loyaltyRule);
 
-        return new BusinessLoyaltyRuleDetails(savedRule, currentUsages);
+        return new LoyaltyRuleDetails(savedRule, currentUsages);
     }
 
-    public List<BusinessLoyaltyRuleDetails> getVenueRules(final UUID ownerId, final UUID venueId) {
+    public List<LoyaltyRuleDetails> getVenueRules(final UUID ownerId, final UUID venueId) {
         venueOwnershipPort.requireOwner(venueId, ownerId);
 
         final List<LoyaltyRule> rules = loyaltyRuleRepository.findByVenueIdOrderByCreatedAtDescIdDesc(venueId);
+        final Map<UUID, Long> usagesByRuleId = getUsagesMap(rules);
 
-        return businessLoyaltyRuleMapper.toDetails(rules, getUsagesMap(rules));
+        return rules.stream()
+                .map(rule -> new LoyaltyRuleDetails(rule, usagesByRuleId.getOrDefault(rule.getId(), 0L)))
+                .toList();
     }
 
-    public Optional<BusinessLoyaltyRuleDetails> getRuleById(final UUID ownerId, final UUID ruleId) {
+    public Optional<LoyaltyRuleDetails> getRuleById(final UUID ownerId, final UUID ruleId) {
         return loyaltyRuleRepository.findById(ruleId)
                 .map(rule -> {
                     venueOwnershipPort.requireOwner(rule.getVenueId(), ownerId);
 
-                    return new BusinessLoyaltyRuleDetails(
+                    return new LoyaltyRuleDetails(
                             rule,
                             loyaltyVerificationRepository.countByRuleId(rule.getId())
                     );
@@ -78,7 +82,7 @@ public class BusinessLoyaltyRuleService {
     }
 
     @Transactional
-    public BusinessLoyaltyRuleDetails updateRule(
+    public LoyaltyRuleDetails updateRule(
             final UUID ownerId,
             final UUID ruleId,
             final BusinessLoyaltyRuleUpdateCommand command
@@ -95,7 +99,7 @@ public class BusinessLoyaltyRuleService {
         final long currentUsages = loyaltyVerificationRepository.countByRuleId(ruleId);
         applyUpdate(rule, command, currentUsages);
 
-        return new BusinessLoyaltyRuleDetails(rule, currentUsages);
+        return new LoyaltyRuleDetails(rule, currentUsages);
     }
 
     @Transactional
@@ -105,20 +109,20 @@ public class BusinessLoyaltyRuleService {
 
         venueOwnershipPort.requireOwner(rule.getVenueId(), command.ownerId());
 
-        if (!rule.getVenueId().equals(command.venueId())) {
-            throw new IllegalArgumentException("Rule does not belong to requested venue");
-        }
-
         if (!rule.isActive()) {
             throw LoyaltyRuleStateException.inactiveRuleCannotBeRedeemed(command.ruleId());
         }
 
-        if (loyaltyVerificationRepository.existsByRuleIdAndUserId(command.ruleId(), command.userId())) {
+        final LoyaltyQrSession qrSession = validateQrSession(rule, command);
+
+        if (loyaltyVerificationRepository.existsByRuleIdAndUserId(command.ruleId(), qrSession.getUserId())) {
+            loyaltyQrService.markConsumed(qrSession);
             return new LoyaltyActivationResult(LoyaltyActivationStatus.ALREADY_USED, null);
         }
 
         final long currentUsages = loyaltyVerificationRepository.countByRuleId(command.ruleId());
         if (currentUsages >= rule.getMaxUsages()) {
+            loyaltyQrService.markConsumed(qrSession);
             return new LoyaltyActivationResult(LoyaltyActivationStatus.LIMIT_EXCEEDED, null);
         }
 
@@ -128,15 +132,31 @@ public class BusinessLoyaltyRuleService {
                     new LoyaltyVerification(
                             UUID.randomUUID(),
                             rule.getVenueId(),
-                            command.userId(),
+                            qrSession.getUserId(),
                             rule,
                             rule.getDiscountPercent()
                     )
             );
         } catch (DataIntegrityViolationException ex) {
+            loyaltyQrService.markConsumed(qrSession);
             return new LoyaltyActivationResult(LoyaltyActivationStatus.ALREADY_USED, null);
         }
+        loyaltyQrService.markConsumed(qrSession);
         return new LoyaltyActivationResult(LoyaltyActivationStatus.SUCCESS, loyaltyVerification);
+    }
+
+    private LoyaltyQrSession validateQrSession(
+            final LoyaltyRule rule,
+            final RedeemLoyaltyRuleCommand command
+    ) {
+        final LoyaltyQrSession qrSession = loyaltyQrService.resolveActiveSessionForUpdate(command.qrPayload());
+        if (!qrSession.getRuleId().equals(command.ruleId())) {
+            throw LoyaltyQrValidationException.qrDoesNotBelongToRequestedRule();
+        }
+        if (!qrSession.getVenueId().equals(rule.getVenueId())) {
+            throw LoyaltyQrValidationException.qrDoesNotBelongToRequestedVenue();
+        }
+        return qrSession;
     }
 
     private Map<UUID, Long> getUsagesMap(final List<LoyaltyRule> rules) {

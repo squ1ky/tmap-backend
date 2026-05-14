@@ -35,7 +35,7 @@ public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
     @Override
     public ResponseEntity<List<LoyaltyRuleResponse>> getBusinessVenueLoyaltyRules(final UUID id) {
         final UUID ownerId = SecurityUtils.currentUserId();
-        final List<BusinessLoyaltyRuleDetails> loyaltyRules = businessLoyaltyRuleService.getVenueRules(ownerId, id);
+        final List<LoyaltyRuleDetails> loyaltyRules = businessLoyaltyRuleService.getVenueRules(ownerId, id);
         return ResponseEntity.ok(loyaltyRules.stream()
                 .map(businessLoyaltyRuleMapper::toResponse)
                 .toList());

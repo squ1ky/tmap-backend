@@ -367,6 +367,44 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /venues/{id}/loyalty-rules/{ruleId}/qr:
+    get:
+      tags: [Venues (Public)]
+      summary: Generate loyalty QR for selected venue rule
+      description: >
+        Generates a short-lived QR payload for the authenticated user and the selected
+        loyalty rule of the venue.
+      operationId: getVenueLoyaltyQr
+      x-required-roles: [USER]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: One-time QR payload for selected loyalty rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoyaltyQrResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   # ── Profile (current user) ──────────────────
   /profile:
     get:
@@ -405,25 +443,6 @@ paths:
           description: Password changed successfully
         '400':
           $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /profile/loyalty/qr:
-    get:
-      tags: [Profile]
-      summary: Get current user loyalty QR payload
-      operationId: getMyLoyaltyQr
-      description: Returns data for rendering the personal loyalty QR code.
-      x-required-roles: [USER]
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: User QR code payload
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LoyaltyQrResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -1694,18 +1713,12 @@ components:
     # ── Loyalty DTOs ──────────────────────────
     LoyaltyActivationRequest:
       type: object
-      required: [userId, venueId]
+      required: [qrPayload]
       properties:
-        userId:
+        qrPayload:
           type: string
-          format: uuid
-          description: ID пользователя из отсканированного QR-кода
-          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-        venueId:
-          type: string
-          format: uuid
-          description: ID заведения, в котором происходит активация
-          example: "5085d345-3129-4e4b-972d-8bcf9a2ea9c9"
+          description: One-time QR payload generated for the selected venue loyalty rule
+          example: "lqr:1:AbCdEfGhIjKlMnOpQrStUvWxYz0123456789"
 
     LoyaltyVerifyResponse:
       type: object
@@ -1738,14 +1751,19 @@ components:
     LoyaltyQrResponse:
       type: object
       properties:
-        userId:
+        venueId:
           type: string
           format: uuid
-          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        ruleId:
+          type: string
+          format: uuid
         qrPayload:
           type: string
-          description: String to be encoded into QR (e.g. JWT or HMAC signed string)
-          example: "usr_3fa85f6457174562b3fc2c963f66afa6:signature"
+          description: One-time QR payload to be encoded by the client
+          example: "lqr:1:AbCdEfGhIjKlMnOpQrStUvWxYz0123456789"
+        expiresAt:
+          type: string
+          format: date-time
 
     LoyaltyRuleResponse:
       type: object
@@ -1765,10 +1783,10 @@ components:
         maxUsages:
           type: integer
           example: 100
-        currentUsages:
+        remainingUsages:
           type: integer
           format: int64
-          example: 45
+          example: 55
         active:
           type: boolean
           example: true

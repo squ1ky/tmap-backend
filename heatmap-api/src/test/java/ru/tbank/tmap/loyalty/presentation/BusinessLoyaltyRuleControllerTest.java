@@ -64,7 +64,7 @@ class BusinessLoyaltyRuleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(RULE_ID.toString()))
                 .andExpect(jsonPath("$[0].venueId").value(VENUE_ID.toString()))
-                .andExpect(jsonPath("$[0].currentUsages").value(4))
+                .andExpect(jsonPath("$[0].remainingUsages").value(96))
                 .andExpect(jsonPath("$[0].active").value(true));
     }
 
@@ -81,7 +81,7 @@ class BusinessLoyaltyRuleControllerTest {
                         .with(user(ownerPrincipal())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(RULE_ID.toString()))
-                .andExpect(jsonPath("$.currentUsages").value(9));
+                .andExpect(jsonPath("$.remainingUsages").value(91));
     }
 
     @Test
@@ -178,10 +178,10 @@ class BusinessLoyaltyRuleControllerTest {
         );
     }
 
-    private BusinessLoyaltyRuleDetails ruleView(final boolean active, final int currentUsages) {
+    private LoyaltyRuleDetails ruleView(final boolean active, final int currentUsages) {
         final LoyaltyRule rule = new LoyaltyRule(RULE_ID, VENUE_ID, "Discount 15%", 15, 100);
         rule.setActive(active);
         rule.setCreatedAt(OffsetDateTime.parse("2026-04-27T08:30:00+03:00"));
-        return new BusinessLoyaltyRuleDetails(rule, currentUsages);
+        return new LoyaltyRuleDetails(rule, currentUsages);
     }
 }

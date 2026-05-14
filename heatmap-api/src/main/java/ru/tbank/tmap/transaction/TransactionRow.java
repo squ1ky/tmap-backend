@@ -1,6 +1,6 @@
 package ru.tbank.tmap.transaction;
 
-import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.api.VenueCategory;
 
 import java.math.BigDecimal;
 import java.time.Instant;

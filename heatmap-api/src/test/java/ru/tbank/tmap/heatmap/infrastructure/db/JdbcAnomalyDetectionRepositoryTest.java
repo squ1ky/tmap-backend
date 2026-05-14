@@ -18,7 +18,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import ru.tbank.tmap.TestcontainersConfiguration;
 import ru.tbank.tmap.heatmap.domain.AnomalyDetectionRepository;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.api.VenueCategory;
 
 @JdbcTest
 @Import({

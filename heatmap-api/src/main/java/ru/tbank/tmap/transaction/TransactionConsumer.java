@@ -7,7 +7,7 @@ import org.springframework.kafka.listener.BatchListenerFailedException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.api.VenueCategory;
 import ru.tbank.tmap.shared.h3.H3IndexService;
 
 import java.util.ArrayList;

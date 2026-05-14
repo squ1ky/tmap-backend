@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import ru.tbank.tmap.shared.geo.GeoPoint;
 import ru.tbank.tmap.venue.application.command.VenueCreateCommand;
 import ru.tbank.tmap.venue.application.command.VenueUpdateCommand;
-import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.api.VenueCategory;
 
 @Component
 public class BusinessVenueMapper {

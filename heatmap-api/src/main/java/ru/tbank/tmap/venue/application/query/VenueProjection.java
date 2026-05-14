@@ -2,7 +2,7 @@ package ru.tbank.tmap.venue.application.query;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
-import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.api.VenueCategory;
 
 public record VenueProjection(
         UUID id,

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.venue.application.query.VenueProjection;
-import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.api.VenueCategory;
 import ru.tbank.tmap.venue.domain.repository.VenueQueryRepository;
 
 @Service

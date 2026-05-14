@@ -20,7 +20,7 @@ import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.test.security.TestSecurityConfig;
 import ru.tbank.tmap.venue.application.service.VenueQueryService;
 import ru.tbank.tmap.venue.application.service.VenueSearchService;
-import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.api.VenueCategory;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.venue.application.query.VenueProjection;
 import ru.tbank.tmap.venue.application.query.VenueSearchProjection;

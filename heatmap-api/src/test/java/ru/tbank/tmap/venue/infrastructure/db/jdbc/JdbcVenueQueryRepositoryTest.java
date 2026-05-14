@@ -15,7 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import ru.tbank.tmap.TestcontainersConfiguration;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.venue.application.query.VenueProjection;
-import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.api.VenueCategory;
 import ru.tbank.tmap.venue.domain.repository.VenueQueryRepository;
 
 @JdbcTest

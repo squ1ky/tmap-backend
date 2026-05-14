@@ -37,7 +37,7 @@ public class BusinessLoyaltyRuleMapper {
 
     public LoyaltyRuleResponse toResponse(final LoyaltyRuleDetails details) {
         final LoyaltyRule rule = details.rule();
-        final long remainingUsages = Math.max(0L, (long) rule.getMaxUsages() - details.currentUsages());
+        final long remainingUsages = Math.max(0L, rule.getMaxUsages() - details.currentUsages());
         return new LoyaltyRuleResponse()
                 .id(rule.getId())
                 .venueId(rule.getVenueId())

@@ -23,7 +23,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
-import ru.tbank.tmap.test.security.TestSecurityConfig;
+import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 import ru.tbank.tmap.venue.application.service.admin.AdminVenueService;
 import ru.tbank.tmap.venue.application.query.VenueDetails;
 import ru.tbank.tmap.venue.api.VenueCategory;

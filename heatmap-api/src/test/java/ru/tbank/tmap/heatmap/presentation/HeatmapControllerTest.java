@@ -24,7 +24,7 @@ import ru.tbank.tmap.heatmap.presentation.dto.HeatmapClusters;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.test.security.TestSecurityConfig;
+import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 
 @WebMvcTest(controllers = HeatmapController.class)
 @Import({

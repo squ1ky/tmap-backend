@@ -1,4 +1,4 @@
-package ru.tbank.tmap.transaction.infastructure.db;
+package ru.tbank.tmap.transaction.infrastructure.db;
 
 import ru.tbank.tmap.venue.api.VenueCategory;
 

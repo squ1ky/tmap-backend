@@ -1,4 +1,4 @@
-package ru.tbank.tmap.transaction.infastructure.kafka;
+package ru.tbank.tmap.transaction.infrastructure.kafka;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

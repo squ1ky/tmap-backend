@@ -4,7 +4,6 @@ import ru.tbank.tmap.venue.api.VenueCategory;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Objects;
 import java.util.UUID;
 
 public record Transaction(
@@ -20,13 +19,23 @@ public record Transaction(
         Instant occurredAt
 ) {
     public Transaction {
-        Objects.requireNonNull(id, "id");
-        Objects.requireNonNull(venueId, "venueId");
-        Objects.requireNonNull(amount, "amount");
-        Objects.requireNonNull(category, "category");
-        Objects.requireNonNull(occurredAt, "occurredAt");
+        if (id == null) {
+            throw new IllegalArgumentException("id must not be null");
+        }
+        if (venueId == null) {
+            throw new IllegalArgumentException("venueId must not be null");
+        }
+        if (amount == null) {
+            throw new IllegalArgumentException("amount must not be null");
+        }
         if (amount.signum() <= 0) {
             throw new IllegalArgumentException("amount must be positive, got " + amount);
+        }
+        if (category == null) {
+            throw new IllegalArgumentException("category must not be null");
+        }
+        if (occurredAt == null) {
+            throw new IllegalArgumentException("occurredAt must not be null");
         }
         if (lat < -90.0 || lat > 90.0) {
             throw new IllegalArgumentException("lat must be in [-90, 90], got " + lat);

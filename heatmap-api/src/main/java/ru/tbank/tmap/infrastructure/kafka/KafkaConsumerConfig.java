@@ -12,7 +12,7 @@ import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
-import ru.tbank.tmap.transaction.TransactionEvent;
+import ru.tbank.tmap.transaction.application.command.TransactionEvent;
 
 @Configuration
 @EnableKafka

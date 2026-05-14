@@ -1,4 +1,4 @@
-package ru.tbank.tmap.transaction;
+package ru.tbank.tmap.transaction.infastructure.db;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Component;
+import ru.tbank.tmap.transaction.application.port.TransactionWriter;
 import ru.tbank.tmap.transaction.domain.Transaction;
 
 import java.sql.Timestamp;
@@ -14,7 +15,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class TransactionBatchWriter {
+public class JdbcTransactionBatchWriter implements TransactionWriter {
 
     private static final String INSERT_SQL = """
         INSERT INTO transactions
@@ -32,7 +33,8 @@ public class TransactionBatchWriter {
         }
 
         SqlParameterSource[] parameters = rows.stream()
-                .map(TransactionBatchWriter::toParams)
+                .map(JdbcTransactionBatchWriter::toRow)
+                .map(JdbcTransactionBatchWriter::toParams)
                 .toArray(SqlParameterSource[]::new);
 
         int[] updatedCounts = jdbcTemplate.batchUpdate(INSERT_SQL, parameters);
@@ -46,7 +48,22 @@ public class TransactionBatchWriter {
         return inserted;
     }
 
-    private static SqlParameterSource toParams(Transaction r) {
+    private static TransactionRow toRow(Transaction transaction) {
+        return new TransactionRow(
+                transaction.id(),
+                transaction.venueId(),
+                transaction.amount(),
+                transaction.lat(),
+                transaction.lng(),
+                transaction.h3Res7(),
+                transaction.h3Res8(),
+                transaction.h3Res9(),
+                transaction.category(),
+                transaction.occurredAt()
+        );
+    }
+
+    private static SqlParameterSource toParams(TransactionRow r) {
         return new MapSqlParameterSource()
                 .addValue("id", r.id())
                 .addValue("venueId", r.venueId())

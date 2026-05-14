@@ -24,11 +24,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
+import ru.tbank.tmap.loyalty.application.command.IssueLoyaltyQrCommand;
 import ru.tbank.tmap.loyalty.application.command.RedeemLoyaltyRuleCommand;
 import ru.tbank.tmap.loyalty.application.port.VenueOwnershipPort;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRuleRepository;
 import ru.tbank.tmap.loyalty.domain.LoyaltyVerificationRepository;
+import ru.tbank.tmap.user.api.UserAccountFacade;
 
 @SpringBootTest
 @Import(BusinessLoyaltyRuleActivationConcurrencyTest.PostgresTestConfiguration.class)
@@ -44,6 +46,9 @@ class BusinessLoyaltyRuleActivationConcurrencyTest {
     private BusinessLoyaltyRuleService businessLoyaltyRuleService;
 
     @Autowired
+    private LoyaltyQrService loyaltyQrService;
+
+    @Autowired
     private LoyaltyRuleRepository loyaltyRuleRepository;
 
     @Autowired
@@ -52,17 +57,29 @@ class BusinessLoyaltyRuleActivationConcurrencyTest {
     @MockitoBean
     private VenueOwnershipPort venueOwnershipPort;
 
+    @MockitoBean
+    private UserAccountFacade userAccountFacade;
+
     @Test
     void redeemLoyaltyRule_whenConcurrentRequestsWithMaxUsageOne_thenOnlyOneSucceeds() throws Exception {
         willDoNothing().given(venueOwnershipPort).requireOwner(VENUE_ID, OWNER_ID);
+        org.mockito.BDDMockito.given(userAccountFacade.existsById(FIRST_USER_ID)).willReturn(true);
+        org.mockito.BDDMockito.given(userAccountFacade.existsById(SECOND_USER_ID)).willReturn(true);
 
         final UUID ruleId = UUID.randomUUID();
         loyaltyRuleRepository.save(new LoyaltyRule(ruleId, VENUE_ID, "Concurrent test rule", 15, 1));
 
+        final String firstQrPayload = loyaltyQrService.issueQr(
+                new IssueLoyaltyQrCommand(FIRST_USER_ID, VENUE_ID, ruleId)
+        ).qrPayload();
+        final String secondQrPayload = loyaltyQrService.issueQr(
+                new IssueLoyaltyQrCommand(SECOND_USER_ID, VENUE_ID, ruleId)
+        ).qrPayload();
+
         final RedeemLoyaltyRuleCommand firstCommand =
-                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, FIRST_USER_ID, VENUE_ID);
+                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, firstQrPayload);
         final RedeemLoyaltyRuleCommand secondCommand =
-                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, SECOND_USER_ID, VENUE_ID);
+                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, secondQrPayload);
 
         final List<LoyaltyActivationStatus> statuses = runConcurrently(firstCommand, secondCommand);
 
@@ -76,14 +93,22 @@ class BusinessLoyaltyRuleActivationConcurrencyTest {
     @Test
     void redeemLoyaltyRule_whenConcurrentRequestsForSameUser_thenSecondIsRejectedAsAlreadyUsed() throws Exception {
         willDoNothing().given(venueOwnershipPort).requireOwner(VENUE_ID, OWNER_ID);
+        org.mockito.BDDMockito.given(userAccountFacade.existsById(FIRST_USER_ID)).willReturn(true);
 
         final UUID ruleId = UUID.randomUUID();
         loyaltyRuleRepository.save(new LoyaltyRule(ruleId, VENUE_ID, "Same user race test", 10, 10));
 
+        final String firstQrPayload = loyaltyQrService.issueQr(
+                new IssueLoyaltyQrCommand(FIRST_USER_ID, VENUE_ID, ruleId)
+        ).qrPayload();
+        final String secondQrPayload = loyaltyQrService.issueQr(
+                new IssueLoyaltyQrCommand(FIRST_USER_ID, VENUE_ID, ruleId)
+        ).qrPayload();
+
         final RedeemLoyaltyRuleCommand firstCommand =
-                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, FIRST_USER_ID, VENUE_ID);
+                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, firstQrPayload);
         final RedeemLoyaltyRuleCommand secondCommand =
-                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, FIRST_USER_ID, VENUE_ID);
+                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, secondQrPayload);
 
         final List<LoyaltyActivationStatus> statuses = runConcurrently(firstCommand, secondCommand);
 

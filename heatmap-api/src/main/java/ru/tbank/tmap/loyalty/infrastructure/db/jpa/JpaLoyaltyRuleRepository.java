@@ -19,4 +19,7 @@ public interface JpaLoyaltyRuleRepository extends JpaRepository<LoyaltyRule, UUI
 
     @Override
     List<LoyaltyRule> findByVenueIdOrderByCreatedAtDescIdDesc(UUID venueId);
+
+    @Override
+    List<LoyaltyRule> findByVenueIdAndActiveTrueOrderByCreatedAtDescIdDesc(UUID venueId);
 }

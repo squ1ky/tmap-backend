@@ -18,10 +18,8 @@ import ru.tbank.tmap.loyalty.application.query.UsedPromoProjection;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.api.UserView;
 import ru.tbank.tmap.user.domain.UserRole;
-import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -91,24 +89,6 @@ class ProfileServiceTest {
         profileService.changePassword(USER_ID, request);
 
         verify(authAccountFacade).changePassword(USER_ID, "Echak123!", "NewPass123!");
-    }
-
-    @Test
-    void getLoyaltyQr_whenUserExists_thenReturnStubPayload() {
-        given(userAccountFacade.existsById(USER_ID)).willReturn(true);
-
-        final var response = profileService.getLoyaltyQr(USER_ID);
-
-        assertThat(response.userId()).isEqualTo(USER_ID);
-        assertThat(response.qrPayload()).isEqualTo("profile-loyalty-qr-stub");
-    }
-
-    @Test
-    void getLoyaltyQr_whenUserMissing_thenThrowUserNotFound() {
-        given(userAccountFacade.existsById(USER_ID)).willReturn(false);
-
-        assertThatThrownBy(() -> profileService.getLoyaltyQr(USER_ID))
-                .isInstanceOf(UserNotFoundException.class);
     }
 
     @Test

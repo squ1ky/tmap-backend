@@ -14,6 +14,8 @@ public interface LoyaltyRuleRepository {
 
     List<LoyaltyRule> findByVenueIdOrderByCreatedAtDescIdDesc(UUID venueId);
 
+    List<LoyaltyRule> findByVenueIdAndActiveTrueOrderByCreatedAtDescIdDesc(UUID venueId);
+
     void deleteById(UUID id);
 
     boolean existsById(UUID id);

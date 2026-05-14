@@ -5,7 +5,6 @@ import java.util.UUID;
 public record RedeemLoyaltyRuleCommand(
         UUID ownerId,
         UUID ruleId,
-        UUID userId,
-        UUID venueId
+        String qrPayload
 ) {
 }

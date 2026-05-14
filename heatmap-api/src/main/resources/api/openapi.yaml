@@ -340,31 +340,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /venues/{id}/promos:
-    get:
-      tags: [Venues (Public)]
-      summary: Get active venue promos
-      description: Returns only active promos for venues with ACTIVE moderation status
-      operationId: getVenuePromos
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Active venue promos
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/VenuePromoResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
   /venues/{id}/loyalty-rules:
     get:
       tags: [Venues (Public)]

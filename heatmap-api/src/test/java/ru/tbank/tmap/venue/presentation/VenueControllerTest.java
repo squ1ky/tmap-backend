@@ -5,7 +5,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.test.security.TestSecurityConfig;
+import ru.tbank.tmap.venue.application.query.VenuePromoProjection;
 import ru.tbank.tmap.venue.application.service.VenueQueryService;
 import ru.tbank.tmap.venue.application.service.VenueSearchService;
 import ru.tbank.tmap.venue.domain.VenueCategory;
@@ -35,6 +38,7 @@ import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
 class VenueControllerTest {
 
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
+    private static final UUID PROMO_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
 
     @Autowired
     private MockMvc mockMvc;
@@ -54,6 +58,8 @@ class VenueControllerTest {
                 new BoundingBox(55.7801, 49.1102, 55.7995, 49.1355),
                 List.of()))
                 .willReturn(List.of(venueResponse()));
+        given(publicVenueService.getVenuePromosByVenueIds(List.of(VENUE_ID)))
+                .willReturn(Map.of(VENUE_ID, List.of(promoResponse())));
 
         mockMvc.perform(get("/api/v1/venues")
                         .param("swLat", "55.7801")
@@ -63,7 +69,9 @@ class VenueControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(VENUE_ID.toString()))
                 .andExpect(jsonPath("$[0].name").value("Bar One"))
-                .andExpect(jsonPath("$[0].category").value("entertainment"));
+                .andExpect(jsonPath("$[0].category").value("entertainment"))
+                .andExpect(jsonPath("$[0].promotions[0].id").value(PROMO_ID.toString()))
+                .andExpect(jsonPath("$[0].promotions[0].title").value("Happy hours"));
     }
 
     @Test
@@ -72,6 +80,8 @@ class VenueControllerTest {
                 new BoundingBox(55.7801, 49.1102, 55.7995, 49.1355),
                 List.of(VenueCategory.FOOD)))
                 .willReturn(List.of());
+        given(publicVenueService.getVenuePromosByVenueIds(List.of()))
+                .willReturn(Map.of());
 
         mockMvc.perform(get("/api/v1/venues")
                         .param("swLat", "55.7801")
@@ -100,12 +110,16 @@ class VenueControllerTest {
     void getVenueById_whenVenueExists_thenReturnVenue() throws Exception {
         given(publicVenueService.getVenueById(VENUE_ID))
                 .willReturn(Optional.of(venueResponse()));
+        given(publicVenueService.getVenuePromos(VENUE_ID))
+                .willReturn(List.of(promoResponse()));
 
         mockMvc.perform(get("/api/v1/venues/{id}", VENUE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(VENUE_ID.toString()))
                 .andExpect(jsonPath("$.name").value("Bar One"))
-                .andExpect(jsonPath("$.category").value("entertainment"));
+                .andExpect(jsonPath("$.category").value("entertainment"))
+                .andExpect(jsonPath("$.promotions[0].id").value(PROMO_ID.toString()))
+                .andExpect(jsonPath("$.promotions[0].title").value("Happy hours"));
     }
 
     @Test
@@ -168,6 +182,18 @@ class VenueControllerTest {
                 null,
                 null,
                 null
+        );
+    }
+
+    private VenuePromoProjection promoResponse() {
+        return new VenuePromoProjection(
+                PROMO_ID,
+                VENUE_ID,
+                "Happy hours",
+                "20% off after 20:00",
+                OffsetDateTime.parse("2026-05-10T10:00:00+03:00"),
+                OffsetDateTime.parse("2026-05-20T23:00:00+03:00"),
+                OffsetDateTime.parse("2026-05-01T10:00:00+03:00")
         );
     }
 }

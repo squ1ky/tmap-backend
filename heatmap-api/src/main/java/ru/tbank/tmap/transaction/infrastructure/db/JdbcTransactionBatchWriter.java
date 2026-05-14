@@ -27,6 +27,7 @@ public class JdbcTransactionBatchWriter implements TransactionWriter {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
+    @Override
     public int insertBatch(List<Transaction> rows) {
         if (rows.isEmpty()) {
             return 0;

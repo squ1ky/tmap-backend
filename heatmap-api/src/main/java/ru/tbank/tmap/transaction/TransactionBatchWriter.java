@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Component;
+import ru.tbank.tmap.transaction.domain.Transaction;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -25,7 +26,7 @@ public class TransactionBatchWriter {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
-    public int insertBatch(List<TransactionRow> rows) {
+    public int insertBatch(List<Transaction> rows) {
         if (rows.isEmpty()) {
             return 0;
         }
@@ -45,7 +46,7 @@ public class TransactionBatchWriter {
         return inserted;
     }
 
-    private static SqlParameterSource toParams(TransactionRow r) {
+    private static SqlParameterSource toParams(Transaction r) {
         return new MapSqlParameterSource()
                 .addValue("id", r.id())
                 .addValue("venueId", r.venueId())

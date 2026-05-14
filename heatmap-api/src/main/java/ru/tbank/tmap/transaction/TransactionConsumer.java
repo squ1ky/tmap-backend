@@ -7,6 +7,7 @@ import org.springframework.kafka.listener.BatchListenerFailedException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.shared.geo.H3Resolution;
+import ru.tbank.tmap.transaction.domain.Transaction;
 import ru.tbank.tmap.venue.api.VenueCategory;
 import ru.tbank.tmap.shared.h3.H3IndexService;
 
@@ -32,7 +33,7 @@ public class TransactionConsumer {
             return;
         }
 
-        List<TransactionRow> rows = new ArrayList<>(events.size());
+        List<Transaction> rows = new ArrayList<>(events.size());
         for (int i = 0; i < events.size(); i++) {
             TransactionEvent event = events.get(i);
             try {
@@ -51,7 +52,7 @@ public class TransactionConsumer {
     }
 
     @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
-    private TransactionRow toRow(TransactionEvent event) {
+    private Transaction toRow(TransactionEvent event) {
         if (event.transactionId() == null) {
             throw new IllegalArgumentException("transactionId must not be null");
         }
@@ -78,7 +79,7 @@ public class TransactionConsumer {
             throw new IllegalArgumentException("lng must be in [-180, 180], got " + event.lng());
         }
 
-        return new TransactionRow(
+        return new Transaction(
                 event.transactionId(),
                 event.venueId(),
                 event.amount(),

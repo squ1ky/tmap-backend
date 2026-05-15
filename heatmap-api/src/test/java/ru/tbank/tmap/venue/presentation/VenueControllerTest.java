@@ -92,6 +92,7 @@ class VenueControllerTest {
                 .andExpect(jsonPath("$[0].description").doesNotExist())
                 .andExpect(jsonPath("$[0].dishOfDay").doesNotExist())
                 .andExpect(jsonPath("$[0].music").doesNotExist())
+                .andExpect(jsonPath("$[0].photoUrl").doesNotExist())
                 .andExpect(jsonPath("$[0].promotions").doesNotExist())
                 .andExpect(jsonPath("$[0].createdAt").doesNotExist())
                 .andExpect(jsonPath("$[0].updatedAt").doesNotExist());

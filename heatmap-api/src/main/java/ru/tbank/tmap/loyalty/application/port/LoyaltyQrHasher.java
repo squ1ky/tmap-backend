@@ -1,4 +1,4 @@
-package ru.tbank.tmap.loyalty.domain;
+package ru.tbank.tmap.loyalty.application.port;
 
 public interface LoyaltyQrHasher {
     String hash(String plainToken);

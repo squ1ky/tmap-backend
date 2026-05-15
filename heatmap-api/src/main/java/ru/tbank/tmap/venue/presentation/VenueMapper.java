@@ -32,7 +32,6 @@ public class VenueMapper {
                 .lng(venue.lng())
                 .category(VenuePublicResponse.CategoryEnum.fromValue(
                         venue.category().name().toLowerCase(Locale.ROOT)))
-                .photoUrl(toPublicPhotoUri(venue.photoObjectKey()))
                 .peopleNow(0);
     }
 

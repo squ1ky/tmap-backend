@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.loyalty.application.command.IssueLoyaltyQrCommand;
 import ru.tbank.tmap.loyalty.application.config.LoyaltyQrProperties;
-import ru.tbank.tmap.loyalty.domain.LoyaltyQrHasher;
+import ru.tbank.tmap.loyalty.application.port.LoyaltyQrHasher;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyQrView;
 import ru.tbank.tmap.loyalty.domain.LoyaltyQrSession;
 import ru.tbank.tmap.loyalty.domain.LoyaltyQrSessionRepository;

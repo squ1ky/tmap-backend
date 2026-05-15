@@ -5,7 +5,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import org.springframework.stereotype.Component;
-import ru.tbank.tmap.loyalty.domain.LoyaltyQrHasher;
+import ru.tbank.tmap.loyalty.application.port.LoyaltyQrHasher;
 
 @Component
 public class Sha256LoyaltyQrHasher implements LoyaltyQrHasher {

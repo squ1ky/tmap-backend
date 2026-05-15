@@ -6,7 +6,6 @@ import org.openapitools.api.ProfileApi;
 import org.openapitools.model.ChangePasswordRequest;
 import org.openapitools.model.LoyaltyVerificationPage;
 import org.openapitools.model.ProfileResponse;
-import org.openapitools.model.UsedPromoPage;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,13 +38,6 @@ public class ProfileController implements ProfileApi {
     public ResponseEntity<LoyaltyVerificationPage> getLoyaltyHistory(final Integer page, final Integer size) {
         return ResponseEntity.ok(profileMapper.toHistoryPageResponse(
                 profileService.getLoyaltyHistory(SecurityUtils.currentUserId(), page, size)
-        ));
-    }
-
-    @Override
-    public ResponseEntity<UsedPromoPage> getUsedPromosHistory(final Integer page, final Integer size) {
-        return ResponseEntity.ok(profileMapper.toUsedPromoPageResponse(
-                profileService.getUsedPromosHistory(SecurityUtils.currentUserId(), page, size)
         ));
     }
 }

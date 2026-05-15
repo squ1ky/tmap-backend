@@ -10,7 +10,6 @@ import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyHistoryProjection;
-import ru.tbank.tmap.loyalty.application.query.UsedPromoProjection;
 import ru.tbank.tmap.loyalty.domain.repository.LoyaltyProfileRepository;
 
 @Repository
@@ -19,8 +18,6 @@ public class JdbcLoyaltyProfileRepository implements LoyaltyProfileRepository {
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final DataClassRowMapper<LoyaltyHistoryProjection> loyaltyHistoryRowMapper =
             new DataClassRowMapper<>(LoyaltyHistoryProjection.class);
-    private final DataClassRowMapper<UsedPromoProjection> usedPromoRowMapper =
-            new DataClassRowMapper<>(UsedPromoProjection.class);
 
     public JdbcLoyaltyProfileRepository(final NamedParameterJdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -53,31 +50,6 @@ public class JdbcLoyaltyProfileRepository implements LoyaltyProfileRepository {
                 "offset", pageable.getOffset()
         );
         final List<LoyaltyHistoryProjection> items = jdbcTemplate.query(sql, params, loyaltyHistoryRowMapper);
-
-        return new PageImpl<>(items, pageable, countByUserId(userId));
-    }
-
-    @Override
-    public Page<UsedPromoProjection> findUserUsedPromos(final UUID userId, final Pageable pageable) {
-        final String sql = """
-                SELECT
-                    v.name AS venueName,
-                    lr.description AS description,
-                    lv.discount_applied AS discountPercent,
-                    lv.verified_at AS usedAt
-                FROM loyalty_verifications lv
-                JOIN venues v ON v.id = lv.venue_id
-                JOIN loyalty_rules lr ON lr.id = lv.rule_id
-                WHERE lv.user_id = :userId
-                ORDER BY lv.verified_at DESC, lv.id DESC
-                LIMIT :limit OFFSET :offset
-                """;
-        final Map<String, Object> params = Map.of(
-                "userId", userId,
-                "limit", pageable.getPageSize(),
-                "offset", pageable.getOffset()
-        );
-        final List<UsedPromoProjection> items = jdbcTemplate.query(sql, params, usedPromoRowMapper);
 
         return new PageImpl<>(items, pageable, countByUserId(userId));
     }

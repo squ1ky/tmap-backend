@@ -14,7 +14,6 @@ import org.springframework.data.domain.PageImpl;
 import ru.tbank.tmap.auth.api.AuthAccountFacade;
 import ru.tbank.tmap.loyalty.api.LoyaltyProfileFacade;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyHistoryProjection;
-import ru.tbank.tmap.loyalty.application.query.UsedPromoProjection;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.api.UserView;
 import ru.tbank.tmap.user.domain.UserRole;
@@ -46,9 +45,6 @@ class ProfileServiceTest {
 
     @Mock
     private LoyaltyHistoryProjection loyaltyHistoryProjection;
-
-    @Mock
-    private UsedPromoProjection usedPromoProjection;
 
     private ProfileService profileService;
 
@@ -101,17 +97,5 @@ class ProfileServiceTest {
 
         assertThat(response.getContent()).hasSize(1);
         assertThat(response.getContent().get(0).venueName()).isEqualTo("Cafe One");
-    }
-
-    @Test
-    void getUsedPromosHistory_returnsProjectionPage() {
-        given(usedPromoProjection.description()).willReturn("Скидка 15% на капучино");
-        given(loyaltyProfileFacade.findUserUsedPromos(eq(USER_ID), any()))
-                .willReturn(new PageImpl<>(List.of(usedPromoProjection)));
-
-        final Page<UsedPromoProjection> response = profileService.getUsedPromosHistory(USER_ID, 0, 20);
-
-        assertThat(response.getContent()).hasSize(1);
-        assertThat(response.getContent().get(0).description()).isEqualTo("Скидка 15% на капучино");
     }
 }

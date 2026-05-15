@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.auth.api.AuthAccountFacade;
 import ru.tbank.tmap.loyalty.api.LoyaltyProfileFacade;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyHistoryProjection;
-import ru.tbank.tmap.loyalty.application.query.UsedPromoProjection;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.api.UserView;
 import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
@@ -36,9 +35,5 @@ public class ProfileService {
 
     public Page<LoyaltyHistoryProjection> getLoyaltyHistory(final UUID userId, final int page, final int size) {
         return loyaltyProfileFacade.findUserLoyaltyHistory(userId, PageRequest.of(page, size));
-    }
-
-    public Page<UsedPromoProjection> getUsedPromosHistory(final UUID userId, final int page, final int size) {
-        return loyaltyProfileFacade.findUserUsedPromos(userId, PageRequest.of(page, size));
     }
 }

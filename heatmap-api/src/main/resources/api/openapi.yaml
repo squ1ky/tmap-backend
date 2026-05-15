@@ -442,29 +442,6 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /profile/loyalty/used-promos:
-    get:
-      tags: [Profile]
-      summary: Get current user used promos history
-      operationId: getUsedPromosHistory
-      x-required-roles: [USER]
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/SizeParam'
-      responses:
-        '200':
-          description: Current user used promos history
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsedPromoPage'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
   # ── Business (Owner) ────────────────────────
   /business/venues:
     get:
@@ -1690,39 +1667,6 @@ components:
           type: integer
           format: int64
 
-    UsedPromoResponse:
-      type: object
-      properties:
-        venueName:
-          type: string
-          example: "ТЦ Кольцо"
-        description:
-          type: string
-          example: "-20% на билеты в кино"
-        discountPercent:
-          type: integer
-          example: 20
-        usedAt:
-          type: string
-          format: date-time
-
-    UsedPromoPage:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/UsedPromoResponse'
-        page:
-          type: integer
-        size:
-          type: integer
-        totalPages:
-          type: integer
-        totalElements:
-          type: integer
-          format: int64
-
     BusinessLoyaltyVerificationResponse:
       type: object
       properties:
@@ -1934,7 +1878,7 @@ components:
             message: "Requested venue with ID 5085d345-3129-4e4b-972d-8bcf9a2ea9c9 was not found."
 
     Conflict:
-      description: Data conflict (e.g. duplicate email, already used promo, activation limit reached)
+      description: Data conflict (e.g. duplicate email, loyalty rule already used, activation limit reached)
       content:
         application/json:
           schema:

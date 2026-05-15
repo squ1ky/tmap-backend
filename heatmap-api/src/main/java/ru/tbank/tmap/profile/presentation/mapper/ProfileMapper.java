@@ -3,12 +3,9 @@ package ru.tbank.tmap.profile.presentation.mapper;
 import org.openapitools.model.LoyaltyVerificationPage;
 import org.openapitools.model.LoyaltyVerificationResponse;
 import org.openapitools.model.ProfileResponse;
-import org.openapitools.model.UsedPromoPage;
-import org.openapitools.model.UsedPromoResponse;
 import org.openapitools.model.UserRole;
 import org.springframework.data.domain.Page;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyHistoryProjection;
-import ru.tbank.tmap.loyalty.application.query.UsedPromoProjection;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.user.api.UserView;
 
@@ -32,15 +29,6 @@ public class ProfileMapper {
                 .totalElements(pageView.getTotalElements());
     }
 
-    public UsedPromoPage toUsedPromoPageResponse(final Page<UsedPromoProjection> pageView) {
-        return new UsedPromoPage()
-                .items(pageView.getContent().stream().map(this::toResponse).toList())
-                .page(pageView.getNumber())
-                .size(pageView.getSize())
-                .totalPages(pageView.getTotalPages())
-                .totalElements(pageView.getTotalElements());
-    }
-
     private LoyaltyVerificationResponse toResponse(final LoyaltyHistoryProjection item) {
         return new LoyaltyVerificationResponse()
                 .id(item.id())
@@ -50,13 +38,5 @@ public class ProfileMapper {
                 .ruleDescription(item.ruleDescription())
                 .discountApplied(item.discountApplied())
                 .verifiedAt(item.verifiedAt());
-    }
-
-    private UsedPromoResponse toResponse(final UsedPromoProjection item) {
-        return new UsedPromoResponse()
-                .venueName(item.venueName())
-                .description(item.description())
-                .discountPercent(item.discountPercent())
-                .usedAt(item.usedAt());
     }
 }

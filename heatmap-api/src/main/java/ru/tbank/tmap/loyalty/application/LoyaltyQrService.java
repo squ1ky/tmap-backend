@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.auth.application.port.RefreshTokenHasher;
 import ru.tbank.tmap.loyalty.application.command.IssueLoyaltyQrCommand;
+import ru.tbank.tmap.loyalty.application.config.LoyaltyQrProperties;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyQrView;
 import ru.tbank.tmap.loyalty.domain.LoyaltyQrSession;
 import ru.tbank.tmap.loyalty.domain.LoyaltyQrSessionRepository;
@@ -25,7 +26,6 @@ import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 @Transactional(readOnly = true)
 public class LoyaltyQrService {
 
-    private static final int QR_TTL_SECONDS = 120;
     private static final int QR_TOKEN_BYTE_LENGTH = 32;
     private static final String QR_PAYLOAD_PREFIX = "lqr:1:";
 
@@ -33,6 +33,7 @@ public class LoyaltyQrService {
     private final LoyaltyQrSessionRepository loyaltyQrSessionRepository;
     private final UserAccountFacade userAccountFacade;
     private final RefreshTokenHasher tokenHasher;
+    private final LoyaltyQrProperties loyaltyQrProperties;
     private final Clock clock;
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -53,7 +54,7 @@ public class LoyaltyQrService {
         }
 
         final String plainToken = generatePlainToken();
-        final OffsetDateTime expiresAt = OffsetDateTime.now(clock).plusSeconds(QR_TTL_SECONDS);
+        final OffsetDateTime expiresAt = OffsetDateTime.now(clock).plusSeconds(loyaltyQrProperties.ttlSeconds());
 
         loyaltyQrSessionRepository.save(new LoyaltyQrSession(
                 UUID.randomUUID(),

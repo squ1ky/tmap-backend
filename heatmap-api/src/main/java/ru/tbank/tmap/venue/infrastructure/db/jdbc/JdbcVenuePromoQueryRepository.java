@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.tbank.tmap.venue.application.query.VenuePromoProjection;
@@ -16,13 +17,10 @@ import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.domain.repository.VenuePromoQueryRepository;
 
 @Repository
+@RequiredArgsConstructor
 public class JdbcVenuePromoQueryRepository implements VenuePromoQueryRepository {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
-
-    public JdbcVenuePromoQueryRepository(final NamedParameterJdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     @Override
     public List<VenuePromoProjection> findActiveByVenueId(final UUID venueId) {

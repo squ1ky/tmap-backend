@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.tbank.tmap.auth.application.port.RefreshTokenHasher;
 import ru.tbank.tmap.loyalty.application.command.IssueLoyaltyQrCommand;
+import ru.tbank.tmap.loyalty.application.config.LoyaltyQrProperties;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyQrView;
 import ru.tbank.tmap.loyalty.domain.LoyaltyQrSession;
 import ru.tbank.tmap.loyalty.domain.LoyaltyQrSessionRepository;
@@ -58,6 +59,7 @@ class LoyaltyQrServiceTest {
                 loyaltyQrSessionRepository,
                 userAccountFacade,
                 tokenHasher,
+                new LoyaltyQrProperties(120),
                 Clock.fixed(Instant.parse("2026-05-14T10:00:00Z"), ZoneOffset.UTC)
         );
     }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
 import ru.tbank.tmap.loyalty.application.command.LoyaltyActivationResult;
+import ru.tbank.tmap.loyalty.application.command.LoyaltyActivationStatus;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyQrView;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleDetails;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
@@ -55,7 +56,7 @@ public class BusinessLoyaltyRuleMapper {
     ) {
         final LoyaltyVerifyResponse response = new LoyaltyVerifyResponse()
                 .ruleId(ruleId)
-                .status(activationResult.status());
+                .status(toApiStatus(activationResult.status()));
         if (activationResult.verification() != null) {
             final LoyaltyVerification verification = activationResult.verification();
             response
@@ -66,6 +67,14 @@ public class BusinessLoyaltyRuleMapper {
                     .verifiedAt(verification.getVerifiedAt());
         }
         return response;
+    }
+
+    private org.openapitools.model.LoyaltyActivationStatus toApiStatus(final LoyaltyActivationStatus status) {
+        return switch (status) {
+            case SUCCESS -> org.openapitools.model.LoyaltyActivationStatus.SUCCESS;
+            case ALREADY_USED -> org.openapitools.model.LoyaltyActivationStatus.ALREADY_USED;
+            case LIMIT_EXCEEDED -> org.openapitools.model.LoyaltyActivationStatus.LIMIT_EXCEEDED;
+        };
     }
 
     public LoyaltyQrResponse toQrResponse(final LoyaltyQrView qrView) {

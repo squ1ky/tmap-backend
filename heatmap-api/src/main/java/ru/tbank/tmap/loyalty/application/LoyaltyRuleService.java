@@ -16,7 +16,7 @@ import ru.tbank.tmap.loyalty.domain.LoyaltyVerificationRepository;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class PublicLoyaltyRuleService {
+public class LoyaltyRuleService {
 
     private final LoyaltyRuleRepository loyaltyRuleRepository;
     private final LoyaltyVerificationRepository loyaltyVerificationRepository;

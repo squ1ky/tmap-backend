@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.loyalty.application.LoyaltyQrService;
-import ru.tbank.tmap.loyalty.application.PublicLoyaltyRuleService;
+import ru.tbank.tmap.loyalty.application.LoyaltyRuleService;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyQrView;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleDetails;
 import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
@@ -65,7 +65,7 @@ class VenueControllerTest {
     private MinioUrlBuilder minioUrlBuilder;
 
     @MockitoBean
-    private PublicLoyaltyRuleService publicLoyaltyRuleService;
+    private LoyaltyRuleService loyaltyRuleService;
 
     @MockitoBean
     private LoyaltyQrService loyaltyQrService;
@@ -144,7 +144,7 @@ class VenueControllerTest {
     void getVenueLoyaltyRules_whenVenueExists_thenReturnsActiveRules() throws Exception {
         given(publicVenueService.getVenueById(VENUE_ID))
                 .willReturn(Optional.of(venueResponse()));
-        given(publicLoyaltyRuleService.getActiveVenueRules(VENUE_ID))
+        given(loyaltyRuleService.getActiveVenueRules(VENUE_ID))
                 .willReturn(List.of(ruleView()));
 
         mockMvc.perform(get("/api/v1/venues/{id}/loyalty-rules", VENUE_ID))

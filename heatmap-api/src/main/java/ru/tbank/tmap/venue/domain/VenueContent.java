@@ -9,7 +9,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import ru.tbank.tmap.shared.geo.GeoPoint;
-import ru.tbank.tmap.venue.api.VenueCategory;
 
 @Embeddable
 public record VenueContent(

@@ -19,7 +19,7 @@ import ru.tbank.tmap.TestcontainersConfiguration;
 import ru.tbank.tmap.transaction.application.port.TransactionWriter;
 import ru.tbank.tmap.transaction.domain.Transaction;
 import ru.tbank.tmap.transaction.domain.TransactionTestFactory;
-import ru.tbank.tmap.venue.api.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenueCategory;
 
 @JdbcTest
 @Import({

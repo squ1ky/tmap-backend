@@ -27,7 +27,7 @@ import ru.tbank.tmap.transaction.application.command.TransactionEvent;
 import ru.tbank.tmap.transaction.application.exception.InvalidTransactionEventException;
 import ru.tbank.tmap.transaction.application.port.TransactionWriter;
 import ru.tbank.tmap.transaction.domain.Transaction;
-import ru.tbank.tmap.venue.api.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenueCategory;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionIngestServiceTest {

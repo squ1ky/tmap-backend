@@ -1,4 +1,4 @@
-package ru.tbank.tmap.venue.api;
+package ru.tbank.tmap.venue.domain;
 
 public enum VenueCategory {
     FOOD,

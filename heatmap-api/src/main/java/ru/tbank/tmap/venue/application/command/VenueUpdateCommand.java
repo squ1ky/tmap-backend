@@ -1,7 +1,7 @@
 package ru.tbank.tmap.venue.application.command;
 
 import ru.tbank.tmap.shared.geo.GeoPoint;
-import ru.tbank.tmap.venue.api.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenueContent;
 
 public record VenueUpdateCommand(

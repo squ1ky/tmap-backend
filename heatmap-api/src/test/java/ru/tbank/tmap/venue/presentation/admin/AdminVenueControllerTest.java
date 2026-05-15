@@ -26,7 +26,7 @@ import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 import ru.tbank.tmap.venue.application.service.admin.AdminVenueService;
 import ru.tbank.tmap.venue.application.query.VenueDetails;
-import ru.tbank.tmap.venue.api.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;

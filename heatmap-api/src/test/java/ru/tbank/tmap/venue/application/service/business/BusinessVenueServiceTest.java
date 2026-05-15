@@ -22,7 +22,7 @@ import ru.tbank.tmap.venue.application.command.VenueUpdateCommand;
 import ru.tbank.tmap.venue.application.query.VenueDetails;
 import ru.tbank.tmap.venue.application.service.VenueH3Resolver;
 import ru.tbank.tmap.venue.domain.Venue;
-import ru.tbank.tmap.venue.api.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.domain.VenueTestFactory;

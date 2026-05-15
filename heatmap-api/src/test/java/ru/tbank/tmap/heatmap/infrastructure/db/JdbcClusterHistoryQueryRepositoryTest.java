@@ -25,7 +25,7 @@ import ru.tbank.tmap.heatmap.domain.ClusterHistoryQueryRepository;
 import ru.tbank.tmap.infrastructure.h3.H3Config;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.venue.api.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenueCategory;
 
 @JdbcTest
 @Import({

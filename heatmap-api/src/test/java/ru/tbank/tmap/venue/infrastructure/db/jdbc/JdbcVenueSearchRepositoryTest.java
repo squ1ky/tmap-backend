@@ -14,7 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import ru.tbank.tmap.TestcontainersConfiguration;
 import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
-import ru.tbank.tmap.venue.api.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.repository.VenueSearchRepository;
 
 @JdbcTest

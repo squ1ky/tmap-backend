@@ -706,130 +706,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /business/venues/{id}/promos:
-    post:
-      tags: [Business (Owner)]
-      summary: Create promo
-      operationId: createBusinessVenuePromo
-      x-required-roles: [BUSINESS_OWNER]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VenuePromoCreateRequest'
-      responses:
-        '201':
-          description: Promo created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VenuePromoResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /business/promos/{id}:
-    get:
-      tags: [Business (Owner)]
-      summary: Get promo by id
-      operationId: getBusinessPromoById
-      x-required-roles: [BUSINESS_OWNER]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Promo details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VenuePromoResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    put:
-      tags: [Business (Owner)]
-      summary: Update promo
-      operationId: updateBusinessPromo
-      x-required-roles: [BUSINESS_OWNER]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VenuePromoUpdateRequest'
-      responses:
-        '200':
-          description: Promo updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VenuePromoResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    delete:
-      tags: [Business (Owner)]
-      summary: Delete promo
-      operationId: deleteBusinessPromo
-      x-required-roles: [BUSINESS_OWNER]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Promo deleted successfully
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
   # ── Business Owner Loyalty ──────────────────
   /business/venues/{id}/loyalty-rules:
     get:
@@ -1592,8 +1468,7 @@ components:
         promotions:
           type: array
           items:
-            $ref: '#/components/schemas/VenuePromoResponse'
-
+            $ref: '#/components/schemas/LoyaltyRuleResponse'
     VenueSearchResultResponse:
       type: object
       properties:
@@ -1652,63 +1527,6 @@ components:
           description: >
             Image file. Allowed formats: jpeg, png, webp.
             Maximum size: 10 MB.
-
-    # ── Promo DTOs ────────────────────────────
-    VenuePromoResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        venueId:
-          type: string
-          format: uuid
-        title:
-          type: string
-          example: "Счастливые часы!"
-        description:
-          type: string
-          example: "Скидка 20% на всю выпечку после 20:00"
-        startsAt:
-          type: string
-          format: date-time
-        endsAt:
-          type: string
-          format: date-time
-        createdAt:
-          type: string
-          format: date-time
-
-    VenuePromoCreateRequest:
-      type: object
-      required: [title, startsAt, endsAt]
-      properties:
-        title:
-          type: string
-          example: "Счастливые часы"
-        description:
-          type: string
-          example: "Скидка 20% на всю выпечку после 20:00"
-        startsAt:
-          type: string
-          format: date-time
-        endsAt:
-          type: string
-          format: date-time
-
-    VenuePromoUpdateRequest:
-      type: object
-      properties:
-        title:
-          type: string
-        description:
-          type: string
-        startsAt:
-          type: string
-          format: date-time
-        endsAt:
-          type: string
-          format: date-time
 
     # ── Loyalty DTOs ──────────────────────────
     LoyaltyActivationRequest:

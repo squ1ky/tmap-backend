@@ -56,7 +56,7 @@ public class VenueController implements VenuesPublicApi {
     @Override
     public ResponseEntity<VenuePublicResponse> getVenueById(final UUID id) {
         return publicVenueService.getVenueById(id)
-                .map(venue -> venuePublicMapper.toResponse(venue, publicVenueService.getVenuePromos(venue.id())))
+                .map(venuePublicMapper::toResponse)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new VenueNotFoundException(id));
     }

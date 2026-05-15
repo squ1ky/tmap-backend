@@ -31,7 +31,6 @@ import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleDetails;
 import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.shared.geo.BoundingBox;
-import ru.tbank.tmap.venue.application.query.VenuePromoProjection;
 import ru.tbank.tmap.venue.application.query.VenueProjection;
 import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
 import ru.tbank.tmap.venue.application.service.VenueQueryService;
@@ -49,7 +48,6 @@ import ru.tbank.tmap.venue.domain.VenueCategory;
 class VenueControllerTest {
 
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
-    private static final UUID PROMO_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
     private static final UUID RULE_ID = UUID.fromString("44444444-4444-4444-4444-444444444444");
 
     @Autowired
@@ -136,16 +134,14 @@ class VenueControllerTest {
     void getVenueById_whenVenueExists_thenReturnVenue() throws Exception {
         given(publicVenueService.getVenueById(VENUE_ID))
                 .willReturn(Optional.of(venueResponse()));
-        given(publicVenueService.getVenuePromos(VENUE_ID))
-                .willReturn(List.of(promoResponse()));
 
         mockMvc.perform(get("/api/v1/venues/{id}", VENUE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(VENUE_ID.toString()))
                 .andExpect(jsonPath("$.name").value("Bar One"))
                 .andExpect(jsonPath("$.category").value("entertainment"))
-                .andExpect(jsonPath("$.promotions[0].id").value(PROMO_ID.toString()))
-                .andExpect(jsonPath("$.promotions[0].title").value("Happy hours"));
+                .andExpect(jsonPath("$.promotions").isArray())
+                .andExpect(jsonPath("$.promotions.length()").value(0));
     }
 
     @Test
@@ -249,17 +245,6 @@ class VenueControllerTest {
                 null,
                 null,
                 null);
-    }
-
-    private VenuePromoProjection promoResponse() {
-        return new VenuePromoProjection(
-                PROMO_ID,
-                VENUE_ID,
-                "Happy hours",
-                "20% off after 20:00",
-                OffsetDateTime.parse("2026-05-10T10:00:00+03:00"),
-                OffsetDateTime.parse("2026-05-20T23:00:00+03:00"),
-                OffsetDateTime.parse("2026-05-01T10:00:00+03:00"));
     }
 
     private LoyaltyRuleDetails ruleView() {

@@ -1,15 +1,11 @@
 package ru.tbank.tmap.venue.domain;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -26,8 +22,6 @@ import lombok.ToString;
 import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -74,15 +68,6 @@ public class Venue {
 
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
-
-    @OneToMany(
-            mappedBy = "venue",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY
-    )
-    @OrderBy("createdAt DESC, id DESC")
-    private List<VenuePromo> promos = new ArrayList<>();
 
     @Builder
     public Venue(UUID id,

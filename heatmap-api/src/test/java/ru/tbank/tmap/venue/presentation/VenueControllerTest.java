@@ -25,9 +25,7 @@ import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 import ru.tbank.tmap.loyalty.application.LoyaltyQrService;
-import ru.tbank.tmap.loyalty.application.LoyaltyRuleService;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyQrView;
-import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleDetails;
 import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.shared.geo.BoundingBox;
@@ -61,9 +59,6 @@ class VenueControllerTest {
 
     @MockitoBean
     private MinioUrlBuilder minioUrlBuilder;
-
-    @MockitoBean
-    private LoyaltyRuleService loyaltyRuleService;
 
     @MockitoBean
     private LoyaltyQrService loyaltyQrService;
@@ -142,21 +137,6 @@ class VenueControllerTest {
                 .andExpect(jsonPath("$.category").value("entertainment"))
                 .andExpect(jsonPath("$.promotions").isArray())
                 .andExpect(jsonPath("$.promotions.length()").value(0));
-    }
-
-    @Test
-    void getVenueLoyaltyRules_whenVenueExists_thenReturnsActiveRules() throws Exception {
-        given(publicVenueService.getVenueById(VENUE_ID))
-                .willReturn(Optional.of(venueResponse()));
-        given(loyaltyRuleService.getActiveVenueRules(VENUE_ID))
-                .willReturn(List.of(ruleView()));
-
-        mockMvc.perform(get("/api/v1/venues/{id}/loyalty-rules", VENUE_ID))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(RULE_ID.toString()))
-                .andExpect(jsonPath("$[0].venueId").value(VENUE_ID.toString()))
-                .andExpect(jsonPath("$[0].discountPercent").value(15))
-                .andExpect(jsonPath("$[0].remainingUsages").value(96));
     }
 
     @Test
@@ -245,13 +225,6 @@ class VenueControllerTest {
                 null,
                 null,
                 null);
-    }
-
-    private LoyaltyRuleDetails ruleView() {
-        final ru.tbank.tmap.loyalty.domain.LoyaltyRule rule = new ru.tbank.tmap.loyalty.domain.LoyaltyRule(
-                RULE_ID, VENUE_ID, "Discount 15%", 15, 100);
-        rule.setCreatedAt(OffsetDateTime.parse("2026-05-01T10:00:00+03:00"));
-        return new LoyaltyRuleDetails(rule, 4L);
     }
 
     private CustomUserDetails userPrincipal() {

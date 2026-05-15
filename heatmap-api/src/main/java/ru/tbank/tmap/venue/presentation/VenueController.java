@@ -5,7 +5,6 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.openapitools.api.VenuesPublicApi;
 import org.openapitools.model.LoyaltyQrResponse;
-import org.openapitools.model.LoyaltyRuleResponse;
 import org.openapitools.model.VenuePublicResponse;
 import org.openapitools.model.VenueSearchResultResponse;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +12,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.tbank.tmap.loyalty.application.LoyaltyQrService;
-import ru.tbank.tmap.loyalty.application.LoyaltyRuleService;
 import ru.tbank.tmap.loyalty.application.command.IssueLoyaltyQrCommand;
 import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.shared.geo.BoundingBox;
@@ -33,7 +31,6 @@ public class VenueController implements VenuesPublicApi {
     private final VenueQueryService publicVenueService;
     private final VenueSearchService venueSearchService;
     private final VenueMapper venuePublicMapper;
-    private final LoyaltyRuleService loyaltyRuleService;
     private final LoyaltyQrService loyaltyQrService;
     private final BusinessLoyaltyRuleMapper businessLoyaltyRuleMapper;
 
@@ -59,16 +56,6 @@ public class VenueController implements VenuesPublicApi {
                 .map(venuePublicMapper::toResponse)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new VenueNotFoundException(id));
-    }
-
-    @Override
-    public ResponseEntity<List<LoyaltyRuleResponse>> getVenueLoyaltyRules(final UUID id) {
-        publicVenueService.getVenueById(id)
-                .orElseThrow(() -> new VenueNotFoundException(id));
-
-        return ResponseEntity.ok(loyaltyRuleService.getActiveVenueRules(id).stream()
-                .map(businessLoyaltyRuleMapper::toResponse)
-                .toList());
     }
 
     @Override

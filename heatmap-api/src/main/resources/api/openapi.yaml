@@ -340,33 +340,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /venues/{id}/loyalty-rules:
-    get:
-      tags: [Venues (Public)]
-      summary: Get active loyalty rules for a venue
-      description: >
-        Returns active loyalty rules available for the given venue.
-        Public endpoint — users need to see available discounts before scanning QR.
-      operationId: getVenueLoyaltyRules
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Active loyalty rules
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LoyaltyRuleResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
   /venues/{id}/loyalty-rules/{ruleId}/qr:
     get:
       tags: [Venues (Public)]

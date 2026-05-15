@@ -1,6 +1,7 @@
 package ru.tbank.tmap.venue.domain;
 
 import ru.tbank.tmap.shared.geo.GeoPoint;
+
 import java.util.UUID;
 
 public class VenueTestFactory {

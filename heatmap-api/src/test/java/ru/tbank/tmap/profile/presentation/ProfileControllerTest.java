@@ -19,7 +19,7 @@ import ru.tbank.tmap.auth.application.exception.PasswordChangeValidationExceptio
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
 import ru.tbank.tmap.profile.application.ProfileService;
 import ru.tbank.tmap.profile.presentation.mapper.ProfileMapper;
-import ru.tbank.tmap.test.security.TestSecurityConfig;
+import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 import ru.tbank.tmap.user.api.UserView;
 
 import static org.mockito.ArgumentMatchers.any;

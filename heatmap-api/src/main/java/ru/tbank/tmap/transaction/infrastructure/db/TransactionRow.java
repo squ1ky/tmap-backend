@@ -1,4 +1,4 @@
-package ru.tbank.tmap.transaction;
+package ru.tbank.tmap.transaction.infrastructure.db;
 
 import ru.tbank.tmap.venue.domain.VenueCategory;
 
@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-public record TransactionRow(
+record TransactionRow(
         UUID id,
         UUID venueId,
         BigDecimal amount,

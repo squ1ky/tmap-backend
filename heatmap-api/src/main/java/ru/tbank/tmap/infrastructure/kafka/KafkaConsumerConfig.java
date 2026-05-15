@@ -1,6 +1,5 @@
 package ru.tbank.tmap.infrastructure.kafka;
 
-import io.jsonwebtoken.io.DeserializationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,8 +10,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.util.backoff.FixedBackOff;
-import ru.tbank.tmap.transaction.TransactionEvent;
+import ru.tbank.tmap.transaction.application.command.TransactionEvent;
 
 @Configuration
 @EnableKafka

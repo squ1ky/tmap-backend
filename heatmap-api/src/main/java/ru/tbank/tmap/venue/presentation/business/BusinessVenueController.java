@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.openapitools.api.BusinessOwnerApi;
+import org.openapitools.model.LoyaltyRuleResponse;
 import org.openapitools.model.VenueCreateRequest;
 import org.openapitools.model.VenueOwnerResponse;
 import org.openapitools.model.VenueUpdateRequest;
@@ -12,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import ru.tbank.tmap.loyalty.api.LoyaltyRuleFacade;
+import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.shared.utils.SecurityUtils;
 import ru.tbank.tmap.venue.application.command.VenueCreateCommand;
 import ru.tbank.tmap.venue.application.command.VenueUpdateCommand;
@@ -30,13 +33,15 @@ public class BusinessVenueController implements BusinessOwnerApi {
     private final BusinessVenuePhotoService businessVenuePhotoService;
     private final BusinessVenueMapper businessVenueMapper;
     private final BusinessVenueOwnerMapper venueOwnerMapper;
+    private final LoyaltyRuleFacade loyaltyRuleFacade;
+    private final BusinessLoyaltyRuleMapper businessLoyaltyRuleMapper;
 
     @Override
     public ResponseEntity<VenueOwnerResponse> createVenue(final VenueCreateRequest venueCreateRequest) {
         final UUID ownerId = SecurityUtils.currentUserId();
         final VenueCreateCommand command = businessVenueMapper.toCommand(venueCreateRequest);
         final VenueDetails venue = businessVenueService.createVenue(ownerId, command);
-        final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
+        final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue, toPromotions(venue.venue().getId()));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -47,7 +52,7 @@ public class BusinessVenueController implements BusinessOwnerApi {
         final List<VenueDetails> venues = businessVenueService.getMyVenues(ownerId);
 
         return ResponseEntity.ok(venues.stream()
-                .map(venueOwnerMapper::toResponse)
+                .map(venue -> venueOwnerMapper.toResponse(venue, toPromotions(venue.venue().getId())))
                 .toList());
     }
 
@@ -56,7 +61,7 @@ public class BusinessVenueController implements BusinessOwnerApi {
         final UUID ownerId = SecurityUtils.currentUserId();
         final VenueDetails venue = businessVenueService.getMyVenueById(ownerId, id)
                 .orElseThrow(() -> new VenueNotFoundException(id));
-        final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue);
+        final VenueOwnerResponse response = venueOwnerMapper.toResponse(venue, toPromotions(venue.venue().getId()));
 
         return ResponseEntity.ok(response);
     }
@@ -67,7 +72,7 @@ public class BusinessVenueController implements BusinessOwnerApi {
         final VenueUpdateCommand command = businessVenueMapper.toCommand(venueUpdateRequest);
         final VenueDetails venue = businessVenueService.updateVenue(ownerId, id, command);
 
-        return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
+        return ResponseEntity.ok(venueOwnerMapper.toResponse(venue, toPromotions(venue.venue().getId())));
     }
 
     @Override
@@ -75,7 +80,7 @@ public class BusinessVenueController implements BusinessOwnerApi {
         final UUID ownerId = SecurityUtils.currentUserId();
         final Venue venue = businessVenuePhotoService.uploadVenuePhoto(ownerId, id, file);
 
-        return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
+        return ResponseEntity.ok(venueOwnerMapper.toResponse(venue, toPromotions(venue.getId())));
     }
 
     @Override
@@ -83,6 +88,10 @@ public class BusinessVenueController implements BusinessOwnerApi {
         final UUID ownerId = SecurityUtils.currentUserId();
         final Venue venue = businessVenuePhotoService.deleteVenuePhoto(ownerId, id);
 
-        return ResponseEntity.ok(venueOwnerMapper.toResponse(venue));
+        return ResponseEntity.ok(venueOwnerMapper.toResponse(venue, toPromotions(venue.getId())));
+    }
+
+    private List<LoyaltyRuleResponse> toPromotions(final UUID venueId) {
+        return businessLoyaltyRuleMapper.toResponseList(loyaltyRuleFacade.getActiveVenueRules(venueId));
     }
 }

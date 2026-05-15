@@ -3,6 +3,7 @@ package ru.tbank.tmap.venue.presentation.business;
 import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
+import org.openapitools.model.LoyaltyRuleResponse;
 import org.openapitools.model.VenueModerationStatus;
 import org.openapitools.model.VenueOwnerResponse;
 import org.springframework.stereotype.Component;
@@ -20,10 +21,18 @@ public class BusinessVenueOwnerMapper {
     private final VenueMapper venueMapper;
 
     public VenueOwnerResponse toResponse(final Venue venue) {
-        return toResponse(new VenueDetails(venue, null));
+        return toResponse(venue, List.of());
+    }
+
+    public VenueOwnerResponse toResponse(final Venue venue, final List<LoyaltyRuleResponse> promotions) {
+        return toResponse(new VenueDetails(venue, null), promotions);
     }
 
     public VenueOwnerResponse toResponse(final VenueDetails details) {
+        return toResponse(details, List.of());
+    }
+
+    public VenueOwnerResponse toResponse(final VenueDetails details, final List<LoyaltyRuleResponse> promotions) {
         final Venue venue = details.venue();
         final VenuePendingUpdate pendingUpdate = details.pendingUpdate();
         final VenueContent content = details.displayContent();
@@ -46,7 +55,7 @@ public class BusinessVenueOwnerMapper {
                 .peopleNow(0)
                 .createdAt(venue.getCreatedAt())
                 .updatedAt(pendingUpdate != null ? pendingUpdate.getUpdatedAt() : venue.getUpdatedAt())
-                .promotions(List.of())
+                .promotions(promotions)
                 .h3Res9(Long.toUnsignedString(content.h3Res9()))
                 .moderationStatus(VenueModerationStatus.fromValue(moderationStatus.name()))
                 .rejectReason(rejectReason);

@@ -5,8 +5,10 @@ import java.util.List;
 import java.util.Locale;
 
 import lombok.RequiredArgsConstructor;
+import org.openapitools.model.LoyaltyRuleResponse;
 import org.openapitools.model.VenuePublicResponse;
 import org.openapitools.model.VenueSearchResultResponse;
+import org.openapitools.model.VenueViewportResponse;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.venue.application.query.VenueProjection;
@@ -19,6 +21,10 @@ public class VenueMapper {
     private final MinioUrlBuilder minioUrlBuilder;
 
     public VenuePublicResponse toResponse(final VenueProjection venue) {
+        return toResponse(venue, List.of());
+    }
+
+    public VenuePublicResponse toResponse(final VenueProjection venue, final List<LoyaltyRuleResponse> promotions) {
         return new VenuePublicResponse()
                 .id(venue.id())
                 .name(venue.name())
@@ -34,16 +40,16 @@ public class VenueMapper {
                 .peopleNow(0)
                 .createdAt(venue.createdAt())
                 .updatedAt(venue.updatedAt())
-                .promotions(List.of());
+                .promotions(promotions);
     }
 
-    public VenuePublicResponse toViewportResponse(final VenueProjection venue) {
-        return new VenuePublicResponse()
+    public VenueViewportResponse toViewportResponse(final VenueProjection venue) {
+        return new VenueViewportResponse()
                 .id(venue.id())
                 .name(venue.name())
                 .lat(venue.lat())
                 .lng(venue.lng())
-                .category(VenuePublicResponse.CategoryEnum.fromValue(
+                .category(VenueViewportResponse.CategoryEnum.fromValue(
                         venue.category().name().toLowerCase(Locale.ROOT)))
                 .peopleNow(0);
     }

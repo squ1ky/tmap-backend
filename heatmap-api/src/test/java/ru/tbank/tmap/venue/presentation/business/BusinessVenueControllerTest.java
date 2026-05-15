@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
+import ru.tbank.tmap.loyalty.api.LoyaltyRuleFacade;
+import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleDetails;
+import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 import ru.tbank.tmap.venue.application.query.VenueDetails;
@@ -39,6 +43,7 @@ import ru.tbank.tmap.venue.domain.VenueTestFactory;
         TestSecurityConfig.class,
         GlobalExceptionHandler.class,
         BusinessVenueMapper.class,
+        BusinessLoyaltyRuleMapper.class,
 })
 class BusinessVenueControllerTest {
 
@@ -60,6 +65,9 @@ class BusinessVenueControllerTest {
     @MockitoBean
     private BusinessVenueOwnerMapper venueOwnerMapper;
 
+    @MockitoBean
+    private LoyaltyRuleFacade loyaltyRuleFacade;
+
     @Test
     void createVenue_whenUserAuthenticated_thenReturnsCreated() throws Exception {
         final Venue venue = VenueTestFactory.createVenue(VenueStatus.PENDING, null);
@@ -67,7 +75,11 @@ class BusinessVenueControllerTest {
                 org.mockito.ArgumentMatchers.eq(OWNER_ID),
                 org.mockito.ArgumentMatchers.any(ru.tbank.tmap.venue.application.command.VenueCreateCommand.class)
         )).willReturn(new VenueDetails(venue, null));
-        given(venueOwnerMapper.toResponse(org.mockito.ArgumentMatchers.any(VenueDetails.class)))
+        given(loyaltyRuleFacade.getActiveVenueRules(VENUE_ID)).willReturn(List.of(ruleView()));
+        given(venueOwnerMapper.toResponse(
+                org.mockito.ArgumentMatchers.any(VenueDetails.class),
+                org.mockito.ArgumentMatchers.anyList()
+        ))
                 .willReturn(new VenueOwnerResponse()
                         .id(VENUE_ID)
                         .name("Bar One")
@@ -100,7 +112,11 @@ class BusinessVenueControllerTest {
                 org.mockito.ArgumentMatchers.eq(VENUE_ID),
                 org.mockito.ArgumentMatchers.any(VenueUpdateCommand.class)
         )).willReturn(new VenueDetails(venue, pendingUpdate));
-        given(venueOwnerMapper.toResponse(org.mockito.ArgumentMatchers.any(VenueDetails.class)))
+        given(loyaltyRuleFacade.getActiveVenueRules(VENUE_ID)).willReturn(List.of(ruleView()));
+        given(venueOwnerMapper.toResponse(
+                org.mockito.ArgumentMatchers.any(VenueDetails.class),
+                org.mockito.ArgumentMatchers.anyList()
+        ))
                 .willReturn(new VenueOwnerResponse()
                         .id(VENUE_ID)
                         .name("Bar One")
@@ -124,6 +140,17 @@ class BusinessVenueControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Bar One"))
                 .andExpect(jsonPath("$.moderationStatus").value("PENDING_UPDATE"));
+    }
+
+    private LoyaltyRuleDetails ruleView() {
+        final ru.tbank.tmap.loyalty.domain.LoyaltyRule rule = new ru.tbank.tmap.loyalty.domain.LoyaltyRule(
+                UUID.fromString("44444444-4444-4444-4444-444444444444"),
+                VENUE_ID,
+                "Discount 15%",
+                15,
+                100
+        );
+        return new LoyaltyRuleDetails(rule, 4L);
     }
 
     private CustomUserDetails userPrincipal() {

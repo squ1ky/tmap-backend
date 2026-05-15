@@ -95,6 +95,10 @@ class VenueControllerTest {
                 .andExpect(jsonPath("$[0].promotions").doesNotExist())
                 .andExpect(jsonPath("$[0].createdAt").doesNotExist())
                 .andExpect(jsonPath("$[0].updatedAt").doesNotExist());
+        then(publicVenueService).should().getVenuesInViewport(
+                new BoundingBox(55.7801, 49.1102, 55.7995, 49.1355),
+                List.of()
+        );
         then(publicVenueService).shouldHaveNoMoreInteractions();
     }
 

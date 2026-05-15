@@ -7,7 +7,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.loyalty.application.command.RedeemLoyaltyRuleCommand;
@@ -114,21 +113,17 @@ public class BusinessLoyaltyRuleService {
         }
 
         final LoyaltyQrSession qrSession = validateQrSession(rule, command);
-
-        if (loyaltyVerificationRepository.existsByRuleIdAndUserId(command.ruleId(), qrSession.getUserId())) {
-            loyaltyQrService.markConsumed(qrSession);
-            return new LoyaltyActivationResult(LoyaltyActivationStatus.ALREADY_USED, null);
-        }
-
-        final long currentUsages = loyaltyVerificationRepository.countByRuleId(command.ruleId());
-        if (currentUsages >= rule.getMaxUsages()) {
-            loyaltyQrService.markConsumed(qrSession);
-            return new LoyaltyActivationResult(LoyaltyActivationStatus.LIMIT_EXCEEDED, null);
-        }
-
-        final LoyaltyVerification loyaltyVerification;
         try {
-            loyaltyVerification = loyaltyVerificationRepository.save(
+            if (loyaltyVerificationRepository.existsByRuleIdAndUserId(command.ruleId(), qrSession.getUserId())) {
+                return new LoyaltyActivationResult(LoyaltyActivationStatus.ALREADY_USED, null);
+            }
+
+            final long currentUsages = loyaltyVerificationRepository.countByRuleId(command.ruleId());
+            if (currentUsages >= rule.getMaxUsages()) {
+                return new LoyaltyActivationResult(LoyaltyActivationStatus.LIMIT_EXCEEDED, null);
+            }
+
+            final LoyaltyVerification loyaltyVerification = loyaltyVerificationRepository.save(
                     new LoyaltyVerification(
                             UUID.randomUUID(),
                             rule.getVenueId(),
@@ -137,12 +132,10 @@ public class BusinessLoyaltyRuleService {
                             rule.getDiscountPercent()
                     )
             );
-        } catch (DataIntegrityViolationException ex) {
+            return new LoyaltyActivationResult(LoyaltyActivationStatus.SUCCESS, loyaltyVerification);
+        } finally {
             loyaltyQrService.markConsumed(qrSession);
-            return new LoyaltyActivationResult(LoyaltyActivationStatus.ALREADY_USED, null);
         }
-        loyaltyQrService.markConsumed(qrSession);
-        return new LoyaltyActivationResult(LoyaltyActivationStatus.SUCCESS, loyaltyVerification);
     }
 
     private LoyaltyQrSession validateQrSession(

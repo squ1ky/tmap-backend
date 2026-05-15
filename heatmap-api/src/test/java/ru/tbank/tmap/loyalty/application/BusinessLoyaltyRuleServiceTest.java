@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 import ru.tbank.tmap.loyalty.domain.LoyaltyQrSession;
 import ru.tbank.tmap.loyalty.application.command.RedeemLoyaltyRuleCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
@@ -344,23 +343,6 @@ class BusinessLoyaltyRuleServiceTest {
         assertThatThrownBy(() -> businessLoyaltyRuleService.redeemLoyaltyRule(REDEEM_COMMAND))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("QR does not belong to requested loyalty rule");
-    }
-
-    @Test
-    void redeemLoyaltyRule_whenConcurrentInsertViolatesUniqueConstraint_thenReturnsAlreadyUsed() {
-        final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
-        given(loyaltyQrService.resolveActiveSessionForUpdate(QR_PAYLOAD)).willReturn(qrSession());
-        given(loyaltyRuleRepository.findByIdForUpdate(RULE_ID)).willReturn(Optional.of(rule));
-        given(loyaltyVerificationRepository.existsByRuleIdAndUserId(RULE_ID, USER_ID)).willReturn(false);
-        given(loyaltyVerificationRepository.countByRuleId(RULE_ID)).willReturn(1L);
-        given(loyaltyVerificationRepository.save(any(LoyaltyVerification.class)))
-                .willThrow(new DataIntegrityViolationException("uq_loyalty_verifications_rule_user"));
-
-        final LoyaltyActivationResult result = businessLoyaltyRuleService
-                .redeemLoyaltyRule(REDEEM_COMMAND);
-
-        assertThat(result.status()).isEqualTo(LoyaltyActivationStatus.ALREADY_USED);
-        assertThat(result.verification()).isNull();
     }
 
     private LoyaltyRule loyaltyRule(

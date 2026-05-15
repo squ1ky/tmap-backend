@@ -18,10 +18,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.tbank.tmap.auth.application.port.RefreshTokenHasher;
 import ru.tbank.tmap.loyalty.application.command.IssueLoyaltyQrCommand;
 import ru.tbank.tmap.loyalty.application.config.LoyaltyQrProperties;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyQrView;
+import ru.tbank.tmap.loyalty.domain.LoyaltyQrHasher;
 import ru.tbank.tmap.loyalty.domain.LoyaltyQrSession;
 import ru.tbank.tmap.loyalty.domain.LoyaltyQrSessionRepository;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
@@ -45,7 +45,7 @@ class LoyaltyQrServiceTest {
     private UserAccountFacade userAccountFacade;
 
     @Mock
-    private RefreshTokenHasher tokenHasher;
+    private LoyaltyQrHasher loyaltyQrHasher;
 
     @Captor
     private ArgumentCaptor<LoyaltyQrSession> sessionCaptor;
@@ -58,7 +58,7 @@ class LoyaltyQrServiceTest {
                 loyaltyRuleRepository,
                 loyaltyQrSessionRepository,
                 userAccountFacade,
-                tokenHasher,
+                loyaltyQrHasher,
                 new LoyaltyQrProperties(120),
                 Clock.fixed(Instant.parse("2026-05-14T10:00:00Z"), ZoneOffset.UTC)
         );
@@ -69,7 +69,7 @@ class LoyaltyQrServiceTest {
         given(userAccountFacade.existsById(USER_ID)).willReturn(true);
         given(loyaltyRuleRepository.findById(RULE_ID))
                 .willReturn(Optional.of(new LoyaltyRule(RULE_ID, VENUE_ID, "Discount 15%", 15, 100)));
-        given(tokenHasher.hash(any())).willReturn("hashed-token");
+        given(loyaltyQrHasher.hash(any())).willReturn("hashed-token");
 
         final LoyaltyQrView response = loyaltyQrService.issueQr(new IssueLoyaltyQrCommand(USER_ID, VENUE_ID, RULE_ID));
 

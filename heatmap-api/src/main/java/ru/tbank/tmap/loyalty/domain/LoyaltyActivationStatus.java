@@ -1,4 +1,4 @@
-package ru.tbank.tmap.loyalty.application.command;
+package ru.tbank.tmap.loyalty.domain;
 
 public enum LoyaltyActivationStatus {
     SUCCESS,

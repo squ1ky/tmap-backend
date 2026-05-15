@@ -18,7 +18,6 @@ import ru.tbank.tmap.user.api.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;
 import ru.tbank.tmap.heatmap.domain.exception.ClusterNotFoundException;
-import ru.tbank.tmap.loyalty.domain.exception.LoyaltyQrValidationException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleStateException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleUpdateValidationException;
@@ -87,13 +86,6 @@ public class GlobalExceptionHandler {
             final LoyaltyRuleUpdateValidationException ex
     ) {
         log.warn("Loyalty rule update validation error: {}", ex.getMessage());
-        return ResponseEntity.badRequest()
-                .body(new ErrorResponse(ErrorCode.VALIDATION_ERROR, ex.getMessage()));
-    }
-
-    @ExceptionHandler(LoyaltyQrValidationException.class)
-    public ResponseEntity<ErrorResponse> handleLoyaltyQrValidation(final LoyaltyQrValidationException ex) {
-        log.warn("Loyalty QR validation error: {}", ex.getMessage());
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse(ErrorCode.VALIDATION_ERROR, ex.getMessage()));
     }

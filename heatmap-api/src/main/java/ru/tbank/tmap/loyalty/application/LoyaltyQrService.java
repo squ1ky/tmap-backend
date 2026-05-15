@@ -8,9 +8,9 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.tbank.tmap.auth.application.port.RefreshTokenHasher;
 import ru.tbank.tmap.loyalty.application.command.IssueLoyaltyQrCommand;
 import ru.tbank.tmap.loyalty.application.config.LoyaltyQrProperties;
+import ru.tbank.tmap.loyalty.domain.LoyaltyQrHasher;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyQrView;
 import ru.tbank.tmap.loyalty.domain.LoyaltyQrSession;
 import ru.tbank.tmap.loyalty.domain.LoyaltyQrSessionRepository;
@@ -32,7 +32,7 @@ public class LoyaltyQrService {
     private final LoyaltyRuleRepository loyaltyRuleRepository;
     private final LoyaltyQrSessionRepository loyaltyQrSessionRepository;
     private final UserAccountFacade userAccountFacade;
-    private final RefreshTokenHasher tokenHasher;
+    private final LoyaltyQrHasher loyaltyQrHasher;
     private final LoyaltyQrProperties loyaltyQrProperties;
     private final Clock clock;
     private final SecureRandom secureRandom = new SecureRandom();
@@ -58,7 +58,7 @@ public class LoyaltyQrService {
 
         loyaltyQrSessionRepository.save(new LoyaltyQrSession(
                 UUID.randomUUID(),
-                tokenHasher.hash(plainToken),
+                loyaltyQrHasher.hash(plainToken),
                 command.userId(),
                 command.venueId(),
                 command.ruleId(),
@@ -75,7 +75,7 @@ public class LoyaltyQrService {
 
     public LoyaltyQrSession resolveActiveSessionForUpdate(final String qrPayload) {
         final String plainToken = extractPlainToken(qrPayload);
-        final String tokenHash = tokenHasher.hash(plainToken);
+        final String tokenHash = loyaltyQrHasher.hash(plainToken);
         final LoyaltyQrSession session = loyaltyQrSessionRepository.findByTokenHashForUpdate(tokenHash)
                 .orElseThrow(LoyaltyQrValidationException::invalidQr);
 

@@ -29,7 +29,7 @@ import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleDetails;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
 import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
-import ru.tbank.tmap.test.security.TestSecurityConfig;
+import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 
 @WebMvcTest(BusinessLoyaltyRuleController.class)
 @Import({

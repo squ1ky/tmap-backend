@@ -1,4 +1,4 @@
-package ru.tbank.tmap.transaction;
+package ru.tbank.tmap.transaction.application.command;
 
 import java.math.BigDecimal;
 import java.time.Instant;

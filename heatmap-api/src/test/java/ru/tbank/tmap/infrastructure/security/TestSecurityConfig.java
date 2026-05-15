@@ -1,4 +1,4 @@
-package ru.tbank.tmap.test.security;
+package ru.tbank.tmap.infrastructure.security;
 
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -9,7 +9,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import ru.tbank.tmap.auth.application.port.TokenIssuer;
-import ru.tbank.tmap.infrastructure.security.SecurityConfig;
 
 @TestConfiguration
 @Import(SecurityConfig.class)

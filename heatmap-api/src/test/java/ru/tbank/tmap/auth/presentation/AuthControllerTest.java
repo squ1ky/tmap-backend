@@ -22,7 +22,7 @@ import ru.tbank.tmap.auth.application.AuthResult;
 import ru.tbank.tmap.auth.application.service.AuthService;
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
 import ru.tbank.tmap.auth.infrastructure.security.cookie.RefreshTokenCookieFactory;
-import ru.tbank.tmap.test.security.TestSecurityConfig;
+import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 import ru.tbank.tmap.user.api.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;

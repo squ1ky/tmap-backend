@@ -1,6 +1,7 @@
 package ru.tbank.tmap.venue.presentation;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -8,7 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -29,12 +29,12 @@ import ru.tbank.tmap.loyalty.application.query.LoyaltyQrView;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleDetails;
 import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.shared.geo.BoundingBox;
+import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.test.security.TestSecurityConfig;
 import ru.tbank.tmap.venue.application.query.VenuePromoProjection;
 import ru.tbank.tmap.venue.application.service.VenueQueryService;
 import ru.tbank.tmap.venue.application.service.VenueSearchService;
 import ru.tbank.tmap.venue.domain.VenueCategory;
-import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.venue.application.query.VenueProjection;
 import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
 
@@ -76,8 +76,6 @@ class VenueControllerTest {
                 new BoundingBox(55.7801, 49.1102, 55.7995, 49.1355),
                 List.of()))
                 .willReturn(List.of(venueResponse()));
-        given(publicVenueService.getVenuePromosByVenueIds(List.of(VENUE_ID)))
-                .willReturn(Map.of(VENUE_ID, List.of(promoResponse())));
 
         mockMvc.perform(get("/api/v1/venues")
                         .param("swLat", "55.7801")
@@ -88,8 +86,16 @@ class VenueControllerTest {
                 .andExpect(jsonPath("$[0].id").value(VENUE_ID.toString()))
                 .andExpect(jsonPath("$[0].name").value("Bar One"))
                 .andExpect(jsonPath("$[0].category").value("entertainment"))
-                .andExpect(jsonPath("$[0].promotions[0].id").value(PROMO_ID.toString()))
-                .andExpect(jsonPath("$[0].promotions[0].title").value("Happy hours"));
+                .andExpect(jsonPath("$[0].lat").value(55.7905))
+                .andExpect(jsonPath("$[0].lng").value(49.1140))
+                .andExpect(jsonPath("$[0].address").doesNotExist())
+                .andExpect(jsonPath("$[0].description").doesNotExist())
+                .andExpect(jsonPath("$[0].dishOfDay").doesNotExist())
+                .andExpect(jsonPath("$[0].music").doesNotExist())
+                .andExpect(jsonPath("$[0].promotions").doesNotExist())
+                .andExpect(jsonPath("$[0].createdAt").doesNotExist())
+                .andExpect(jsonPath("$[0].updatedAt").doesNotExist());
+        then(publicVenueService).shouldHaveNoMoreInteractions();
     }
 
     @Test
@@ -98,8 +104,6 @@ class VenueControllerTest {
                 new BoundingBox(55.7801, 49.1102, 55.7995, 49.1355),
                 List.of(VenueCategory.FOOD)))
                 .willReturn(List.of());
-        given(publicVenueService.getVenuePromosByVenueIds(List.of()))
-                .willReturn(Map.of());
 
         mockMvc.perform(get("/api/v1/venues")
                         .param("swLat", "55.7801")

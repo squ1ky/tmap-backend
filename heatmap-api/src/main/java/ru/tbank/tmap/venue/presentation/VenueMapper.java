@@ -24,6 +24,18 @@ public class VenueMapper {
         return toResponse(venue, List.of());
     }
 
+    public VenuePublicResponse toViewportResponse(final VenueProjection venue) {
+        return new VenuePublicResponse()
+                .id(venue.id())
+                .name(venue.name())
+                .lat(venue.lat())
+                .lng(venue.lng())
+                .category(VenuePublicResponse.CategoryEnum.fromValue(
+                        venue.category().name().toLowerCase(Locale.ROOT)))
+                .photoUrl(toPublicPhotoUri(venue.photoObjectKey()))
+                .peopleNow(0);
+    }
+
     public VenuePublicResponse toResponse(final VenueProjection venue, final List<VenuePromoProjection> promotions) {
         return new VenuePublicResponse()
                 .id(venue.id())

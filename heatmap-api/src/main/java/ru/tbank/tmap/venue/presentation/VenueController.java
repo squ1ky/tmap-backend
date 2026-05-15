@@ -1,7 +1,6 @@
 package ru.tbank.tmap.venue.presentation;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.openapitools.api.VenuesPublicApi;
@@ -19,7 +18,6 @@ import ru.tbank.tmap.loyalty.application.command.IssueLoyaltyQrCommand;
 import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.utils.SecurityUtils;
-import ru.tbank.tmap.venue.application.query.VenuePromoProjection;
 import ru.tbank.tmap.venue.application.query.VenueProjection;
 import ru.tbank.tmap.venue.application.service.VenueQueryService;
 import ru.tbank.tmap.venue.application.service.VenueSearchService;
@@ -50,14 +48,8 @@ public class VenueController implements VenuesPublicApi {
                 new BoundingBox(swLat, swLng, neLat, neLng),
                 toCategories(category)
         );
-        final Map<UUID, List<VenuePromoProjection>> promotionsByVenueId = publicVenueService.getVenuePromosByVenueIds(
-                venues.stream().map(VenueProjection::id).toList()
-        );
         return ResponseEntity.ok(venues.stream()
-                .map(venue -> venuePublicMapper.toResponse(
-                        venue,
-                        promotionsByVenueId.getOrDefault(venue.id(), List.of())
-                ))
+                .map(venuePublicMapper::toViewportResponse)
                 .toList());
     }
 

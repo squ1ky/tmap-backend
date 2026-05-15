@@ -20,7 +20,7 @@ tags:
   - name: Venues (Public)
     description: Public venue pages
   - name: Business (Owner)
-    description: Venue and promotion management for owners
+    description: Venue management for owners
   - name: Business Owner Loyalty
     description: Loyalty rule management for owners
   - name: Profile
@@ -286,7 +286,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/VenuePublicResponse'
+                  $ref: '#/components/schemas/VenueViewportResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
 
@@ -337,33 +337,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VenuePublicResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /venues/{id}/loyalty-rules:
-    get:
-      tags: [Venues (Public)]
-      summary: Get active loyalty rules for a venue
-      description: >
-        Returns active loyalty rules available for the given venue.
-        Public endpoint — users need to see available discounts before scanning QR.
-      operationId: getVenueLoyaltyRules
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Active loyalty rules
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LoyaltyRuleResponse'
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -464,29 +437,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoyaltyVerificationPage'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /profile/loyalty/used-promos:
-    get:
-      tags: [Profile]
-      summary: Get current user used promos history
-      operationId: getUsedPromosHistory
-      x-required-roles: [USER]
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/SizeParam'
-      responses:
-        '200':
-          description: Current user used promos history
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsedPromoPage'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -699,130 +649,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VenueOwnerResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /business/venues/{id}/promos:
-    post:
-      tags: [Business (Owner)]
-      summary: Create promo
-      operationId: createBusinessVenuePromo
-      x-required-roles: [BUSINESS_OWNER]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VenuePromoCreateRequest'
-      responses:
-        '201':
-          description: Promo created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VenuePromoResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /business/promos/{id}:
-    get:
-      tags: [Business (Owner)]
-      summary: Get promo by id
-      operationId: getBusinessPromoById
-      x-required-roles: [BUSINESS_OWNER]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Promo details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VenuePromoResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    put:
-      tags: [Business (Owner)]
-      summary: Update promo
-      operationId: updateBusinessPromo
-      x-required-roles: [BUSINESS_OWNER]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VenuePromoUpdateRequest'
-      responses:
-        '200':
-          description: Promo updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VenuePromoResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    delete:
-      tags: [Business (Owner)]
-      summary: Delete promo
-      operationId: deleteBusinessPromo
-      x-required-roles: [BUSINESS_OWNER]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Promo deleted successfully
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1542,6 +1368,33 @@ components:
         music:
           type: string
 
+    VenueViewportResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "5085d345-3129-4e4b-972d-8bcf9a2ea9c9"
+        name:
+          type: string
+          example: "Скуратов Кофе"
+        lat:
+          type: number
+          format: double
+          example: 55.7915
+        lng:
+          type: number
+          format: double
+          example: 49.1118
+        category:
+          type: string
+          enum: [food, entertainment, shopping]
+          example: "food"
+        peopleNow:
+          type: integer
+          description: Approximate number of people currently at the venue based on tx
+          example: 18
+
     VenuePublicResponse:
       type: object
       properties:
@@ -1592,8 +1445,7 @@ components:
         promotions:
           type: array
           items:
-            $ref: '#/components/schemas/VenuePromoResponse'
-
+            $ref: '#/components/schemas/LoyaltyRuleResponse'
     VenueSearchResultResponse:
       type: object
       properties:
@@ -1652,63 +1504,6 @@ components:
           description: >
             Image file. Allowed formats: jpeg, png, webp.
             Maximum size: 10 MB.
-
-    # ── Promo DTOs ────────────────────────────
-    VenuePromoResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        venueId:
-          type: string
-          format: uuid
-        title:
-          type: string
-          example: "Счастливые часы!"
-        description:
-          type: string
-          example: "Скидка 20% на всю выпечку после 20:00"
-        startsAt:
-          type: string
-          format: date-time
-        endsAt:
-          type: string
-          format: date-time
-        createdAt:
-          type: string
-          format: date-time
-
-    VenuePromoCreateRequest:
-      type: object
-      required: [title, startsAt, endsAt]
-      properties:
-        title:
-          type: string
-          example: "Счастливые часы"
-        description:
-          type: string
-          example: "Скидка 20% на всю выпечку после 20:00"
-        startsAt:
-          type: string
-          format: date-time
-        endsAt:
-          type: string
-          format: date-time
-
-    VenuePromoUpdateRequest:
-      type: object
-      properties:
-        title:
-          type: string
-        description:
-          type: string
-        startsAt:
-          type: string
-          format: date-time
-        endsAt:
-          type: string
-          format: date-time
 
     # ── Loyalty DTOs ──────────────────────────
     LoyaltyActivationRequest:
@@ -1862,39 +1657,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LoyaltyVerificationResponse'
-        page:
-          type: integer
-        size:
-          type: integer
-        totalPages:
-          type: integer
-        totalElements:
-          type: integer
-          format: int64
-
-    UsedPromoResponse:
-      type: object
-      properties:
-        venueName:
-          type: string
-          example: "ТЦ Кольцо"
-        description:
-          type: string
-          example: "-20% на билеты в кино"
-        discountPercent:
-          type: integer
-          example: 20
-        usedAt:
-          type: string
-          format: date-time
-
-    UsedPromoPage:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/UsedPromoResponse'
         page:
           type: integer
         size:
@@ -2116,7 +1878,7 @@ components:
             message: "Requested venue with ID 5085d345-3129-4e4b-972d-8bcf9a2ea9c9 was not found."
 
     Conflict:
-      description: Data conflict (e.g. duplicate email, already used promo, activation limit reached)
+      description: Data conflict (e.g. duplicate email, loyalty rule already used, activation limit reached)
       content:
         application/json:
           schema:

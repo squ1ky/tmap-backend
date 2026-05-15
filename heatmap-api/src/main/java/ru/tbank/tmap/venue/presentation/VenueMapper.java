@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.Locale;
 
 import lombok.RequiredArgsConstructor;
-import org.openapitools.model.VenuePromoResponse;
+import org.openapitools.model.LoyaltyRuleResponse;
 import org.openapitools.model.VenuePublicResponse;
 import org.openapitools.model.VenueSearchResultResponse;
+import org.openapitools.model.VenueViewportResponse;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
-import ru.tbank.tmap.venue.application.query.VenuePromoProjection;
 import ru.tbank.tmap.venue.application.query.VenueProjection;
 import ru.tbank.tmap.venue.application.query.VenueSearchProjection;
 
@@ -24,18 +24,7 @@ public class VenueMapper {
         return toResponse(venue, List.of());
     }
 
-    public VenuePublicResponse toViewportResponse(final VenueProjection venue) {
-        return new VenuePublicResponse()
-                .id(venue.id())
-                .name(venue.name())
-                .lat(venue.lat())
-                .lng(venue.lng())
-                .category(VenuePublicResponse.CategoryEnum.fromValue(
-                        venue.category().name().toLowerCase(Locale.ROOT)))
-                .peopleNow(0);
-    }
-
-    public VenuePublicResponse toResponse(final VenueProjection venue, final List<VenuePromoProjection> promotions) {
+    public VenuePublicResponse toResponse(final VenueProjection venue, final List<LoyaltyRuleResponse> promotions) {
         return new VenuePublicResponse()
                 .id(venue.id())
                 .name(venue.name())
@@ -51,7 +40,18 @@ public class VenueMapper {
                 .peopleNow(0)
                 .createdAt(venue.createdAt())
                 .updatedAt(venue.updatedAt())
-                .promotions(toPromoResponses(promotions));
+                .promotions(promotions);
+    }
+
+    public VenueViewportResponse toViewportResponse(final VenueProjection venue) {
+        return new VenueViewportResponse()
+                .id(venue.id())
+                .name(venue.name())
+                .lat(venue.lat())
+                .lng(venue.lng())
+                .category(VenueViewportResponse.CategoryEnum.fromValue(
+                        venue.category().name().toLowerCase(Locale.ROOT)))
+                .peopleNow(0);
     }
 
     public VenueSearchResultResponse toSearchResponse(final VenueSearchProjection venue) {
@@ -72,22 +72,5 @@ public class VenueMapper {
             return null;
         }
         return URI.create(publicUrl);
-    }
-
-    public List<VenuePromoResponse> toPromoResponses(final List<VenuePromoProjection> promotions) {
-        return promotions.stream()
-                .map(this::toPromoResponse)
-                .toList();
-    }
-
-    private VenuePromoResponse toPromoResponse(final VenuePromoProjection promo) {
-        return new VenuePromoResponse()
-                .id(promo.id())
-                .venueId(promo.venueId())
-                .title(promo.title())
-                .description(promo.description())
-                .startsAt(promo.startsAt())
-                .endsAt(promo.endsAt())
-                .createdAt(promo.createdAt());
     }
 }

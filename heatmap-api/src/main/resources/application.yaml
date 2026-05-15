@@ -97,6 +97,8 @@ app:
     ratio-threshold: 0.5
     min-baseline: 1
     min-baseline-days: 1
+  qr:
+    ttl-seconds: 120
   kafka:
     transactions-topic: ${KAFKA_TRANSACTIONS_TOPIC}
   minio:

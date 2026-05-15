@@ -1,8 +1,8 @@
-package ru.tbank.tmap.loyalty.presentation.dto;
+package ru.tbank.tmap.loyalty.application.query;
 
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
 
-public record BusinessLoyaltyRuleDetails(
+public record LoyaltyRuleDetails(
         LoyaltyRule rule,
         long currentUsages
 ) {

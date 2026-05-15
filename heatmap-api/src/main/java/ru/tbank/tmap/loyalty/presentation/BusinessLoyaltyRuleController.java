@@ -5,17 +5,20 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.openapitools.api.BusinessOwnerLoyaltyApi;
+import org.openapitools.model.LoyaltyActivationRequest;
 import org.openapitools.model.LoyaltyRuleCreateRequest;
 import org.openapitools.model.LoyaltyRuleResponse;
 import org.openapitools.model.LoyaltyRuleUpdateRequest;
+import org.openapitools.model.LoyaltyVerifyResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.tbank.tmap.loyalty.application.BusinessLoyaltyRuleService;
+import ru.tbank.tmap.loyalty.application.command.RedeemLoyaltyRuleCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
-import ru.tbank.tmap.loyalty.presentation.dto.BusinessLoyaltyRuleDetails;
+import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleDetails;
 import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleUpdateValidationException;
@@ -32,7 +35,7 @@ public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
     @Override
     public ResponseEntity<List<LoyaltyRuleResponse>> getBusinessVenueLoyaltyRules(final UUID id) {
         final UUID ownerId = SecurityUtils.currentUserId();
-        final List<BusinessLoyaltyRuleDetails> loyaltyRules = businessLoyaltyRuleService.getVenueRules(ownerId, id);
+        final List<LoyaltyRuleDetails> loyaltyRules = businessLoyaltyRuleService.getVenueRules(ownerId, id);
         return ResponseEntity.ok(loyaltyRules.stream()
                 .map(businessLoyaltyRuleMapper::toResponse)
                 .toList());
@@ -46,7 +49,7 @@ public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
         final UUID ownerId = SecurityUtils.currentUserId();
         final BusinessLoyaltyRuleCreateCommand command =
                 businessLoyaltyRuleMapper.toCreateCommand(loyaltyRuleCreateRequest);
-        final BusinessLoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.createRule(ownerId, id, command);
+        final LoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.createRule(ownerId, id, command);
         final LoyaltyRuleResponse response = businessLoyaltyRuleMapper.toResponse(loyaltyRule);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -62,7 +65,7 @@ public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
         if (!command.hasChanges()) {
             throw LoyaltyRuleUpdateValidationException.noFieldsForUpdate();
         }
-        final BusinessLoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.updateRule(ownerId, id, command);
+        final LoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.updateRule(ownerId, id, command);
         final LoyaltyRuleResponse response = businessLoyaltyRuleMapper.toResponse(loyaltyRule);
         return ResponseEntity.ok(response);
     }
@@ -70,9 +73,25 @@ public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
     @Override
     public ResponseEntity<LoyaltyRuleResponse> getBusinessLoyaltyRuleById(final UUID id) {
         final UUID ownerId = SecurityUtils.currentUserId();
-        final BusinessLoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.getRuleById(ownerId, id)
+        final LoyaltyRuleDetails loyaltyRule = businessLoyaltyRuleService.getRuleById(ownerId, id)
                 .orElseThrow(() -> new LoyaltyRuleNotFoundException(id));
         final LoyaltyRuleResponse response = businessLoyaltyRuleMapper.toResponse(loyaltyRule);
         return ResponseEntity.ok(response);
+    }
+
+    @Override
+    public ResponseEntity<LoyaltyVerifyResponse> activateLoyaltyQr(
+            final UUID ruleId,
+            @Valid final LoyaltyActivationRequest loyaltyActivationRequest
+    ) {
+        final UUID ownerId = SecurityUtils.currentUserId();
+        return ResponseEntity.ok(businessLoyaltyRuleMapper.toVerifyResponse(
+                ruleId,
+                businessLoyaltyRuleService.redeemLoyaltyRule(new RedeemLoyaltyRuleCommand(
+                        ownerId,
+                        ruleId,
+                        loyaltyActivationRequest.getQrPayload()
+                ))
+        ));
     }
 }

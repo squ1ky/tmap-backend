@@ -17,6 +17,9 @@ public interface JpaLoyaltyVerificationRepository
     long countByRuleId(UUID ruleId);
 
     @Override
+    boolean existsByRuleIdAndUserId(UUID ruleId, UUID userId);
+
+    @Override
     @Query(value = """
         SELECT rule_id AS ruleId, COUNT(*) AS usageCount
         FROM loyalty_verifications

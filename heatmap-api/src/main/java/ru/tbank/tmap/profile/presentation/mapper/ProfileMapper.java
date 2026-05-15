@@ -1,6 +1,5 @@
 package ru.tbank.tmap.profile.presentation.mapper;
 
-import org.openapitools.model.LoyaltyQrResponse;
 import org.openapitools.model.LoyaltyVerificationPage;
 import org.openapitools.model.LoyaltyVerificationResponse;
 import org.openapitools.model.ProfileResponse;
@@ -11,7 +10,6 @@ import org.springframework.data.domain.Page;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyHistoryProjection;
 import ru.tbank.tmap.loyalty.application.query.UsedPromoProjection;
 import org.springframework.stereotype.Component;
-import ru.tbank.tmap.profile.application.query.ProfileLoyaltyQr;
 import ru.tbank.tmap.user.api.UserView;
 
 @Component
@@ -23,12 +21,6 @@ public class ProfileMapper {
                 .email(profile.email())
                 .nickname(profile.nickname())
                 .role(UserRole.fromValue(profile.role().name()));
-    }
-
-    public LoyaltyQrResponse toResponse(final ProfileLoyaltyQr qrView) {
-        return new LoyaltyQrResponse()
-                .userId(qrView.userId())
-                .qrPayload(qrView.qrPayload());
     }
 
     public LoyaltyVerificationPage toHistoryPageResponse(final Page<LoyaltyHistoryProjection> pageView) {

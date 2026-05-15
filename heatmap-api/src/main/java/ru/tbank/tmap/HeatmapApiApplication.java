@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import ru.tbank.tmap.loyalty.application.config.LoyaltyQrProperties;
 import ru.tbank.tmap.heatmap.application.config.AnomalyDetectionProperties;
 import ru.tbank.tmap.infrastructure.minio.MinioProperties;
 import ru.tbank.tmap.infrastructure.security.cors.CorsProperties;
@@ -19,7 +20,8 @@ import ru.tbank.tmap.auth.infrastructure.security.JwtProperties;
         RefreshTokenCookieProperties.class,
         CorsProperties.class,
         MinioProperties.class,
-        AnomalyDetectionProperties.class
+        AnomalyDetectionProperties.class,
+        LoyaltyQrProperties.class
 })
 public class HeatmapApiApplication {
 

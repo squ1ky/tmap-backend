@@ -10,7 +10,11 @@ public interface LoyaltyRuleRepository {
 
     Optional<LoyaltyRule> findById(UUID id);
 
+    Optional<LoyaltyRule> findByIdForUpdate(UUID id);
+
     List<LoyaltyRule> findByVenueIdOrderByCreatedAtDescIdDesc(UUID venueId);
+
+    List<LoyaltyRule> findByVenueIdAndActiveTrueOrderByCreatedAtDescIdDesc(UUID venueId);
 
     void deleteById(UUID id);
 

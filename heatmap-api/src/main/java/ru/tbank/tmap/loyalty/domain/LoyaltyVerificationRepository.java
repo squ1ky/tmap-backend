@@ -12,5 +12,7 @@ public interface LoyaltyVerificationRepository {
 
     long countByRuleId(UUID ruleId);
 
+    boolean existsByRuleIdAndUserId(UUID ruleId, UUID userId);
+
     List<LoyaltyRuleUsageCount> countUsagesByRuleIds(Collection<UUID> ruleIds);
 }

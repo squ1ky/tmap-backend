@@ -4,7 +4,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.openapitools.api.ProfileApi;
 import org.openapitools.model.ChangePasswordRequest;
-import org.openapitools.model.LoyaltyQrResponse;
 import org.openapitools.model.LoyaltyVerificationPage;
 import org.openapitools.model.ProfileResponse;
 import org.openapitools.model.UsedPromoPage;
@@ -34,13 +33,6 @@ public class ProfileController implements ProfileApi {
     public ResponseEntity<Void> changeMyPassword(@Valid final ChangePasswordRequest changePasswordRequest) {
         profileService.changePassword(SecurityUtils.currentUserId(), changePasswordRequest);
         return ResponseEntity.noContent().build();
-    }
-
-    @Override
-    public ResponseEntity<LoyaltyQrResponse> getMyLoyaltyQr() {
-        return ResponseEntity.ok(profileMapper.toResponse(
-                profileService.getLoyaltyQr(SecurityUtils.currentUserId())
-        ));
     }
 
     @Override

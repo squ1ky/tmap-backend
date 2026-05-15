@@ -20,7 +20,7 @@ tags:
   - name: Venues (Public)
     description: Public venue pages
   - name: Business (Owner)
-    description: Venue and promotion management for owners
+    description: Venue management for owners
   - name: Business Owner Loyalty
     description: Loyalty rule management for owners
   - name: Profile

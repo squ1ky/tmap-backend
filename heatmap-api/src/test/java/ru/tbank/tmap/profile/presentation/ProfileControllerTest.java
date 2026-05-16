@@ -1,15 +1,19 @@
 package ru.tbank.tmap.profile.presentation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.openapitools.model.ChangePasswordRequest;
+import org.openapitools.model.LoyaltyVerificationPage;
+import org.openapitools.model.LoyaltyVerificationResponse;
 import org.openapitools.model.ProfileResponse;
 import org.openapitools.model.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -17,9 +21,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.auth.application.exception.PasswordChangeValidationException;
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
+import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
+import ru.tbank.tmap.loyalty.application.query.LoyaltyHistoryProjection;
 import ru.tbank.tmap.profile.application.ProfileService;
 import ru.tbank.tmap.profile.presentation.mapper.ProfileMapper;
-import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 import ru.tbank.tmap.user.api.UserView;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -43,6 +48,7 @@ class ProfileControllerTest {
 
     private static final String PROFILE_URL = "/api/v1/profile";
     private static final String PASSWORD_URL = "/api/v1/profile/password";
+    private static final String LOYALTY_HISTORY_URL = "/api/v1/profile/loyalty/history";
     private static final UUID USER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     @Autowired
@@ -146,6 +152,45 @@ class ProfileControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void getLoyaltyHistory_whenAuthenticated_thenReturnItemsWithCategory() throws Exception {
+        final LoyaltyHistoryProjection item = new LoyaltyHistoryProjection(
+                UUID.fromString("44444444-4444-4444-4444-444444444444"),
+                UUID.fromString("22222222-2222-2222-2222-222222222222"),
+                "Cafe One",
+                "FOOD",
+                UUID.fromString("33333333-3333-3333-3333-333333333333"),
+                "15% off cappuccino",
+                15,
+                OffsetDateTime.parse("2026-05-16T12:30:00Z")
+        );
+        final LoyaltyVerificationPage response = new LoyaltyVerificationPage()
+                .items(List.of(new LoyaltyVerificationResponse()
+                        .id(item.id())
+                        .venueId(item.venueId())
+                        .venueName(item.venueName())
+                        .category(LoyaltyVerificationResponse.CategoryEnum.FOOD)
+                        .ruleId(item.ruleId())
+                        .ruleDescription(item.ruleDescription())
+                        .discountApplied(item.discountApplied())
+                        .verifiedAt(item.verifiedAt())))
+                .page(0)
+                .size(20)
+                .totalPages(1)
+                .totalElements(1L);
+
+        given(profileService.getLoyaltyHistory(USER_ID, 0, 20)).willReturn(new PageImpl<>(List.of(item)));
+        given(profileMapper.toHistoryPageResponse(any())).willReturn(response);
+
+        mockMvc.perform(get(LOYALTY_HISTORY_URL)
+                        .with(user(principal()))
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].venueName").value("Cafe One"))
+                .andExpect(jsonPath("$.items[0].category").value("food"));
     }
 
     private CustomUserDetails principal() {

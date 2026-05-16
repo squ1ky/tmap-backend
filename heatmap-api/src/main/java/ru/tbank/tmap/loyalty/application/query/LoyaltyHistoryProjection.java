@@ -7,6 +7,7 @@ public record LoyaltyHistoryProjection(
         UUID id,
         UUID venueId,
         String venueName,
+        String venueCategory,
         UUID ruleId,
         String ruleDescription,
         Integer discountApplied,

@@ -5,6 +5,7 @@ import org.openapitools.model.LoyaltyVerificationResponse;
 import org.openapitools.model.ProfileResponse;
 import org.openapitools.model.UserRole;
 import org.springframework.data.domain.Page;
+import java.util.Locale;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyHistoryProjection;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.user.api.UserView;
@@ -34,6 +35,9 @@ public class ProfileMapper {
                 .id(item.id())
                 .venueId(item.venueId())
                 .venueName(item.venueName())
+                .category(LoyaltyVerificationResponse.CategoryEnum.fromValue(
+                        item.venueCategory().toLowerCase(Locale.ROOT)
+                ))
                 .ruleId(item.ruleId())
                 .ruleDescription(item.ruleDescription())
                 .discountApplied(item.discountApplied())

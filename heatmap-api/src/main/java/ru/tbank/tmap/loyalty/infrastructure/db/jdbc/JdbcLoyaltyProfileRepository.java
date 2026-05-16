@@ -33,6 +33,7 @@ public class JdbcLoyaltyProfileRepository implements LoyaltyProfileRepository {
                     lv.id,
                     lv.venue_id AS venueId,
                     v.name AS venueName,
+                    v.category AS venueCategory,
                     lv.rule_id AS ruleId,
                     lr.description AS ruleDescription,
                     lv.discount_applied AS discountApplied,

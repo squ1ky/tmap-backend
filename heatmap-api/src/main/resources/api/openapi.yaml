@@ -1637,6 +1637,10 @@ components:
         venueName:
           type: string
           example: "Скуратов Кофе"
+        category:
+          type: string
+          enum: [food, entertainment, shopping]
+          example: "food"
         ruleId:
           type: string
           format: uuid

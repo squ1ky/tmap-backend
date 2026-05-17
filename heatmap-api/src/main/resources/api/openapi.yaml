@@ -1733,6 +1733,8 @@ components:
         ownerId:
           type: string
           format: uuid
+        ownerEmail:
+          type: string
         name:
           type: string
           example: "Скуратов Кофе"

@@ -26,6 +26,7 @@ import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 import ru.tbank.tmap.venue.application.service.admin.AdminVenueService;
 import ru.tbank.tmap.venue.application.query.VenueDetails;
+import ru.tbank.tmap.venue.application.query.VenueDetailsWithOwnerEmail;
 import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
@@ -62,7 +63,7 @@ class AdminVenueControllerTest {
         final Venue venue = VenueTestFactory.createVenue(VenueStatus.PENDING, null);
         given(adminVenueService.getVenues(VenueStatus.PENDING, 0, 20))
                 .willReturn(new PageImpl<>(
-                        List.of(new VenueDetails(venue, null)),
+                        List.of(new VenueDetailsWithOwnerEmail(new VenueDetails(venue, null), "owner@example.com")),
                         PageRequest.of(0, 20),
                         1
                 ));

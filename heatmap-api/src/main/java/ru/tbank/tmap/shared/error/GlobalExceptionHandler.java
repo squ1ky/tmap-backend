@@ -21,6 +21,8 @@ import ru.tbank.tmap.heatmap.domain.exception.ClusterNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleStateException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleUpdateValidationException;
+import ru.tbank.tmap.user.domain.exception.UserAlreadyBlockedException;
+import ru.tbank.tmap.user.domain.exception.UserNotBlockedException;
 import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 import ru.tbank.tmap.venue.domain.exception.InvalidVenuePhotoException;
 import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
@@ -28,6 +30,7 @@ import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 
 @Slf4j
 @RestControllerAdvice
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ClusterNotFoundException.class)
@@ -179,8 +182,22 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFound(final UserNotFoundException ex) {
         log.warn("User not found: id={} email={}", ex.getId(), ex.getEmail());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse(ErrorCode.UNAUTHORIZED, ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(ErrorCode.NOT_FOUND, ex.getMessage()));
+    }
+
+    @ExceptionHandler(UserAlreadyBlockedException.class)
+    public ResponseEntity<ErrorResponse> handleUserAlreadyBlocked(final UserAlreadyBlockedException ex) {
+        log.warn("User already blocked: id={}", ex.getId());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(ErrorCode.CONFLICT, ex.getMessage()));
+    }
+
+    @ExceptionHandler(UserNotBlockedException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotBlocked(final UserNotBlockedException ex) {
+        log.warn("User is not blocked: id={}", ex.getId());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(ErrorCode.CONFLICT, ex.getMessage()));
     }
 
     @ExceptionHandler(InvalidRefreshTokenException.class)

@@ -17,7 +17,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/admin/users")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class AdminUserController implements AdminUsersApi {
 

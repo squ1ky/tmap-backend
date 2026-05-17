@@ -8,6 +8,7 @@ import org.openapitools.model.VenueModerationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.venue.application.query.VenueDetails;
+import ru.tbank.tmap.venue.application.query.VenueDetailsWithOwnerEmail;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueContent;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
@@ -20,7 +21,7 @@ public class AdminVenueMapper {
 
     private final VenueMapper venueMapper;
 
-    public AdminVenueModerationPage toPage(final Page<VenueDetails> venues) {
+    public AdminVenueModerationPage toPage(final Page<VenueDetailsWithOwnerEmail> venues) {
         return new AdminVenueModerationPage()
                 .items(venues.stream()
                         .map(this::toResponse)
@@ -36,6 +37,14 @@ public class AdminVenueMapper {
     }
 
     public AdminVenueModerationResponse toResponse(final VenueDetails details) {
+        return buildResponse(details, null);
+    }
+
+    public AdminVenueModerationResponse toResponse(final VenueDetailsWithOwnerEmail withOwnerEmail) {
+        return buildResponse(withOwnerEmail.venueDetails(), withOwnerEmail.ownerEmail());
+    }
+
+    private AdminVenueModerationResponse buildResponse(final VenueDetails details, final String ownerEmail) {
         final Venue venue = details.venue();
         final VenuePendingUpdate pendingUpdate = details.pendingUpdate();
         final VenueContent content = details.displayContent();
@@ -45,6 +54,7 @@ public class AdminVenueMapper {
         return new AdminVenueModerationResponse()
                 .id(venue.getId())
                 .ownerId(venue.getOwnerId())
+                .ownerEmail(ownerEmail)
                 .name(content.name())
                 .address(content.address())
                 .lat(content.location().getLat())

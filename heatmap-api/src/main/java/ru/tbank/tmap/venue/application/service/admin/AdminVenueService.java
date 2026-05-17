@@ -10,7 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.user.api.UserAccountFacade;
+import ru.tbank.tmap.user.api.UserView;
 import ru.tbank.tmap.venue.application.query.VenueDetails;
+import ru.tbank.tmap.venue.application.query.VenueDetailsWithOwnerEmail;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
@@ -27,28 +29,32 @@ public class AdminVenueService {
     private final VenueRepository venueRepository;
     private final VenuePendingUpdateRepository venuePendingUpdateRepository;
 
-    public Page<VenueDetails> getVenues(
+    public Page<VenueDetailsWithOwnerEmail> getVenues(
             final VenueStatus status,
             final int page,
             final int size
     ) {
         final Pageable pageable = PageRequest.of(page, size);
 
+        final Page<VenueDetails> venueDetails;
         if (status == VenueStatus.PENDING_UPDATE) {
-            return venuePendingUpdateRepository.findByStatus(VenueStatus.PENDING_UPDATE, pageable)
+            venueDetails = venuePendingUpdateRepository.findByStatus(VenueStatus.PENDING_UPDATE, pageable)
                     .map(pendingUpdate -> new VenueDetails(pendingUpdate.getVenue(), pendingUpdate));
+        } else {
+            venueDetails = venueRepository.findByStatus(status, pageable)
+                    .map(venue -> new VenueDetails(venue, null));
         }
 
-        return venueRepository.findByStatus(status, pageable)
-                .map(venue -> new VenueDetails(venue, null));
+        return venueDetails.map(this::withOwnerEmail);
     }
 
-    public Optional<VenueDetails> getVenueById(final UUID id) {
+    public Optional<VenueDetailsWithOwnerEmail> getVenueById(final UUID id) {
         return venueRepository.findById(id)
                 .map(venue -> new VenueDetails(
                         venue,
                         venuePendingUpdateRepository.findByVenueId(id).orElse(null)
-                ));
+                ))
+                .map(this::withOwnerEmail);
     }
 
     @Transactional
@@ -63,6 +69,16 @@ public class AdminVenueService {
         return venuePendingUpdateRepository.findByVenueId(id)
                 .map(pendingUpdate -> rejectPendingUpdate(pendingUpdate, reason))
                 .orElseGet(() -> rejectNewVenue(id, reason));
+    }
+
+    private String resolveOwnerEmail(final UUID ownerId) {
+        return userAccountFacade.findById(ownerId)
+                .map(UserView::email)
+                .orElse(null);
+    }
+
+    private VenueDetailsWithOwnerEmail withOwnerEmail(VenueDetails details) {
+        return new VenueDetailsWithOwnerEmail(details, resolveOwnerEmail(details.venue().getOwnerId()));
     }
 
     private VenueDetails approvePendingUpdate(VenuePendingUpdate pendingUpdate) {

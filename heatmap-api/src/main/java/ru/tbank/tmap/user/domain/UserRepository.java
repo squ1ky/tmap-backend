@@ -14,6 +14,8 @@ public interface UserRepository {
 
     Optional<User> findByEmail(String email);
 
+    boolean existsById(UUID id);
+
     boolean existsByEmail(String email);
 
     Page<User> search(UserSearchCriteria criteria, Pageable pageable);

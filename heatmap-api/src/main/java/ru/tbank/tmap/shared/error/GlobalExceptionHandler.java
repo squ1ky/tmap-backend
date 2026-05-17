@@ -178,7 +178,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFound(final UserNotFoundException ex) {
-        log.warn("User not found: email={}", ex.getEmail());
+        log.warn("User not found: id={} email={}", ex.getId(), ex.getEmail());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponse(ErrorCode.UNAUTHORIZED, ex.getMessage()));
     }

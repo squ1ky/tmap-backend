@@ -128,6 +128,6 @@ public class BusinessVenueService {
 
     private void verifyOwnerExists(final UUID ownerId) {
         userAccountFacade.findById(ownerId)
-                .orElseThrow(() -> new UserNotFoundException(ownerId.toString()));
+                .orElseThrow(() -> UserNotFoundException.byId(ownerId));
     }
 }

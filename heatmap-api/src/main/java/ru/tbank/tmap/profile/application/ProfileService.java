@@ -25,7 +25,7 @@ public class ProfileService {
 
     public UserView getProfile(final UUID userId) {
         return userAccountFacade.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
+                .orElseThrow(() -> UserNotFoundException.byId(userId));
     }
 
     @Transactional

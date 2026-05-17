@@ -12,6 +12,7 @@ import ru.tbank.tmap.user.domain.UserSearchCriteria;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 public interface JpaUserRepository
@@ -29,13 +30,13 @@ public interface JpaUserRepository
             if (criteria.nickname() != null && !criteria.nickname().isBlank()) {
                 predicates.add(cb.like(
                         cb.lower(root.get("nickname")),
-                        "%" + criteria.nickname().toLowerCase() + "%"
+                        "%" + criteria.nickname().toLowerCase(Locale.ROOT) + "%"
                 ));
             }
             if (criteria.email() != null && !criteria.email().isBlank()) {
                 predicates.add(cb.like(
                         cb.lower(root.get("email")),
-                        "%" + criteria.email().toLowerCase() + "%"
+                        "%" + criteria.email().toLowerCase(Locale.ROOT) + "%"
                 ));
             }
             if (criteria.role() != null) {

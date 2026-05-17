@@ -1016,6 +1016,68 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /admin/users/search:
+    get:
+      tags: [AdminUsers]
+      summary: Search users
+      description: >
+        Searches users by any combination of filters. All parameters are optional.
+        At least one filter or a paginated full-list view is returned when no filters are provided.
+      operationId: searchAdminUsers
+      x-required-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: nickname
+          in: query
+          description: Partial or full nickname (case-insensitive)
+          schema:
+            type: string
+            example: "Tatarin"
+        - name: email
+          in: query
+          description: Partial or full email (case-insensitive)
+          schema:
+            type: string
+            example: "kazan"
+        - name: role
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserRole'
+        - name: blocked
+          in: query
+          schema:
+            type: boolean
+        - name: createdFrom
+          in: query
+          description: Lower bound for account creation date (inclusive)
+          schema:
+            type: string
+            format: date-time
+            example: "2024-01-01T00:00:00Z"
+        - name: createdTo
+          in: query
+          description: Upper bound for account creation date (inclusive)
+          schema:
+            type: string
+            format: date-time
+            example: "2025-12-31T23:59:59Z"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Matching users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserModerationPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /admin/users/{id}/block:
     patch:
       tags: [AdminUsers]

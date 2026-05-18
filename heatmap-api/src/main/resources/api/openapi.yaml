@@ -989,33 +989,6 @@ paths:
         '409':
           $ref: '#/components/responses/Conflict'
 
-  /admin/users:
-    get:
-      tags: [AdminUsers]
-      summary: Get users for moderation
-      operationId: getAdminUsers
-      x-required-roles: [ADMIN]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: blocked
-          in: query
-          schema:
-            type: boolean
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/SizeParam'
-      responses:
-        '200':
-          description: User moderation queue
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminUserModerationPage'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-
   /admin/users/search:
     get:
       tags: [AdminUsers]

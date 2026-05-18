@@ -11,7 +11,6 @@ import ru.tbank.tmap.venue.application.query.VenueDetails;
 import ru.tbank.tmap.venue.application.query.VenueDetailsWithOwnerEmail;
 import ru.tbank.tmap.venue.domain.Venue;
 import ru.tbank.tmap.venue.domain.VenueContent;
-import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.presentation.VenueMapper;
 
@@ -46,8 +45,8 @@ public class AdminVenueMapper {
 
     private AdminVenueModerationResponse buildResponse(final VenueDetails details, final String ownerEmail) {
         final Venue venue = details.venue();
-        final VenuePendingUpdate pendingUpdate = details.pendingUpdate();
         final VenueContent content = details.displayContent();
+        final String photoObjectKey = details.displayPhotoObjectKey();
         final VenueStatus moderationStatus = details.displayStatus();
         final String rejectReason = details.displayRejectReason();
 
@@ -62,12 +61,12 @@ public class AdminVenueMapper {
                 .h3Res9(Long.toUnsignedString(content.h3Res9()))
                 .category(AdminVenueModerationResponse.CategoryEnum.fromValue(
                         content.category().name().toLowerCase(Locale.ROOT)))
-                .photoUrl(venueMapper.toPublicPhotoUri(venue.getPhotoObjectKey()))
+                .photoUrl(venueMapper.toPublicPhotoUri(photoObjectKey))
                 .dishOfDay(content.dishOfDay())
                 .music(content.music())
                 .moderationStatus(VenueModerationStatus.fromValue(moderationStatus.name()))
                 .rejectReason(rejectReason)
                 .createdAt(venue.getCreatedAt())
-                .updatedAt(pendingUpdate != null ? pendingUpdate.getUpdatedAt() : venue.getUpdatedAt());
+                .updatedAt(details.displayUpdatedAt());
     }
 }

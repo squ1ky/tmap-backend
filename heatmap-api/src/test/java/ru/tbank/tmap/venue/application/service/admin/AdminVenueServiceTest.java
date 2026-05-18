@@ -147,4 +147,23 @@ class AdminVenueServiceTest {
         assertThat(response.pendingUpdate().getStatus()).isEqualTo(VenueStatus.REJECTED);
         assertThat(response.pendingUpdate().getRejectReason()).isEqualTo(rejectReason);
     }
+
+    @Test
+    void verifyAdminVenue_whenPendingHasStagedPhoto_thenPhotoMovesToVenue() {
+        final Venue venue = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
+        venue.setPhotoObjectKey("venues/" + VENUE_ID + "/old.jpg");
+        final VenuePendingUpdate pendingUpdate =
+                VenueTestFactory.createPendingUpdate(venue, VenueStatus.PENDING_UPDATE);
+        pendingUpdate.setPendingPhotoObjectKey("venues/" + VENUE_ID + "/new.jpg");
+
+        given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.of(pendingUpdate));
+        given(venueRepository.save(venue)).willReturn(venue);
+
+        final VenueDetails response = adminVenueService.verifyAdminVenue(VENUE_ID);
+
+        assertThat(response.venue().getPhotoObjectKey())
+                .isEqualTo("venues/" + VENUE_ID + "/new.jpg");
+        assertThat(response.venue().getStatus()).isEqualTo(VenueStatus.ACTIVE);
+        verify(venuePendingUpdateRepository).deleteById(pendingUpdate.getVenueId());
+    }
 }

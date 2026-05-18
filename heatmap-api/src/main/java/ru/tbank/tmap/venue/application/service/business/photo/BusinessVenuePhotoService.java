@@ -49,16 +49,11 @@ public class BusinessVenuePhotoService {
             throw new ObjectStorageException("Failed to read uploaded file", e);
         }
 
-        final String oldObjectKey;
         try {
-            oldObjectKey = venuePhotoUpdater.swapPhotoKey(venueId, ownerId, newObjectKey);
+            venuePhotoUpdater.swapPhotoKey(venueId, ownerId, newObjectKey);
         } catch (RuntimeException e) {
             safePhotoDelete(newObjectKey);
             throw e;
-        }
-
-        if (oldObjectKey != null && !oldObjectKey.equals(newObjectKey)) {
-            safePhotoDelete(oldObjectKey);
         }
 
         return venueRepository.findByIdAndOwnerId(venueId, ownerId)
@@ -66,12 +61,7 @@ public class BusinessVenuePhotoService {
     }
 
     public Venue deleteVenuePhoto(final UUID ownerId, final UUID venueId) {
-        final String oldObjectKey = venuePhotoUpdater.clearPhotoKey(venueId, ownerId);
-
-        if (oldObjectKey != null) {
-            safePhotoDelete(oldObjectKey);
-        }
-
+        venuePhotoUpdater.clearPhotoKey(venueId, ownerId);
         return venueRepository.findByIdAndOwnerId(venueId, ownerId)
                 .orElseThrow(() -> new VenueNotFoundException(venueId));
     }

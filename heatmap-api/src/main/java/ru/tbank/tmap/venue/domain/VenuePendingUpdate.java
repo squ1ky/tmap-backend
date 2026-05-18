@@ -20,14 +20,18 @@ import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
+
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.domain.AbstractAggregateRoot;
 import org.springframework.data.domain.Persistable;
 import jakarta.persistence.Transient;
+import ru.tbank.tmap.venue.domain.event.VenuePhotoObsoleted;
 import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
 
 @Entity
@@ -37,7 +41,7 @@ import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
-public class VenuePendingUpdate implements Persistable<UUID> {
+public class VenuePendingUpdate extends AbstractAggregateRoot<VenuePendingUpdate> implements Persistable<UUID> {
 
     @Id
     @Column(name = "venue_id", nullable = false)
@@ -54,6 +58,10 @@ public class VenuePendingUpdate implements Persistable<UUID> {
     @Valid
     @Embedded
     private VenueContent content;
+
+    @Size(max = 255)
+    @Column(name = "pending_photo_object_key", length = 255)
+    private String pendingPhotoObjectKey;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -102,6 +110,14 @@ public class VenuePendingUpdate implements Persistable<UUID> {
         return new VenuePendingUpdate(venue, content);
     }
 
+    public static VenuePendingUpdate createForPhoto(final Venue venue, final String newPhotoObjectKey) {
+        Objects.requireNonNull(venue, "venue");
+        Objects.requireNonNull(newPhotoObjectKey, "newPhotoObjectKey");
+        VenuePendingUpdate pendingUpdate = new VenuePendingUpdate(venue, venue.getContent());
+        pendingUpdate.pendingPhotoObjectKey = newPhotoObjectKey;
+        return pendingUpdate;
+    }
+
     @Override
     public UUID getId() {
         return venueId;
@@ -118,6 +134,21 @@ public class VenuePendingUpdate implements Persistable<UUID> {
         }
         this.status = VenueStatus.REJECTED;
         this.rejectReason = reason;
+        if (this.pendingPhotoObjectKey != null) {
+            registerEvent(new VenuePhotoObsoleted(this.pendingPhotoObjectKey));
+            this.pendingPhotoObjectKey = null;
+        }
+    }
+
+    public void stagePhoto(final String newObjectKey) {
+        Objects.requireNonNull(newObjectKey, "newObjectKey");
+        String previous = this.pendingPhotoObjectKey;
+        this.pendingPhotoObjectKey = newObjectKey;
+        this.status = VenueStatus.PENDING_UPDATE;
+        this.rejectReason = null;
+        if (previous != null && !previous.equals(newObjectKey)) {
+            registerEvent(new VenuePhotoObsoleted(previous));
+        }
     }
 
     public void applyContent(final VenueContent content) {

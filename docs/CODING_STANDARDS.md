@@ -8,19 +8,33 @@
 
 ## Структура проекта
 
-Package by layer:
+Package by feature. Каждый модуль самодостаточен и содержит свои слои внутри.
 
 ```
-com.company.citypulse
-├── controller        # REST-контроллеры
-├── service           # бизнес-логика (интерфейсы + реализации)
-├── repository        # Spring Data JPA репозитории
-├── entity            # JPA-сущности
-├── dto               # Request / Response объекты
-├── mapper            # маппинг entity ↔ dto
-├── config            # Spring-конфигурации
-└── exception         # кастомные исключения + GlobalExceptionHandler
+ru.tbank.tmap
+├── user
+│   ├── api              # публичные интерфейсы модуля (Facade) для использования другими модулями
+│   ├── application      # сервисы, команды (command/), проекции (query/), порты (port/)
+│   ├── domain           # сущности, репозиторные интерфейсы, доменные исключения
+│   ├── infrastructure   # JPA/JDBC-адаптеры, хранилища, внешние клиенты
+│   └── presentation     # контроллеры, маперы presentation → domain
+├── venue
+│   └── ...              # та же структура
+├── auth
+│   └── ...
+├── shared               # кросс-модульное: ErrorResponse, GeoPoint, SecurityUtils
+└── infrastructure       # глобальные Spring-бины: SecurityConfig, KafkaConfig, MinioConfig
 ```
+
+Слои внутри модуля:
+
+| Слой | Что лежит |
+|---|---|
+| `api` | Facade-интерфейсы для вызова модуля из других модулей |
+| `application` | `@Service`-классы, команды (record), проекции (record), порты (interface) |
+| `domain` | `@Entity`-классы, интерфейсы репозиториев, бизнес-исключения |
+| `infrastructure` | `JpaXxx`, `JdbcXxx`, адаптеры к внешним системам (Minio, Kafka) |
+| `presentation` | `@RestController`-классы, mapper-компоненты |
 
 ---
 
@@ -32,8 +46,9 @@ com.company.citypulse
 - Секреты — только через переменные окружения, не хардкодить в `application.yml`
 
 **Именование**
-- Классы: `UserController`, `UserService`, `UserServiceImpl`, `UserRepository`, `UserEntity`, `CreateUserRequest`, `UserResponse`
-- Таблицы и колонки БД: `snake_case`, таблицы во множественном числе (`transactions`, `locations`)
+- Классы: `AdminUserController`, `AdminUserService`, `UserRepository` (интерфейс), `JpaUserRepository` (адаптер)
+- Mapper-компоненты: `AdminUserMapper`, `VenueMapper` — `@Component`, без интерфейса
+- Таблицы и колонки БД: `snake_case`, таблицы во множественном числе (`users`, `venues`, `transactions`)
 - Методы тестов: `methodName_whenCondition_thenExpected`
 
 **Код**
@@ -44,7 +59,7 @@ com.company.citypulse
 **API**
 - Spec-first: контракт описывается в `openapi.yaml`, интерфейсы генерируются через OpenAPI Generator
 - Все эндпоинты версионируются: `/api/v1/...`
-- Единый формат ошибок: `ErrorResponse` с полями `code` и `message`
+- Единый формат ошибок: `ErrorResponse(ErrorCode code, String message)`
 
 ---
 
@@ -53,6 +68,6 @@ com.company.citypulse
 | Тема | Документ |
 |---|---|
 | REST API, OpenAPI, формат ответов | [standards/api.md](standards/api.md) |
-| JPA, PostgreSQL, миграции | [standards/database.md](standards/database.md) |
-| JUnit 5, Mockito, TestContainers | [standards/testing.md](standards/testing.md) |
+| JPA, JDBC, PostgreSQL, миграции | [standards/database.md](standards/database.md) |
+| JUnit 5, Mockito, WebMvcTest | [standards/testing.md](standards/testing.md) |
 | JWT, секреты, обработка ошибок | [standards/security.md](standards/security.md) |

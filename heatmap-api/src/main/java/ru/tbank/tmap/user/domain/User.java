@@ -16,6 +16,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import ru.tbank.tmap.user.domain.exception.UserAlreadyBlockedException;
+import ru.tbank.tmap.user.domain.exception.UserNotBlockedException;
 
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -88,5 +90,19 @@ public class User {
         if (role == UserRole.USER) {
             role = UserRole.BUSINESS_OWNER;
         }
+    }
+
+    public void block() {
+        if (blocked) {
+            throw new UserAlreadyBlockedException(id);
+        }
+        blocked = true;
+    }
+
+    public void unblock() {
+        if (!blocked) {
+            throw new UserNotBlockedException(id);
+        }
+        blocked = false;
     }
 }

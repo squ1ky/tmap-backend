@@ -40,7 +40,7 @@ public class LoyaltyQrService {
     @Transactional
     public LoyaltyQrView issueQr(final IssueLoyaltyQrCommand command) {
         if (!userAccountFacade.existsById(command.userId())) {
-            throw new UserNotFoundException(command.userId().toString());
+            throw UserNotFoundException.byId(command.userId());
         }
 
         final LoyaltyRule rule = loyaltyRuleRepository.findById(command.ruleId())

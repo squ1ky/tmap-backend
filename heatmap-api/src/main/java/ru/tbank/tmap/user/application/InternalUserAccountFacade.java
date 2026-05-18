@@ -56,7 +56,7 @@ public class InternalUserAccountFacade implements UserAccountFacade {
     @Override
     public UserView promoteToBusinessOwner(UUID id) {
         final User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id.toString()));
+                .orElseThrow(() -> UserNotFoundException.byId(id));
         user.promoteToBusinessOwner();
         return toView(user);
     }
@@ -64,7 +64,7 @@ public class InternalUserAccountFacade implements UserAccountFacade {
     @Override
     public UserView updatePasswordHash(final UUID id, final String passwordHash) {
         final User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id.toString()));
+                .orElseThrow(() -> UserNotFoundException.byId(id));
         user.setPasswordHash(passwordHash);
         return toView(user);
     }

@@ -20,5 +20,7 @@ public interface VenuePendingUpdateRepository {
 
     Page<VenuePendingUpdate> findByStatus(VenueStatus status, Pageable pageable);
 
+    void delete(VenuePendingUpdate pendingUpdate);
+
     void deleteById(UUID venueId);
 }

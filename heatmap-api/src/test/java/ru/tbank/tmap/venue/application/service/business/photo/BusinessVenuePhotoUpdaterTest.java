@@ -17,6 +17,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.tbank.tmap.venue.domain.Venue;
+import ru.tbank.tmap.venue.domain.VenueCategory;
+import ru.tbank.tmap.venue.domain.VenueContent;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.domain.VenueTestFactory;
@@ -153,5 +155,50 @@ class BusinessVenuePhotoUpdaterTest {
 
         assertThatThrownBy(() -> venuePhotoUpdater.clearPhotoKey(VENUE_ID, OWNER_ID))
                 .isInstanceOf(VenueNotFoundException.class);
+    }
+
+    @Test
+    void clearPhotoKey_whenPendingHasStagedPhoto_thenDiscardsStagedPhoto() {
+        final Venue existing = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
+        existing.setPhotoObjectKey(OLD_KEY);
+        final VenuePendingUpdate pending =
+                VenueTestFactory.createPendingUpdate(existing, VenueStatus.PENDING_UPDATE);
+        pending.setPendingPhotoObjectKey(NEW_KEY);
+
+        pending.applyContent(new VenueContent(
+                "Bar Two",
+                "ул. Кремлёвская, 1, Казань",
+                VenueTestFactory.defaultContent().location(),
+                VenueTestFactory.H3_RES_9,
+                VenueCategory.FOOD,
+                "Updated description",
+                "Updated dish",
+                "Updated music"
+        ));
+
+        given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(Optional.of(existing));
+        given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.of(pending));
+
+        venuePhotoUpdater.clearPhotoKey(VENUE_ID, OWNER_ID);
+
+        assertThat(existing.getPhotoObjectKey()).isNull();
+        assertThat(pending.getPendingPhotoObjectKey()).isNull();
+        verify(venuePendingUpdateRepository).save(pending);
+    }
+
+    @Test
+    void clearPhotoKey_whenPendingExistsOnlyForPhoto_thenDeletesPending() {
+        final Venue existing = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
+        existing.setPhotoObjectKey(OLD_KEY);
+        final VenuePendingUpdate pending =
+                VenuePendingUpdate.createForPhoto(existing, NEW_KEY);
+
+        given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(Optional.of(existing));
+        given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.of(pending));
+
+        venuePhotoUpdater.clearPhotoKey(VENUE_ID, OWNER_ID);
+
+        assertThat(existing.getPhotoObjectKey()).isNull();
+        verify(venuePendingUpdateRepository).delete(pending);
     }
 }

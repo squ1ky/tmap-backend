@@ -51,12 +51,30 @@ public class BusinessVenuePhotoUpdater {
 
         venue.removePhoto();
         venueRepository.save(venue);
+
+        venuePendingUpdateRepository.findByVenueId(venueId)
+                .ifPresent(pending -> handlePendingOnPhotoClear(pending, venue));
     }
 
     private void stagePhotoForModeration(final Venue venue, final String newObjectKey) {
         final VenuePendingUpdate pending = venuePendingUpdateRepository.findByVenueId(venue.getId())
                 .orElseGet(() -> VenuePendingUpdate.createForPhoto(venue, newObjectKey));
         pending.stagePhoto(newObjectKey);
+        venuePendingUpdateRepository.save(pending);
+    }
+
+    private void handlePendingOnPhotoClear(final VenuePendingUpdate pending, final Venue venue) {
+        if (pending.getPendingPhotoObjectKey() == null) {
+            return;
+        }
+
+        if (pending.getContent().equals(venue.getContent())) {
+            pending.discardStagedPhoto();
+            venuePendingUpdateRepository.delete(pending);
+            return;
+        }
+
+        pending.discardStagedPhoto();
         venuePendingUpdateRepository.save(pending);
     }
 

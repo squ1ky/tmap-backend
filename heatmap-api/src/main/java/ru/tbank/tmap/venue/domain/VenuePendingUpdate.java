@@ -151,6 +151,14 @@ public class VenuePendingUpdate extends AbstractAggregateRoot<VenuePendingUpdate
         }
     }
 
+    public void discardStagedPhoto() {
+        if (this.pendingPhotoObjectKey == null) {
+            return;
+        }
+        registerEvent(new VenuePhotoObsoleted(this.pendingPhotoObjectKey));
+        this.pendingPhotoObjectKey = null;
+    }
+
     public void applyContent(final VenueContent content) {
             this.content = Objects.requireNonNull(content, "content");
             this.status = VenueStatus.PENDING_UPDATE;

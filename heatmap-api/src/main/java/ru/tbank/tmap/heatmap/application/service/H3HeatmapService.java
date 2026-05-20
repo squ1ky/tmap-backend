@@ -5,17 +5,20 @@ import java.time.temporal.ChronoUnit;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.heatmap.application.query.HeatmapClusterAggregate;
 import ru.tbank.tmap.heatmap.presentation.dto.HeatmapClusters;
 import ru.tbank.tmap.heatmap.application.query.ClusterDetailsAggregate;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 import ru.tbank.tmap.heatmap.domain.ClusterHistoryQueryRepository;
+import ru.tbank.tmap.shared.h3.H3IndexService;
 
 @Service
 @RequiredArgsConstructor
@@ -24,8 +27,10 @@ public class H3HeatmapService {
 
     private static final int DEFAULT_WINDOW_MINUTES = 60;
     private static final int REFRESH_INTERVAL_MINUTES = 5;
+    private static final H3Resolution PARENT_RESOLUTION = H3Resolution.RES_6;
 
     private final ClusterHistoryQueryRepository heatmapQueryRepository;
+    private final H3IndexService h3IndexService;
     private final MinioUrlBuilder minioUrlBuilder;
     private final Clock clock;
 
@@ -38,16 +43,19 @@ public class H3HeatmapService {
         final Instant from = now.minus(window, ChronoUnit.MINUTES);
         final Instant currentHour = now.truncatedTo(ChronoUnit.HOURS);
 
+        final List<Long> parents = h3IndexService.bboxToCells(boundingBox, PARENT_RESOLUTION);
+
+        final List<HeatmapClusterAggregate> clusters = heatmapQueryRepository
+                .findClustersByParents(parents, resolution, from, currentHour)
+                .stream()
+                .filter(cluster -> boundingBox.contains(cluster.centerLat(), cluster.centerLng()))
+                .toList();
+
         return new HeatmapClusters(
                 OffsetDateTime.ofInstant(now, ZoneOffset.UTC),
                 REFRESH_INTERVAL_MINUTES,
                 window,
-                heatmapQueryRepository.findClusters(
-                        boundingBox,
-                        resolution,
-                        from,
-                        currentHour
-                )
+                clusters
         );
     }
 

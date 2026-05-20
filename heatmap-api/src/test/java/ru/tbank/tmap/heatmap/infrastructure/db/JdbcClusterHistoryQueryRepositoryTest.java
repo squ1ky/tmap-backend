@@ -3,7 +3,6 @@ package ru.tbank.tmap.heatmap.infrastructure.db;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.uber.h3core.H3Core;
-import com.uber.h3core.util.LatLng;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -23,7 +22,6 @@ import ru.tbank.tmap.heatmap.application.query.ClusterDetailsAggregate;
 import ru.tbank.tmap.heatmap.application.query.HeatmapClusterAggregate;
 import ru.tbank.tmap.heatmap.domain.ClusterHistoryQueryRepository;
 import ru.tbank.tmap.infrastructure.h3.H3Config;
-import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 
 @JdbcTest
@@ -36,6 +34,8 @@ import ru.tbank.tmap.shared.geo.H3Resolution;
 class JdbcClusterHistoryQueryRepositoryTest {
 
     private static final String RES_8_CLUSTER = "88115b22b1fffff";
+    private static final String RES_8_CLUSTER_SAME_PARENT = "88115b22b3fffff";
+    private static final String RES_8_CLUSTER_OTHER_PARENT = "881f1d4881fffff";
     private static final String RES_9_CLUSTER = "89115b22b0bffff";
     private static final String PHOTO_URL = "districts/kazan/vahitovsky.jpg";
 
@@ -52,7 +52,7 @@ class JdbcClusterHistoryQueryRepositoryTest {
     private H3Core h3Core;
 
     @Test
-    void findClusters_whenClusterHistoryContainsViewportData_thenReturnsAggregatedClusters() {
+    void findClustersByParents_whenOneParentWithMultipleHourBuckets_thenAggregatesAcrossBuckets() {
         insertClusterHistory(
                 RES_8_CLUSTER, 8,
                 Instant.parse("2026-04-17T10:00:00Z"),
@@ -64,10 +64,10 @@ class JdbcClusterHistoryQueryRepositoryTest {
                 1, new BigDecimal("700.00"), new BigDecimal("700.00")
         );
 
-        final BoundingBox boundingBox = boundingBoxAround(RES_8_CLUSTER);
+        final long parent = parentRes6(RES_8_CLUSTER);
 
-        final List<HeatmapClusterAggregate> result = heatmapQueryRepository.findClusters(
-                boundingBox, H3Resolution.RES_8, FROM, CURRENT_HOUR
+        final List<HeatmapClusterAggregate> result = heatmapQueryRepository.findClustersByParents(
+                List.of(parent), H3Resolution.RES_8, FROM, CURRENT_HOUR
         );
 
         assertThat(result).hasSize(1);
@@ -79,16 +79,78 @@ class JdbcClusterHistoryQueryRepositoryTest {
         assertThat(cluster.avgCheck()).isEqualByComparingTo("600.00");
         assertThat(cluster.sumAmount()).isEqualByComparingTo("1200.00");
         assertThat(cluster.updatedAt()).isEqualTo(Instant.parse("2026-04-17T10:15:00Z"));
-        assertThat(boundingBox.contains(cluster.centerLat(), cluster.centerLng())).isTrue();
         assertThat(cluster.isAnomaly()).isFalse();
         assertThat(cluster.anomalyRatio()).isNull();
     }
 
     @Test
-    void findClusters_whenAnomalyExistsForCurrentHour_thenReturnsAnomalyFields() {
+    void findClustersByParents_whenMultipleParents_thenReturnsClustersFromAllParents() {
         insertClusterHistory(
-                RES_8_CLUSTER, 8,
-                CURRENT_HOUR,
+                RES_8_CLUSTER, 8, CURRENT_HOUR,
+                1, new BigDecimal("100.00"), new BigDecimal("100.00")
+        );
+        insertClusterHistory(
+                RES_8_CLUSTER_OTHER_PARENT, 8, CURRENT_HOUR,
+                2, new BigDecimal("200.00"), new BigDecimal("400.00")
+        );
+
+        final List<Long> parents = List.of(
+                parentRes6(RES_8_CLUSTER),
+                parentRes6(RES_8_CLUSTER_OTHER_PARENT)
+        );
+
+        final List<HeatmapClusterAggregate> result = heatmapQueryRepository.findClustersByParents(
+                parents, H3Resolution.RES_8, FROM, CURRENT_HOUR
+        );
+
+        assertThat(result).hasSize(2);
+        assertThat(result)
+                .extracting(HeatmapClusterAggregate::h3Index)
+                .containsExactlyInAnyOrder(
+                        Long.parseUnsignedLong(RES_8_CLUSTER, 16),
+                        Long.parseUnsignedLong(RES_8_CLUSTER_OTHER_PARENT, 16)
+                );
+    }
+
+    @Test
+    void findClustersByParents_whenParentNotRequested_thenFiltersOut() {
+        insertClusterHistory(
+                RES_8_CLUSTER, 8, CURRENT_HOUR,
+                1, new BigDecimal("100.00"), new BigDecimal("100.00")
+        );
+        insertClusterHistory(
+                RES_8_CLUSTER_OTHER_PARENT, 8, CURRENT_HOUR,
+                2, new BigDecimal("200.00"), new BigDecimal("400.00")
+        );
+
+        final List<HeatmapClusterAggregate> result = heatmapQueryRepository.findClustersByParents(
+                List.of(parentRes6(RES_8_CLUSTER)),
+                H3Resolution.RES_8, FROM, CURRENT_HOUR
+        );
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().h3Index())
+                .isEqualTo(Long.parseUnsignedLong(RES_8_CLUSTER, 16));
+    }
+
+    @Test
+    void findClustersByParents_whenEmptyParentList_thenReturnsEmptyList() {
+        insertClusterHistory(
+                RES_8_CLUSTER, 8, CURRENT_HOUR,
+                1, new BigDecimal("100.00"), new BigDecimal("100.00")
+        );
+
+        final List<HeatmapClusterAggregate> result = heatmapQueryRepository.findClustersByParents(
+                List.of(), H3Resolution.RES_8, FROM, CURRENT_HOUR
+        );
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void findClustersByParents_whenAnomalyExistsForCurrentHour_thenReturnsAnomalyFields() {
+        insertClusterHistory(
+                RES_8_CLUSTER, 8, CURRENT_HOUR,
                 128, new BigDecimal("742.50"), new BigDecimal("95040.00")
         );
         insertAnomaly(
@@ -96,10 +158,9 @@ class JdbcClusterHistoryQueryRepositoryTest {
                 128, new BigDecimal("37.60"), new BigDecimal("3.40")
         );
 
-        final BoundingBox boundingBox = boundingBoxAround(RES_8_CLUSTER);
-
-        final List<HeatmapClusterAggregate> result = heatmapQueryRepository.findClusters(
-                boundingBox, H3Resolution.RES_8, FROM, CURRENT_HOUR
+        final List<HeatmapClusterAggregate> result = heatmapQueryRepository.findClustersByParents(
+                List.of(parentRes6(RES_8_CLUSTER)),
+                H3Resolution.RES_8, FROM, CURRENT_HOUR
         );
 
         assertThat(result).hasSize(1);
@@ -112,11 +173,35 @@ class JdbcClusterHistoryQueryRepositoryTest {
     }
 
     @Test
+    void findClustersByParents_whenSiblingsShareParent_thenBothReturned() {
+        insertClusterHistory(
+                RES_8_CLUSTER, 8, CURRENT_HOUR,
+                1, new BigDecimal("100.00"), new BigDecimal("100.00")
+        );
+        insertClusterHistory(
+                RES_8_CLUSTER_SAME_PARENT, 8, CURRENT_HOUR,
+                3, new BigDecimal("200.00"), new BigDecimal("600.00")
+        );
+
+        final List<HeatmapClusterAggregate> result = heatmapQueryRepository.findClustersByParents(
+                List.of(parentRes6(RES_8_CLUSTER)),
+                H3Resolution.RES_8, FROM, CURRENT_HOUR
+        );
+
+        assertThat(result).hasSize(2);
+        assertThat(result)
+                .extracting(HeatmapClusterAggregate::h3Index)
+                .containsExactlyInAnyOrder(
+                        Long.parseUnsignedLong(RES_8_CLUSTER, 16),
+                        Long.parseUnsignedLong(RES_8_CLUSTER_SAME_PARENT, 16)
+                );
+    }
+
+    @Test
     void findClusterDetails_whenClusterExists_thenReturnsAggregate() {
         insertDistrictMapping(RES_9_CLUSTER, 9, "Вахитовский район", PHOTO_URL);
         insertClusterHistory(
-                RES_9_CLUSTER,
-                9,
+                RES_9_CLUSTER, 9,
                 Instant.parse("2026-04-17T10:00:00Z"),
                 3, new BigDecimal("900.00"), new BigDecimal("2700.00")
         );
@@ -147,12 +232,8 @@ class JdbcClusterHistoryQueryRepositoryTest {
     void findClusterDetails_whenAnomalyExists_thenReturnsAnomalyFields() {
         insertDistrictMapping(RES_9_CLUSTER, 9, "Вахитовский район", PHOTO_URL);
         insertClusterHistory(
-                RES_9_CLUSTER,
-                9,
-                CURRENT_HOUR,
-                128,
-                new BigDecimal("742.50"),
-                new BigDecimal("95040.00")
+                RES_9_CLUSTER, 9, CURRENT_HOUR,
+                128, new BigDecimal("742.50"), new BigDecimal("95040.00")
         );
         insertAnomaly(
                 RES_9_CLUSTER, 9, CURRENT_HOUR,
@@ -174,6 +255,10 @@ class JdbcClusterHistoryQueryRepositoryTest {
         assertThat(cluster.isAnomaly()).isTrue();
         assertThat(cluster.anomalyRatio()).isEqualByComparingTo("3.40");
         assertThat(cluster.baselineAvg()).isEqualByComparingTo("37.60");
+    }
+
+    private long parentRes6(final String h3IndexHex) {
+        return h3Core.cellToParent(Long.parseUnsignedLong(h3IndexHex, 16), 6);
     }
 
     private void insertDistrictMapping(
@@ -216,7 +301,7 @@ class JdbcClusterHistoryQueryRepositoryTest {
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                 Long.parseUnsignedLong(h3Index, 16),
-                h3Core.cellToParent(Long.parseUnsignedLong(h3Index, 16), 6),
+                parentRes6(h3Index),
                 resolution,
                 Timestamp.from(hourBucket),
                 txCount,
@@ -247,14 +332,6 @@ class JdbcClusterHistoryQueryRepositoryTest {
                 txCount,
                 baselineAvg,
                 ratio
-        );
-    }
-
-    private BoundingBox boundingBoxAround(final String h3Index) {
-        final LatLng center = h3Core.cellToLatLng(Long.parseUnsignedLong(h3Index, 16));
-        return new BoundingBox(
-                center.lat - 0.01, center.lng - 0.01,
-                center.lat + 0.01, center.lng + 0.01
         );
     }
 }

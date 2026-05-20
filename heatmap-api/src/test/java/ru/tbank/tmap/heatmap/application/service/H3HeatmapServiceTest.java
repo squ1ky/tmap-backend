@@ -21,6 +21,7 @@ import ru.tbank.tmap.heatmap.presentation.dto.HeatmapClusters;
 import ru.tbank.tmap.infrastructure.minio.MinioUrlBuilder;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
+import ru.tbank.tmap.shared.h3.H3IndexService;
 
 class H3HeatmapServiceTest {
 
@@ -34,8 +35,16 @@ class H3HeatmapServiceTest {
     private static final String H3_INDEX_HEX = "89115b22b0bffff";
     private static final long H3_INDEX = Long.parseUnsignedLong(H3_INDEX_HEX, 16);
 
+    private static final List<Long> PARENTS = List.of(
+            Long.parseUnsignedLong("86115b227ffffff", 16),
+            Long.parseUnsignedLong("86115b22fffffff", 16)
+    );
+
     @Mock
     private ClusterHistoryQueryRepository heatmapQueryRepository;
+
+    @Mock
+    private H3IndexService h3IndexService;
 
     @Mock
     private MinioUrlBuilder minioUrlBuilder;
@@ -47,6 +56,7 @@ class H3HeatmapServiceTest {
         MockitoAnnotations.openMocks(this);
         heatmapService = new H3HeatmapService(
                 heatmapQueryRepository,
+                h3IndexService,
                 minioUrlBuilder,
                 Clock.fixed(FIXED_NOW, ZoneOffset.UTC)
         );
@@ -54,8 +64,10 @@ class H3HeatmapServiceTest {
 
     @Test
     void getHeatmapClusters_whenRepositoryReturnsClusters_thenReturnHeatmapData() {
-        given(heatmapQueryRepository.findClusters(
-                KAZAN_BOUNDING_BOX,
+        given(h3IndexService.bboxToCells(KAZAN_BOUNDING_BOX, H3Resolution.RES_6))
+                .willReturn(PARENTS);
+        given(heatmapQueryRepository.findClustersByParents(
+                PARENTS,
                 H3Resolution.RES_8,
                 WINDOW_FROM,
                 CURRENT_HOUR
@@ -90,8 +102,10 @@ class H3HeatmapServiceTest {
 
     @Test
     void getHeatmapClusters_whenClusterIsAnomalous_thenReturnAnomalyFlagAndRatio() {
-        given(heatmapQueryRepository.findClusters(
-                KAZAN_BOUNDING_BOX,
+        given(h3IndexService.bboxToCells(KAZAN_BOUNDING_BOX, H3Resolution.RES_6))
+                .willReturn(PARENTS);
+        given(heatmapQueryRepository.findClustersByParents(
+                PARENTS,
                 H3Resolution.RES_8,
                 WINDOW_FROM,
                 CURRENT_HOUR
@@ -117,6 +131,48 @@ class H3HeatmapServiceTest {
 
         assertThat(cluster.isAnomaly()).isTrue();
         assertThat(cluster.anomalyRatio()).isEqualByComparingTo("3.40");
+    }
+
+    @Test
+    void getHeatmapClusters_whenClusterCenterOutsideBoundingBox_thenFiltersItOut() {
+        given(h3IndexService.bboxToCells(KAZAN_BOUNDING_BOX, H3Resolution.RES_6))
+                .willReturn(PARENTS);
+        given(heatmapQueryRepository.findClustersByParents(
+                PARENTS,
+                H3Resolution.RES_8,
+                WINDOW_FROM,
+                CURRENT_HOUR
+        )).willReturn(List.of(
+                new HeatmapClusterAggregate(
+                        H3_INDEX,
+                        55.796127,
+                        49.106414,
+                        50,
+                        new BigDecimal("100.00"),
+                        new BigDecimal("5000.00"),
+                        Instant.parse("2026-04-17T10:15:00Z"),
+                        false,
+                        null
+                ),
+                new HeatmapClusterAggregate(
+                        0xDEADBEEFL,
+                        56.0000,
+                        50.0000,
+                        50,
+                        new BigDecimal("100.00"),
+                        new BigDecimal("5000.00"),
+                        Instant.parse("2026-04-17T10:15:00Z"),
+                        false,
+                        null
+                )
+        ));
+
+        final HeatmapClusters response = heatmapService.getHeatmapClusters(
+                KAZAN_BOUNDING_BOX, H3Resolution.RES_8, 60
+        );
+
+        assertThat(response.clusters()).hasSize(1);
+        assertThat(response.clusters().getFirst().h3Index()).isEqualTo(H3_INDEX);
     }
 
     @Test

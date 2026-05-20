@@ -18,7 +18,6 @@ import org.springframework.stereotype.Repository;
 import ru.tbank.tmap.heatmap.application.query.ClusterDetailsAggregate;
 import ru.tbank.tmap.heatmap.application.query.HeatmapClusterAggregate;
 import ru.tbank.tmap.heatmap.domain.ClusterHistoryQueryRepository;
-import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 
 @Repository
@@ -29,12 +28,16 @@ public class JdbcClusterHistoryQueryRepository implements ClusterHistoryQueryRep
     private final H3Core h3Core;
 
     @Override
-    public List<HeatmapClusterAggregate> findClusters(
-            final BoundingBox boundingBox,
+    public List<HeatmapClusterAggregate> findClustersByParents(
+            final List<Long> parentRes6Indexes,
             final H3Resolution resolution,
             final Instant from,
             final Instant currentHour
     ) {
+        if (parentRes6Indexes.isEmpty()) {
+            return List.of();
+        }
+
         final String sql = """
                 WITH aggregated AS (
                     SELECT
@@ -47,8 +50,9 @@ public class JdbcClusterHistoryQueryRepository implements ClusterHistoryQueryRep
                         COALESCE(SUM(ch.sum_amount), 0) AS sum_amount,
                         MAX(ch.hour_bucket) AS updated_at
                     FROM cluster_history ch
-                    WHERE ch.hour_bucket >= :from
-                      AND ch.resolution  = :resolution
+                    WHERE ch.h3_parent_res6 IN (:parents)
+                      AND ch.resolution     = :resolution
+                      AND ch.hour_bucket   >= :from
                     GROUP BY ch.h3_index
                 )
                 SELECT
@@ -67,14 +71,12 @@ public class JdbcClusterHistoryQueryRepository implements ClusterHistoryQueryRep
                 """;
 
         final MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("from", Timestamp.from(from))
+                .addValue("parents", parentRes6Indexes)
                 .addValue("resolution", resolution.getValue())
+                .addValue("from", Timestamp.from(from))
                 .addValue("currentHour", Timestamp.from(currentHour));
 
-        return jdbcTemplate.query(sql, params, (rs, rowNum) -> toClusterAggregate(rs))
-                .stream()
-                .filter(cluster -> boundingBox.contains(cluster.centerLat(), cluster.centerLng()))
-                .toList();
+        return jdbcTemplate.query(sql, params, (rs, rowNum) -> toClusterAggregate(rs));
     }
 
     @Override

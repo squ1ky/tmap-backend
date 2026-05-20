@@ -27,10 +27,10 @@ dev-gen: infra
 	./mvnw spring-boot:run -pl $(GEN_MODULE) -Dspring-boot.run.profiles=local
 
 # Поднять инфраструктуру (БД + Kafka + MinIO + Мониторинг)
-.PHONY: infra db minio monitoring
+.PHONY: infra db minio monitoring redis
 
 infra:
-	$(DC) up -d db kafka kafka-init minio minio-init prometheus grafana
+	$(DC) up -d db kafka kafka-init minio minio-init redis prometheus grafana
 
 # Поднять только БД
 db:
@@ -39,6 +39,9 @@ db:
 # Поднять только MinIO
 minio:
 	$(DC) up -d minio minio-init
+
+redis:
+	$(DC) up -d redis
 
 # Поднять только мониторинг (Prometheus + Grafana)
 monitoring:

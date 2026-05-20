@@ -20,7 +20,7 @@ public class ClusterHistoryAggregator {
     public int aggregate(final Instant from, final Instant to) {
         int total = 0;
 
-        for (H3Resolution resolution : H3Resolution.values()) {
+        for (H3Resolution resolution : H3Resolution.AGGREGATED) {
             total += writeRepository.refreshAggregates(resolution, from, to);
         }
 

@@ -3,23 +3,27 @@ package ru.tbank.tmap.heatmap.infrastructure.db;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.UUID;
+
+import com.uber.h3core.H3Core;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.ActiveProfiles;
 import ru.tbank.tmap.TestcontainersConfiguration;
 import ru.tbank.tmap.heatmap.domain.ClusterHistoryWriteRepository;
+import ru.tbank.tmap.infrastructure.h3.H3Config;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 
 @JdbcTest
 @Import({
         TestcontainersConfiguration.class,
-        JdbcClusterHistoryWriteRepository.class
+        JdbcClusterHistoryWriteRepository.class,
+        H3Config.class
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class JdbcClusterHistoryWriteRepositoryTest {
@@ -34,6 +38,9 @@ class JdbcClusterHistoryWriteRepositoryTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private H3Core h3Core;
 
     @Test
     void refreshAggregates_whenTransactionsBelongToInactiveVenues_thenAggregatesOnlyActiveVenues() {
@@ -53,7 +60,7 @@ class JdbcClusterHistoryWriteRepositoryTest {
                 """
                 SELECT tx_count
                 FROM cluster_history
-                WHERE h3_index = ? AND resolution = 9 AND category = 'FOOD'
+                WHERE h3_index = ? AND resolution = 9
                 """,
                 Integer.class,
                 H3_RES_9
@@ -62,7 +69,7 @@ class JdbcClusterHistoryWriteRepositoryTest {
                 """
                 SELECT sum_amount
                 FROM cluster_history
-                WHERE h3_index = ? AND resolution = 9 AND category = 'FOOD'
+                WHERE h3_index = ? AND resolution = 9
                 """,
                 BigDecimal.class,
                 H3_RES_9
@@ -91,15 +98,15 @@ class JdbcClusterHistoryWriteRepositoryTest {
         jdbcTemplate.update(
                 """
                 INSERT INTO transactions (
-                    id, venue_id, amount, lat, lng, h3_res7, h3_res8, h3_res9, category, occurred_at
-                ) VALUES (?, ?, ?, 55.7905, 49.1140, 617422037122678781, 617422037122678782, ?,
+                    id, venue_id, amount, lat, lng, h3_res6, h3_res7, h3_res8, h3_res9, category, occurred_at
+                ) VALUES (?, ?, ?, 55.7905, 49.1140, 603911238254067711, 617422037122678781, 617422037122678782, ?,
                     'FOOD', ?)
                 """,
                 UUID.randomUUID(),
                 venueId,
                 amount,
                 H3_RES_9,
-                java.sql.Timestamp.from(Instant.parse("2026-04-17T10:15:00Z"))
+                Timestamp.from(Instant.parse("2026-04-17T10:15:00Z"))
         );
     }
 }

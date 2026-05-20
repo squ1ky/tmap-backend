@@ -12,6 +12,7 @@ record TransactionRow(
         BigDecimal amount,
         double lat,
         double lng,
+        long h3Res6,
         long h3Res7,
         long h3Res8,
         long h3Res9,

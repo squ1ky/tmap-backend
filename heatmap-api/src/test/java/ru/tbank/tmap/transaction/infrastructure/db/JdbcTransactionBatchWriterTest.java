@@ -8,6 +8,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import com.uber.h3core.H3Core;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -16,6 +18,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import ru.tbank.tmap.TestcontainersConfiguration;
+import ru.tbank.tmap.infrastructure.h3.H3Config;
+import ru.tbank.tmap.shared.h3.H3IndexService;
 import ru.tbank.tmap.transaction.application.port.TransactionWriter;
 import ru.tbank.tmap.transaction.domain.Transaction;
 import ru.tbank.tmap.transaction.domain.TransactionTestFactory;
@@ -24,7 +28,9 @@ import ru.tbank.tmap.venue.domain.VenueCategory;
 @JdbcTest
 @Import({
         TestcontainersConfiguration.class,
-        JdbcTransactionBatchWriter.class
+        JdbcTransactionBatchWriter.class,
+        H3Config.class,
+        H3IndexService.class
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class JdbcTransactionBatchWriterTest {
@@ -37,6 +43,9 @@ class JdbcTransactionBatchWriterTest {
 
     @Autowired
     private TransactionWriter transactionWriter;
+
+    @Autowired
+    private H3Core h3Core;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -62,7 +71,6 @@ class JdbcTransactionBatchWriterTest {
                 .withVenueId(VENUE_ID)
                 .withAmount(amount)
                 .withLocation(55.7910, 49.1210)
-                .withH3Indices(608111111111111111L, 613222222222222222L, 617333333333333333L)
                 .withCategory(VenueCategory.FOOD)
                 .withOccurredAt(occurredAt)
                 .build();
@@ -76,9 +84,14 @@ class JdbcTransactionBatchWriterTest {
         assertThat(((BigDecimal) row.get("amount"))).isEqualByComparingTo(amount);
         assertThat(((Number) row.get("lat")).doubleValue()).isEqualTo(55.7910);
         assertThat(((Number) row.get("lng")).doubleValue()).isEqualTo(49.1210);
-        assertThat(((Number) row.get("h3_res7")).longValue()).isEqualTo(608111111111111111L);
-        assertThat(((Number) row.get("h3_res8")).longValue()).isEqualTo(613222222222222222L);
-        assertThat(((Number) row.get("h3_res9")).longValue()).isEqualTo(617333333333333333L);
+        assertThat(((Number) row.get("h3_res6")).longValue())
+                .isEqualTo(h3Core.latLngToCell(55.7910, 49.1210, 6));
+        assertThat(((Number) row.get("h3_res7")).longValue())
+                .isEqualTo(h3Core.latLngToCell(55.7910, 49.1210, 7));
+        assertThat(((Number) row.get("h3_res8")).longValue())
+                .isEqualTo(h3Core.latLngToCell(55.7910, 49.1210, 8));
+        assertThat(((Number) row.get("h3_res9")).longValue())
+                .isEqualTo(h3Core.latLngToCell(55.7910, 49.1210, 9));
         assertThat(row.get("category")).isEqualTo(VenueCategory.FOOD.name());
         assertThat(((Timestamp) row.get("occurred_at")).toInstant()).isEqualTo(occurredAt);
     }

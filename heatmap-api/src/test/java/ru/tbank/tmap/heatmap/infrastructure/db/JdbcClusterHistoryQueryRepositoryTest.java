@@ -25,7 +25,6 @@ import ru.tbank.tmap.heatmap.domain.ClusterHistoryQueryRepository;
 import ru.tbank.tmap.infrastructure.h3.H3Config;
 import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.venue.domain.VenueCategory;
 
 @JdbcTest
 @Import({
@@ -55,12 +54,12 @@ class JdbcClusterHistoryQueryRepositoryTest {
     @Test
     void findClusters_whenClusterHistoryContainsViewportData_thenReturnsAggregatedClusters() {
         insertClusterHistory(
-                RES_8_CLUSTER, 8, VenueCategory.FOOD,
+                RES_8_CLUSTER, 8,
                 Instant.parse("2026-04-17T10:00:00Z"),
                 1, new BigDecimal("500.00"), new BigDecimal("500.00")
         );
         insertClusterHistory(
-                RES_8_CLUSTER, 8, VenueCategory.FOOD,
+                RES_8_CLUSTER, 8,
                 Instant.parse("2026-04-17T10:15:00Z"),
                 1, new BigDecimal("700.00"), new BigDecimal("700.00")
         );
@@ -88,7 +87,7 @@ class JdbcClusterHistoryQueryRepositoryTest {
     @Test
     void findClusters_whenAnomalyExistsForCurrentHour_thenReturnsAnomalyFields() {
         insertClusterHistory(
-                RES_8_CLUSTER, 8, VenueCategory.FOOD,
+                RES_8_CLUSTER, 8,
                 CURRENT_HOUR,
                 128, new BigDecimal("742.50"), new BigDecimal("95040.00")
         );
@@ -116,7 +115,8 @@ class JdbcClusterHistoryQueryRepositoryTest {
     void findClusterDetails_whenClusterExists_thenReturnsAggregate() {
         insertDistrictMapping(RES_9_CLUSTER, 9, "Вахитовский район", PHOTO_URL);
         insertClusterHistory(
-                RES_9_CLUSTER, 9, VenueCategory.FOOD,
+                RES_9_CLUSTER,
+                9,
                 Instant.parse("2026-04-17T10:00:00Z"),
                 3, new BigDecimal("900.00"), new BigDecimal("2700.00")
         );
@@ -147,9 +147,12 @@ class JdbcClusterHistoryQueryRepositoryTest {
     void findClusterDetails_whenAnomalyExists_thenReturnsAnomalyFields() {
         insertDistrictMapping(RES_9_CLUSTER, 9, "Вахитовский район", PHOTO_URL);
         insertClusterHistory(
-                RES_9_CLUSTER, 9, VenueCategory.FOOD,
+                RES_9_CLUSTER,
+                9,
                 CURRENT_HOUR,
-                128, new BigDecimal("742.50"), new BigDecimal("95040.00")
+                128,
+                new BigDecimal("742.50"),
+                new BigDecimal("95040.00")
         );
         insertAnomaly(
                 RES_9_CLUSTER, 9, CURRENT_HOUR,
@@ -200,7 +203,6 @@ class JdbcClusterHistoryQueryRepositoryTest {
     private void insertClusterHistory(
             final String h3Index,
             final int resolution,
-            final VenueCategory category,
             final Instant hourBucket,
             final int txCount,
             final BigDecimal avgCheck,
@@ -209,13 +211,13 @@ class JdbcClusterHistoryQueryRepositoryTest {
         jdbcTemplate.update(
                 """
                         INSERT INTO cluster_history (
-                            h3_index, resolution, category, hour_bucket,
+                            h3_index, h3_parent_res6, resolution, hour_bucket,
                             tx_count, avg_check, sum_amount, created_at
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                 Long.parseUnsignedLong(h3Index, 16),
+                h3Core.cellToParent(Long.parseUnsignedLong(h3Index, 16), 6),
                 resolution,
-                category.name(),
                 Timestamp.from(hourBucket),
                 txCount,
                 avgCheck,

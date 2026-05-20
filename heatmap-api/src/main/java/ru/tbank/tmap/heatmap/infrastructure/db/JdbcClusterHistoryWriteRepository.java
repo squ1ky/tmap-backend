@@ -16,12 +16,12 @@ public class JdbcClusterHistoryWriteRepository implements ClusterHistoryWriteRep
 
     private static final String UPSERT_SQL_TEMPLATE = """
             INSERT INTO cluster_history
-                (h3_index, resolution, category, hour_bucket,
+                (h3_index, h3_parent_res6, resolution, hour_bucket,
                  tx_count, avg_check, sum_amount)
             SELECT
                 %s                                    AS h3_index,
+                t.h3_res6                             AS h3_parent_res6,
                 :resolution                           AS resolution,
-                t.category                            AS category,
                 date_trunc('hour', t.occurred_at)     AS hour_bucket,
                 count(*)                              AS tx_count,
                 avg(t.amount)                         AS avg_check,
@@ -31,8 +31,8 @@ public class JdbcClusterHistoryWriteRepository implements ClusterHistoryWriteRep
             WHERE t.occurred_at >= :fromTs
               AND t.occurred_at <  :toTs
               AND v.status = 'ACTIVE'
-            GROUP BY %s, t.category, date_trunc('hour', t.occurred_at)
-            ON CONFLICT (h3_index, resolution, category, hour_bucket) DO UPDATE
+            GROUP BY %s, t.h3_res6, date_trunc('hour', t.occurred_at)
+            ON CONFLICT (h3_index, resolution, hour_bucket) DO UPDATE
             SET tx_count   = EXCLUDED.tx_count,
                 avg_check  = EXCLUDED.avg_check,
                 sum_amount = EXCLUDED.sum_amount
@@ -55,6 +55,7 @@ public class JdbcClusterHistoryWriteRepository implements ClusterHistoryWriteRep
 
     private static String resolveH3Column(H3Resolution resolution) {
         return switch (resolution) {
+            case RES_6 -> throw new IllegalArgumentException("RES_6 aggregates are not supported in cluster_history");
             case RES_7 -> "t.h3_res7";
             case RES_8 -> "t.h3_res8";
             case RES_9 -> "t.h3_res9";

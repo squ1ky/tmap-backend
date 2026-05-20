@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import com.uber.h3core.H3Core;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -17,13 +18,14 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import ru.tbank.tmap.TestcontainersConfiguration;
 import ru.tbank.tmap.heatmap.domain.AnomalyDetectionRepository;
+import ru.tbank.tmap.infrastructure.h3.H3Config;
 import ru.tbank.tmap.shared.geo.H3Resolution;
-import ru.tbank.tmap.venue.domain.VenueCategory;
 
 @JdbcTest
 @Import({
         TestcontainersConfiguration.class,
-        JdbcAnomalyDetectionRepository.class
+        JdbcAnomalyDetectionRepository.class,
+        H3Config.class
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class JdbcAnomalyDetectionRepositoryTest {
@@ -39,6 +41,9 @@ class JdbcAnomalyDetectionRepositoryTest {
 
     @Autowired
     private AnomalyDetectionRepository anomalyRepository;
+
+    @Autowired
+    private H3Core h3Core;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -131,35 +136,6 @@ class JdbcAnomalyDetectionRepositoryTest {
         );
 
         assertThat(rowsInserted).isZero();
-    }
-
-    @Test
-    void recompute_whenSumsAcrossCategories_thenComputesAggregatedTxCount() {
-        // 3 categories x 50 transactions = baseline 150
-        for (int day = 1; day <= 7; day++) {
-            final Instant pastHour = CURRENT_HOUR.minus(Duration.ofDays(day));
-            insertHistory(H3_INDEX_HEX, 9, VenueCategory.FOOD, pastHour, 50);
-            insertHistory(H3_INDEX_HEX, 9, VenueCategory.ENTERTAINMENT, pastHour, 50);
-            insertHistory(H3_INDEX_HEX, 9, VenueCategory.SHOPPING, pastHour, 50);
-        }
-
-        // current: 100+100+100 = 300, ratio = 300/150 = 2.0
-        insertHistory(H3_INDEX_HEX, 9, VenueCategory.FOOD, CURRENT_HOUR, 100);
-        insertHistory(H3_INDEX_HEX, 9, VenueCategory.ENTERTAINMENT, CURRENT_HOUR, 100);
-        insertHistory(H3_INDEX_HEX, 9, VenueCategory.SHOPPING, CURRENT_HOUR, 100);
-
-        final int rowsInserted = anomalyRepository.recompute(
-                H3Resolution.RES_9, CURRENT_HOUR,
-                RATIO_THRESHOLD, MIN_BASELINE, MIN_BASELINE_DAYS
-        );
-
-        assertThat(rowsInserted).isEqualTo(1);
-
-        final AnomalyRow saved = fetchAnomaly(H3_INDEX, 9, CURRENT_HOUR);
-
-        assertThat(saved.txCount).isEqualTo(300);
-        assertThat(saved.baselineAvg).isEqualByComparingTo("150.00");
-        assertThat(saved.ratio).isEqualByComparingTo("2.00");
     }
 
     @Test
@@ -269,15 +245,10 @@ class JdbcAnomalyDetectionRepositoryTest {
     }
 
     private void insertHistory(
-            final String h3Index, final int resolution,
-            final Instant hourBucket, final int txCount
-    ) {
-        insertHistory(h3Index, resolution, VenueCategory.FOOD, hourBucket, txCount);
-    }
-
-    private void insertHistory(
-            final String h3Index, final int resolution,
-            final VenueCategory category, final Instant hourBucket, final int txCount
+            final String h3Index,
+            final int resolution,
+            final Instant hourBucket,
+            final int txCount
     ) {
         final BigDecimal avgCheck = new BigDecimal("100.00");
         final BigDecimal sumAmount = avgCheck.multiply(BigDecimal.valueOf(txCount));
@@ -285,22 +256,26 @@ class JdbcAnomalyDetectionRepositoryTest {
         jdbcTemplate.update(
                 """
                         INSERT INTO cluster_history (
-                            h3_index, resolution, category, hour_bucket,
+                            h3_index, h3_parent_res6, resolution, hour_bucket,
                             tx_count, avg_check, sum_amount, created_at
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        ON CONFLICT (h3_index, resolution, category, hour_bucket) DO UPDATE
+                        ON CONFLICT (h3_index, resolution, hour_bucket) DO UPDATE
                         SET tx_count = EXCLUDED.tx_count,
                             sum_amount = EXCLUDED.sum_amount
                         """,
                 Long.parseUnsignedLong(h3Index, 16),
+                parentRes6(h3Index),
                 resolution,
-                category.name(),
                 Timestamp.from(hourBucket),
                 txCount,
                 avgCheck,
                 sumAmount,
                 Timestamp.from(hourBucket)
         );
+    }
+
+    private long parentRes6(final String h3IndexHex) {
+        return h3Core.cellToParent(Long.parseUnsignedLong(h3IndexHex, 16), 6);
     }
 
     private AnomalyRow fetchAnomaly(final long h3Index, final int resolution, final Instant hourBucket) {

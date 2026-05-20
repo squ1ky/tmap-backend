@@ -10,8 +10,6 @@ public final class TransactionTestFactory {
 
     public static final double DEFAULT_LAT = 55.7900;
     public static final double DEFAULT_LNG = 49.1200;
-    public static final long DEFAULT_H3_RES7 = 608733123456780000L;
-    public static final long DEFAULT_H3_RES8 = 613233123456780000L;
     public static final long DEFAULT_H3_RES9 = 617733123456780000L;
     public static final BigDecimal DEFAULT_AMOUNT = new BigDecimal("100.50");
     public static final VenueCategory DEFAULT_CATEGORY = VenueCategory.FOOD;
@@ -31,9 +29,6 @@ public final class TransactionTestFactory {
         private BigDecimal amount = DEFAULT_AMOUNT;
         private double lat = DEFAULT_LAT;
         private double lng = DEFAULT_LNG;
-        private long h3Res7 = DEFAULT_H3_RES7;
-        private long h3Res8 = DEFAULT_H3_RES8;
-        private long h3Res9 = DEFAULT_H3_RES9;
         private VenueCategory category = DEFAULT_CATEGORY;
         private Instant occurredAt = DEFAULT_OCCURRED_AT;
 
@@ -58,13 +53,6 @@ public final class TransactionTestFactory {
             return this;
         }
 
-        public Builder withH3Indices(final long h3Res7, final long h3Res8, final long h3Res9) {
-            this.h3Res7 = h3Res7;
-            this.h3Res8 = h3Res8;
-            this.h3Res9 = h3Res9;
-            return this;
-        }
-
         public Builder withCategory(final VenueCategory category) {
             this.category = category;
             return this;
@@ -82,9 +70,6 @@ public final class TransactionTestFactory {
                     amount,
                     lat,
                     lng,
-                    h3Res7,
-                    h3Res8,
-                    h3Res9,
                     category,
                     occurredAt
             );

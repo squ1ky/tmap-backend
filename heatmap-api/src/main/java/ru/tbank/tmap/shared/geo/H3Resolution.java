@@ -4,6 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum H3Resolution {
+    RES_6(6),
     RES_7(7),
     RES_8(8),
     RES_9(9);

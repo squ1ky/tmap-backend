@@ -28,6 +28,8 @@ public class H3HeatmapService {
 
     private static final int DEFAULT_WINDOW_MINUTES = 60;
     private static final int REFRESH_INTERVAL_MINUTES = 5;
+
+    private static final H3Resolution PARENT_DISCOVERY_RESOLUTION = H3Resolution.RES_9;
     private static final H3Resolution PARENT_RESOLUTION = H3Resolution.RES_6;
 
     private final ClusterHistoryQueryRepository heatmapQueryRepository;
@@ -45,7 +47,8 @@ public class H3HeatmapService {
         final Instant from = now.minus(window, ChronoUnit.MINUTES);
         final Instant currentHour = now.truncatedTo(ChronoUnit.HOURS);
 
-        final List<Long> parents = h3IndexService.bboxToCells(boundingBox, PARENT_RESOLUTION);
+        final List<Long> parents =
+                h3IndexService.bboxToParents(boundingBox, PARENT_DISCOVERY_RESOLUTION, PARENT_RESOLUTION);
 
         final List<HeatmapClusterAggregate> clusters = clusterReader
                 .read(parents, resolution, window, from, currentHour)

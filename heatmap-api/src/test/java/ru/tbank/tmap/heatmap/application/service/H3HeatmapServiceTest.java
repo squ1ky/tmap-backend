@@ -12,8 +12,9 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import ru.tbank.tmap.heatmap.application.port.cache.HeatmapClusterReader;
 import ru.tbank.tmap.heatmap.application.query.ClusterDetailsAggregate;
 import ru.tbank.tmap.heatmap.application.query.HeatmapClusterAggregate;
@@ -24,6 +25,7 @@ import ru.tbank.tmap.shared.geo.BoundingBox;
 import ru.tbank.tmap.shared.geo.H3Resolution;
 import ru.tbank.tmap.shared.h3.H3IndexService;
 
+@ExtendWith(MockitoExtension.class)
 class H3HeatmapServiceTest {
 
     private static final BoundingBox KAZAN_BOUNDING_BOX =
@@ -58,7 +60,6 @@ class H3HeatmapServiceTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         heatmapService = new H3HeatmapService(
                 heatmapQueryRepository,
                 clusterReader,
@@ -70,7 +71,7 @@ class H3HeatmapServiceTest {
 
     @Test
     void getHeatmapClusters_whenReaderReturnsClusters_thenReturnHeatmapData() {
-        given(h3IndexService.bboxToCells(KAZAN_BOUNDING_BOX, H3Resolution.RES_6))
+        given(h3IndexService.bboxToParents(KAZAN_BOUNDING_BOX, H3Resolution.RES_9, H3Resolution.RES_6))
                 .willReturn(PARENTS);
         given(clusterReader.read(
                 PARENTS,
@@ -109,7 +110,7 @@ class H3HeatmapServiceTest {
 
     @Test
     void getHeatmapClusters_whenClusterIsAnomalous_thenReturnAnomalyFlagAndRatio() {
-        given(h3IndexService.bboxToCells(KAZAN_BOUNDING_BOX, H3Resolution.RES_6))
+        given(h3IndexService.bboxToParents(KAZAN_BOUNDING_BOX, H3Resolution.RES_9, H3Resolution.RES_6))
                 .willReturn(PARENTS);
         given(clusterReader.read(
                 PARENTS,
@@ -143,7 +144,7 @@ class H3HeatmapServiceTest {
 
     @Test
     void getHeatmapClusters_whenClusterCenterOutsideBoundingBox_thenFiltersItOut() {
-        given(h3IndexService.bboxToCells(KAZAN_BOUNDING_BOX, H3Resolution.RES_6))
+        given(h3IndexService.bboxToParents(KAZAN_BOUNDING_BOX, H3Resolution.RES_9, H3Resolution.RES_6))
                 .willReturn(PARENTS);
         given(clusterReader.read(
                 PARENTS,

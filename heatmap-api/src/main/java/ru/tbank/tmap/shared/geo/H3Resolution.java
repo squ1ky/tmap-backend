@@ -11,13 +11,13 @@ public enum H3Resolution {
     RES_8(8),
     RES_9(9);
 
+    public static final Set<H3Resolution> AGGREGATED = Set.of(RES_7, RES_8, RES_9);
+
     private final int value;
 
     H3Resolution(int value) {
         this.value = value;
     }
-
-    public static final Set<H3Resolution> AGGREGATED = Set.of(RES_7, RES_8, RES_9);
 
     @SuppressWarnings("PMD.ShortMethodName")
     public static H3Resolution of(int value) {

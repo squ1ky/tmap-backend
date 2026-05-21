@@ -19,7 +19,11 @@ public class RedisConfig {
                 .findAndRegisterModules();
 
         final GenericJackson2JsonRedisSerializer valueSerializer =
-                new GenericJackson2JsonRedisSerializer(objectMapper);
+                GenericJackson2JsonRedisSerializer.builder()
+                        .objectMapper(objectMapper)
+                        .defaultTyping(true)
+                        .build();
+
         final StringRedisSerializer keySerializer = new StringRedisSerializer();
 
         final RedisTemplate<String, Object> template = new RedisTemplate<>();

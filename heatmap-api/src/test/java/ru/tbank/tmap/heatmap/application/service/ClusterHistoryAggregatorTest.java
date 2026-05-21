@@ -34,12 +34,12 @@ class ClusterHistoryAggregatorTest {
     }
 
     @Test
-    void aggregate_whenInvoked_thenCallsRepositoryForEveryResolution() {
+    void aggregate_whenInvoked_thenCallsRepositoryForEveryAggregatedResolution() {
         given(writeRepository.refreshAggregates(any(), any(), any())).willReturn(0);
 
         aggregator.aggregate(FROM, TO);
 
-        for (H3Resolution resolution : H3Resolution.values()) {
+        for (H3Resolution resolution : H3Resolution.AGGREGATED) {
             verify(writeRepository).refreshAggregates(resolution, FROM, TO);
         }
         verifyNoMoreInteractions(writeRepository);

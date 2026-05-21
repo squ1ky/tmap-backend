@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import ru.tbank.tmap.heatmap.application.port.cache.HeatmapClusterReader;
 import ru.tbank.tmap.heatmap.application.query.ClusterDetailsAggregate;
 import ru.tbank.tmap.heatmap.application.query.HeatmapClusterAggregate;
 import ru.tbank.tmap.heatmap.domain.ClusterHistoryQueryRepository;
@@ -31,6 +32,7 @@ class H3HeatmapServiceTest {
     private static final Instant FIXED_NOW = Instant.parse("2026-04-17T10:20:00Z");
     private static final Instant WINDOW_FROM = Instant.parse("2026-04-17T09:20:00Z");
     private static final Instant CURRENT_HOUR = Instant.parse("2026-04-17T10:00:00Z");
+    private static final int WINDOW_MINUTES = 60;
 
     private static final String H3_INDEX_HEX = "89115b22b0bffff";
     private static final long H3_INDEX = Long.parseUnsignedLong(H3_INDEX_HEX, 16);
@@ -42,6 +44,9 @@ class H3HeatmapServiceTest {
 
     @Mock
     private ClusterHistoryQueryRepository heatmapQueryRepository;
+
+    @Mock
+    private HeatmapClusterReader clusterReader;
 
     @Mock
     private H3IndexService h3IndexService;
@@ -56,6 +61,7 @@ class H3HeatmapServiceTest {
         MockitoAnnotations.openMocks(this);
         heatmapService = new H3HeatmapService(
                 heatmapQueryRepository,
+                clusterReader,
                 h3IndexService,
                 minioUrlBuilder,
                 Clock.fixed(FIXED_NOW, ZoneOffset.UTC)
@@ -63,12 +69,13 @@ class H3HeatmapServiceTest {
     }
 
     @Test
-    void getHeatmapClusters_whenRepositoryReturnsClusters_thenReturnHeatmapData() {
+    void getHeatmapClusters_whenReaderReturnsClusters_thenReturnHeatmapData() {
         given(h3IndexService.bboxToCells(KAZAN_BOUNDING_BOX, H3Resolution.RES_6))
                 .willReturn(PARENTS);
-        given(heatmapQueryRepository.findClustersByParents(
+        given(clusterReader.read(
                 PARENTS,
                 H3Resolution.RES_8,
+                WINDOW_MINUTES,
                 WINDOW_FROM,
                 CURRENT_HOUR
         )).willReturn(List.of(new HeatmapClusterAggregate(
@@ -84,10 +91,10 @@ class H3HeatmapServiceTest {
         )));
 
         final HeatmapClusters response = heatmapService.getHeatmapClusters(
-                KAZAN_BOUNDING_BOX, H3Resolution.RES_8, 60
+                KAZAN_BOUNDING_BOX, H3Resolution.RES_8, WINDOW_MINUTES
         );
 
-        assertThat(response.aggregationWindowMinutes()).isEqualTo(60);
+        assertThat(response.aggregationWindowMinutes()).isEqualTo(WINDOW_MINUTES);
         assertThat(response.refreshIntervalMinutes()).isEqualTo(5);
         assertThat(response.clusters()).hasSize(1);
 
@@ -104,9 +111,10 @@ class H3HeatmapServiceTest {
     void getHeatmapClusters_whenClusterIsAnomalous_thenReturnAnomalyFlagAndRatio() {
         given(h3IndexService.bboxToCells(KAZAN_BOUNDING_BOX, H3Resolution.RES_6))
                 .willReturn(PARENTS);
-        given(heatmapQueryRepository.findClustersByParents(
+        given(clusterReader.read(
                 PARENTS,
                 H3Resolution.RES_8,
+                WINDOW_MINUTES,
                 WINDOW_FROM,
                 CURRENT_HOUR
         )).willReturn(List.of(new HeatmapClusterAggregate(
@@ -122,7 +130,7 @@ class H3HeatmapServiceTest {
         )));
 
         final HeatmapClusters response = heatmapService.getHeatmapClusters(
-                KAZAN_BOUNDING_BOX, H3Resolution.RES_8, 60
+                KAZAN_BOUNDING_BOX, H3Resolution.RES_8, WINDOW_MINUTES
         );
 
         assertThat(response.clusters()).hasSize(1);
@@ -137,9 +145,10 @@ class H3HeatmapServiceTest {
     void getHeatmapClusters_whenClusterCenterOutsideBoundingBox_thenFiltersItOut() {
         given(h3IndexService.bboxToCells(KAZAN_BOUNDING_BOX, H3Resolution.RES_6))
                 .willReturn(PARENTS);
-        given(heatmapQueryRepository.findClustersByParents(
+        given(clusterReader.read(
                 PARENTS,
                 H3Resolution.RES_8,
+                WINDOW_MINUTES,
                 WINDOW_FROM,
                 CURRENT_HOUR
         )).willReturn(List.of(
@@ -168,7 +177,7 @@ class H3HeatmapServiceTest {
         ));
 
         final HeatmapClusters response = heatmapService.getHeatmapClusters(
-                KAZAN_BOUNDING_BOX, H3Resolution.RES_8, 60
+                KAZAN_BOUNDING_BOX, H3Resolution.RES_8, WINDOW_MINUTES
         );
 
         assertThat(response.clusters()).hasSize(1);

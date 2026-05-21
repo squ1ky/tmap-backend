@@ -28,4 +28,8 @@ public class H3IndexService {
         );
         return h3.polygonToCells(outline, List.of(), resolution.getValue());
     }
+
+    public long cellToParent(long cell, H3Resolution resolution) {
+        return h3.cellToParent(cell, resolution.getValue());
+    }
 }

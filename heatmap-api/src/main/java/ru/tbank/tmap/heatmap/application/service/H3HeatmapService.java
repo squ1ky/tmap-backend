@@ -11,6 +11,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.heatmap.application.port.cache.HeatmapClusterReader;
 import ru.tbank.tmap.heatmap.application.query.HeatmapClusterAggregate;
 import ru.tbank.tmap.heatmap.presentation.dto.HeatmapClusters;
 import ru.tbank.tmap.heatmap.application.query.ClusterDetailsAggregate;
@@ -30,6 +31,7 @@ public class H3HeatmapService {
     private static final H3Resolution PARENT_RESOLUTION = H3Resolution.RES_6;
 
     private final ClusterHistoryQueryRepository heatmapQueryRepository;
+    private final HeatmapClusterReader clusterReader;
     private final H3IndexService h3IndexService;
     private final MinioUrlBuilder minioUrlBuilder;
     private final Clock clock;
@@ -45,8 +47,8 @@ public class H3HeatmapService {
 
         final List<Long> parents = h3IndexService.bboxToCells(boundingBox, PARENT_RESOLUTION);
 
-        final List<HeatmapClusterAggregate> clusters = heatmapQueryRepository
-                .findClustersByParents(parents, resolution, from, currentHour)
+        final List<HeatmapClusterAggregate> clusters = clusterReader
+                .read(parents, resolution, window, from, currentHour)
                 .stream()
                 .filter(cluster -> boundingBox.contains(cluster.centerLat(), cluster.centerLng()))
                 .toList();

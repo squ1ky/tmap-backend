@@ -12,6 +12,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.loyalty.api.LoyaltyVenueFacade;
+import ru.tbank.tmap.transaction.api.TransactionVenueFacade;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 import ru.tbank.tmap.venue.application.command.VenueUpdateCommand;
@@ -38,6 +39,7 @@ public class BusinessVenueService {
     private final VenuePendingUpdateRepository venuePendingUpdateRepository;
     private final VenueH3Resolver venueH3Resolver;
     private final LoyaltyVenueFacade loyaltyVenueFacade;
+    private final TransactionVenueFacade transactionVenueFacade;
 
     @Transactional
     public VenueDetails createVenue(final UUID ownerId, final VenueCreateCommand command) {
@@ -101,6 +103,7 @@ public class BusinessVenueService {
                 .ifPresent(this::cleanupPendingUpdateBeforeDelete);
 
         loyaltyVenueFacade.deleteVerificationHistory(venueId);
+        transactionVenueFacade.deleteVenueTransactions(venueId);
 
         if (venue.getPhotoObjectKey() != null) {
             venue.removePhoto();

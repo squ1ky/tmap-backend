@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.tbank.tmap.loyalty.api.LoyaltyVenueFacade;
 import ru.tbank.tmap.shared.geo.GeoPoint;
+import ru.tbank.tmap.transaction.api.TransactionVenueFacade;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.api.UserView;
 import ru.tbank.tmap.venue.application.command.VenueCreateCommand;
@@ -54,6 +55,9 @@ class BusinessVenueServiceTest {
     @Mock
     private LoyaltyVenueFacade loyaltyVenueFacade;
 
+    @Mock
+    private TransactionVenueFacade transactionVenueFacade;
+
     private BusinessVenueService businessVenueService;
 
     @BeforeEach
@@ -63,7 +67,8 @@ class BusinessVenueServiceTest {
                 venueRepository,
                 venuePendingUpdateRepository,
                 venueH3Resolver,
-                loyaltyVenueFacade
+                loyaltyVenueFacade,
+                transactionVenueFacade
         );
     }
 
@@ -226,6 +231,7 @@ class BusinessVenueServiceTest {
         businessVenueService.deleteVenue(OWNER_ID, VENUE_ID);
 
         verify(loyaltyVenueFacade).deleteVerificationHistory(VENUE_ID);
+        verify(transactionVenueFacade).deleteVenueTransactions(VENUE_ID);
         verify(venuePendingUpdateRepository).deleteById(VENUE_ID);
         verify(venueRepository).deleteById(VENUE_ID);
     }
@@ -245,6 +251,7 @@ class BusinessVenueServiceTest {
         assertThat(venue.getPhotoObjectKey()).isNull();
         assertThat(pendingUpdate.getPendingPhotoObjectKey()).isNull();
         verify(loyaltyVenueFacade).deleteVerificationHistory(VENUE_ID);
+        verify(transactionVenueFacade).deleteVenueTransactions(VENUE_ID);
         verify(venuePendingUpdateRepository).save(pendingUpdate);
         verify(venueRepository).save(venue);
         verify(venuePendingUpdateRepository).deleteById(VENUE_ID);

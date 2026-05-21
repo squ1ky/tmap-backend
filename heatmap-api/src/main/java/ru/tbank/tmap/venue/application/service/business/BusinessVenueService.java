@@ -89,6 +89,22 @@ public class BusinessVenueService {
         return editVenue(venue, content);
     }
 
+    @Transactional
+    public void deleteVenue(final UUID ownerId, final UUID venueId) {
+        final Venue venue = findOwnedVenue(ownerId, venueId);
+
+        venuePendingUpdateRepository.findByVenueId(venueId)
+                .ifPresent(this::cleanupPendingUpdateBeforeDelete);
+
+        if (venue.getPhotoObjectKey() != null) {
+            venue.removePhoto();
+            venueRepository.save(venue);
+        }
+
+        venuePendingUpdateRepository.deleteById(venueId);
+        venueRepository.deleteById(venueId);
+    }
+
     private VenueDetails upsertPendingUpdate(final Venue venue, final VenueContent content) {
         final VenuePendingUpdate pendingUpdate = venuePendingUpdateRepository.findByVenueId(venue.getId())
                 .map(existing -> {
@@ -111,6 +127,15 @@ public class BusinessVenueService {
 
         Venue saved = venueRepository.save(venue);
         return new VenueDetails(saved, null);
+    }
+
+    private void cleanupPendingUpdateBeforeDelete(final VenuePendingUpdate pendingUpdate) {
+        if (pendingUpdate.getPendingPhotoObjectKey() == null) {
+            return;
+        }
+
+        pendingUpdate.discardStagedPhoto();
+        venuePendingUpdateRepository.save(pendingUpdate);
     }
 
     private Venue findOwnedVenue(final UUID userId, final UUID venueId) {

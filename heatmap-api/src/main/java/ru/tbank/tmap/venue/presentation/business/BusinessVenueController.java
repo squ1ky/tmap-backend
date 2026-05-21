@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 import ru.tbank.tmap.loyalty.api.LoyaltyRuleFacade;
 import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.shared.utils.SecurityUtils;
@@ -94,7 +93,9 @@ public class BusinessVenueController implements BusinessOwnerApi {
 
     @Override
     public ResponseEntity<Void> deleteVenue(final UUID id) {
-        throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Venue deletion is not implemented yet");
+        final UUID ownerId = SecurityUtils.currentUserId();
+        businessVenueService.deleteVenue(ownerId, id);
+        return ResponseEntity.noContent().build();
     }
 
     private List<LoyaltyRuleResponse> toPromotions(final UUID venueId) {

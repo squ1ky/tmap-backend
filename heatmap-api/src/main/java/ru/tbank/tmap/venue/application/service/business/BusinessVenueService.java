@@ -8,13 +8,16 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.loyalty.api.LoyaltyVenueFacade;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 import ru.tbank.tmap.venue.application.command.VenueUpdateCommand;
 import ru.tbank.tmap.venue.domain.VenueContent;
 import ru.tbank.tmap.venue.domain.VenueStatus;
+import ru.tbank.tmap.venue.domain.exception.VenueDeletionConflictException;
 import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 import ru.tbank.tmap.venue.domain.repository.VenuePendingUpdateRepository;
 import ru.tbank.tmap.venue.domain.repository.VenueRepository;
@@ -34,6 +37,7 @@ public class BusinessVenueService {
     private final VenueRepository venueRepository;
     private final VenuePendingUpdateRepository venuePendingUpdateRepository;
     private final VenueH3Resolver venueH3Resolver;
+    private final LoyaltyVenueFacade loyaltyVenueFacade;
 
     @Transactional
     public VenueDetails createVenue(final UUID ownerId, final VenueCreateCommand command) {
@@ -96,13 +100,19 @@ public class BusinessVenueService {
         venuePendingUpdateRepository.findByVenueId(venueId)
                 .ifPresent(this::cleanupPendingUpdateBeforeDelete);
 
+        loyaltyVenueFacade.deleteVerificationHistory(venueId);
+
         if (venue.getPhotoObjectKey() != null) {
             venue.removePhoto();
             venueRepository.save(venue);
         }
 
-        venuePendingUpdateRepository.deleteById(venueId);
-        venueRepository.deleteById(venueId);
+        try {
+            venuePendingUpdateRepository.deleteById(venueId);
+            venueRepository.deleteById(venueId);
+        } catch (DataIntegrityViolationException ex) {
+            throw VenueDeletionConflictException.forRelatedHistory(venueId, ex);
+        }
     }
 
     private VenueDetails upsertPendingUpdate(final Venue venue, final VenueContent content) {

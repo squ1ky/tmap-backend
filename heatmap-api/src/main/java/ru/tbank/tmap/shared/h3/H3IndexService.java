@@ -39,9 +39,7 @@ public class H3IndexService {
         }
 
         if (parents.isEmpty()) {
-            double centerLat = (bbox.swLat() + bbox.neLat()) / 2.0;
-            double centerLng = (bbox.swLng() + bbox.neLng()) / 2.0;
-            parents.add(h3.latLngToCell(centerLat, centerLng, parentResolution.getValue()));
+            parents.addAll(parentsFromBboxAnchors(bbox, parentResolution));
         }
 
         return new ArrayList<>(parents);
@@ -57,6 +55,20 @@ public class H3IndexService {
                 new LatLng(bbox.swLat(), bbox.neLng()),
                 new LatLng(bbox.neLat(), bbox.neLng()),
                 new LatLng(bbox.neLat(), bbox.swLng())
+        );
+    }
+
+    private List<Long> parentsFromBboxAnchors(BoundingBox bbox, H3Resolution parentResolution) {
+        int parentRes = parentResolution.getValue();
+        double centerLat = (bbox.swLat() + bbox.neLat()) / 2.0;
+        double centerLng = (bbox.swLng() + bbox.neLng()) / 2.0;
+
+        return List.of(
+                h3.latLngToCell(bbox.swLat(), bbox.swLng(), parentRes),
+                h3.latLngToCell(bbox.swLat(), bbox.neLng(), parentRes),
+                h3.latLngToCell(bbox.neLat(), bbox.neLng(), parentRes),
+                h3.latLngToCell(bbox.neLat(), bbox.swLng(), parentRes),
+                h3.latLngToCell(centerLat, centerLng, parentRes)
         );
     }
 }

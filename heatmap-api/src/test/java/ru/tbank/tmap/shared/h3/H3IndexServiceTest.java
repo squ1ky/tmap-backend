@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.List;
 
 import com.uber.h3core.H3Core;
+import com.uber.h3core.util.LatLng;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.tbank.tmap.shared.geo.BoundingBox;
@@ -98,6 +99,55 @@ class H3IndexServiceTest {
         assertThatThrownBy(() -> h3IndexService.bboxToParents(
                 KAZAN_BOUNDING_BOX, H3Resolution.RES_6, H3Resolution.RES_6
         )).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void bboxToParents_whenTinyViewportStraddlesTwoParentTilesBoundary_thenFallbackReturnsBothParents() {
+        final long neighborRes6 = h3Core.gridDisk(PARENT_RES_6, 1).stream()
+                .filter(cell -> cell != PARENT_RES_6)
+                .findFirst()
+                .orElseThrow();
+
+        List<LatLng> boundaryA = h3Core.cellToBoundary(PARENT_RES_6);
+        List<LatLng> boundaryB = h3Core.cellToBoundary(neighborRes6);
+
+        LatLng sharedPoint = null;
+        for (LatLng pointA : boundaryA) {
+            for (LatLng pointB : boundaryB) {
+                if (Math.abs(pointA.lat - pointB.lat) < 1e-5 && Math.abs(pointA.lng - pointB.lng) < 1e-5) {
+                    sharedPoint = pointA;
+                    break;
+                }
+            }
+            if (sharedPoint != null) break;
+        }
+
+        assertThat(sharedPoint).isNotNull();
+
+        final double halfSide = 1e-7;
+        final BoundingBox boundingBox = new BoundingBox(
+                sharedPoint.lat - halfSide,
+                sharedPoint.lng - halfSide,
+                sharedPoint.lat + halfSide,
+                sharedPoint.lng + halfSide
+        );
+
+        final List<LatLng> outline = List.of(
+                new LatLng(boundingBox.swLat(), boundingBox.swLng()),
+                new LatLng(boundingBox.swLat(), boundingBox.neLng()),
+                new LatLng(boundingBox.neLat(), boundingBox.neLng()),
+                new LatLng(boundingBox.neLat(), boundingBox.swLng())
+        );
+
+        assertThat(h3Core.polygonToCells(outline, List.of(), H3Resolution.RES_9.getValue()))
+                .as("Test precondition: bbox should be lower than RES_9-tile")
+                .isEmpty();
+
+        final List<Long> parents = h3IndexService.bboxToParents(
+                boundingBox, H3Resolution.RES_9, H3Resolution.RES_6
+        );
+
+        assertThat(parents).contains(PARENT_RES_6, neighborRes6);
     }
 
     @Test

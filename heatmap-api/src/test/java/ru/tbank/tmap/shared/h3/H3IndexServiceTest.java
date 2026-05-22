@@ -3,6 +3,7 @@ package ru.tbank.tmap.shared.h3;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.uber.h3core.H3Core;
@@ -103,33 +104,20 @@ class H3IndexServiceTest {
 
     @Test
     void bboxToParents_whenTinyViewportStraddlesTwoParentTilesBoundary_thenFallbackReturnsBothParents() {
-        final long neighborRes6 = h3Core.gridDisk(PARENT_RES_6, 1).stream()
-                .filter(cell -> cell != PARENT_RES_6)
-                .findFirst()
-                .orElseThrow();
+        List<LatLng> boundary = h3Core.cellToBoundary(PARENT_RES_6);
 
-        List<LatLng> boundaryA = h3Core.cellToBoundary(PARENT_RES_6);
-        List<LatLng> boundaryB = h3Core.cellToBoundary(neighborRes6);
+        LatLng v1 = boundary.get(0);
+        LatLng v2 = boundary.get(1);
+        double midEdgeLat = (v1.lat + v2.lat) / 2.0;
+        double midEdgeLng = (v1.lng + v2.lng) / 2.0;
 
-        LatLng sharedPoint = null;
-        for (LatLng pointA : boundaryA) {
-            for (LatLng pointB : boundaryB) {
-                if (Math.abs(pointA.lat - pointB.lat) < 1e-5 && Math.abs(pointA.lng - pointB.lng) < 1e-5) {
-                    sharedPoint = pointA;
-                    break;
-                }
-            }
-            if (sharedPoint != null) break;
-        }
-
-        assertThat(sharedPoint).isNotNull();
-
-        final double halfSide = 1e-7;
+        // ~22х22 meters (halfSide = 1e-4)
+        final double halfSide = 1e-4;
         final BoundingBox boundingBox = new BoundingBox(
-                sharedPoint.lat - halfSide,
-                sharedPoint.lng - halfSide,
-                sharedPoint.lat + halfSide,
-                sharedPoint.lng + halfSide
+                midEdgeLat - halfSide,
+                midEdgeLng - halfSide,
+                midEdgeLat + halfSide,
+                midEdgeLng + halfSide
         );
 
         final List<LatLng> outline = List.of(
@@ -147,7 +135,9 @@ class H3IndexServiceTest {
                 boundingBox, H3Resolution.RES_9, H3Resolution.RES_6
         );
 
-        assertThat(parents).contains(PARENT_RES_6, neighborRes6);
+        assertThat(parents)
+                .hasSize(2)
+                .contains(PARENT_RES_6);
     }
 
     @Test

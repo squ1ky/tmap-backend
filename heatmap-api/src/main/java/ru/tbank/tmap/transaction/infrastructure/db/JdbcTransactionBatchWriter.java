@@ -53,16 +53,21 @@ public class JdbcTransactionBatchWriter implements TransactionWriter {
     }
 
     private TransactionRow toRow(Transaction transaction) {
+        long h3Res9 = h3IndexService.toH3(transaction.lat(), transaction.lng(), H3Resolution.RES_9);
+        long h3Res8 = h3IndexService.cellToParent(h3Res9, H3Resolution.RES_8);
+        long h3Res7 = h3IndexService.cellToParent(h3Res8, H3Resolution.RES_7);
+        long h3Res6 = h3IndexService.cellToParent(h3Res7, H3Resolution.RES_6);
+
         return new TransactionRow(
                 transaction.id(),
                 transaction.venueId(),
                 transaction.amount(),
                 transaction.lat(),
                 transaction.lng(),
-                h3IndexService.toH3(transaction.lat(), transaction.lng(), H3Resolution.RES_6),
-                h3IndexService.toH3(transaction.lat(), transaction.lng(), H3Resolution.RES_7),
-                h3IndexService.toH3(transaction.lat(), transaction.lng(), H3Resolution.RES_8),
-                h3IndexService.toH3(transaction.lat(), transaction.lng(), H3Resolution.RES_9),
+                h3Res6,
+                h3Res7,
+                h3Res8,
+                h3Res9,
                 transaction.category(),
                 transaction.occurredAt()
         );

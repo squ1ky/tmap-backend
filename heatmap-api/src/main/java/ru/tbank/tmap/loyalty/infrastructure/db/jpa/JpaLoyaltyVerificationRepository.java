@@ -20,6 +20,9 @@ public interface JpaLoyaltyVerificationRepository
     boolean existsByRuleIdAndUserId(UUID ruleId, UUID userId);
 
     @Override
+    void deleteByVenueId(UUID venueId);
+
+    @Override
     @Query(value = """
         SELECT rule_id AS ruleId, COUNT(*) AS usageCount
         FROM loyalty_verifications

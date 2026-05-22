@@ -19,6 +19,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.domain.AbstractAggregateRoot;
+import ru.tbank.tmap.venue.domain.event.VenuePhotoObsoleted;
 import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
 
 import java.time.OffsetDateTime;
@@ -32,7 +34,7 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
-public class Venue {
+public class Venue extends AbstractAggregateRoot<Venue> {
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)
@@ -78,6 +80,9 @@ public class Venue {
         this.ownerId = Objects.requireNonNull(ownerId, "ownerId");
         this.content = Objects.requireNonNull(content, "content");
         this.status = status != null ? status : VenueStatus.PENDING;
+        if (this.status == VenueStatus.PENDING_UPDATE) {
+            throw new IllegalArgumentException("Venue cannot be created in PENDING_UPDATE status");
+        }
     }
 
     @PrePersist
@@ -92,23 +97,17 @@ public class Venue {
         updatedAt = OffsetDateTime.now();
     }
 
-    public String updatePhoto(String newObjectKey) {
+    public void updatePhoto(String newObjectKey) {
+        Objects.requireNonNull(newObjectKey, "newObjectKey");
         String oldObjectKey = this.photoObjectKey;
         this.photoObjectKey = newObjectKey;
-        this.markEditedForReview();
-        return oldObjectKey;
+        registerObsoletedPhoto(oldObjectKey, newObjectKey);
     }
 
-    public String removePhoto() {
+    public void removePhoto() {
         String oldObjectKey = this.photoObjectKey;
         this.photoObjectKey = null;
-        return oldObjectKey;
-    }
-
-    public void markEditedForReview() {
-        if (status == VenueStatus.ACTIVE) {
-            status = VenueStatus.PENDING_UPDATE;
-        }
+        registerObsoletedPhoto(oldObjectKey, null);
     }
 
     public void approve() {
@@ -129,6 +128,13 @@ public class Venue {
         }
         this.content = Objects.requireNonNull(pendingUpdate.getContent(), "pendingUpdate.content");
         this.rejectReason = null;
+
+        final String newPhoto = pendingUpdate.getPendingPhotoObjectKey();
+        if (newPhoto != null) {
+            final String oldPhoto = this.photoObjectKey;
+            this.photoObjectKey = newPhoto;
+            registerObsoletedPhoto(oldPhoto, newPhoto);
+        }
     }
 
     public void reject(String reason) {
@@ -141,5 +147,11 @@ public class Venue {
 
     public void applyContent(final VenueContent content) {
         this.content = Objects.requireNonNull(content, "content");
+    }
+
+    private void registerObsoletedPhoto(String oldKey, String newKey) {
+        if (oldKey != null && !oldKey.equals(newKey)) {
+            registerEvent(new VenuePhotoObsoleted(oldKey));
+        }
     }
 }

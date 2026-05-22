@@ -1,6 +1,7 @@
 package ru.tbank.tmap.venue.application.service.business;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -14,7 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.tbank.tmap.loyalty.api.LoyaltyVenueFacade;
 import ru.tbank.tmap.shared.geo.GeoPoint;
+import ru.tbank.tmap.transaction.api.TransactionVenueFacade;
 import ru.tbank.tmap.user.api.UserAccountFacade;
 import ru.tbank.tmap.user.api.UserView;
 import ru.tbank.tmap.venue.application.command.VenueCreateCommand;
@@ -26,6 +29,7 @@ import ru.tbank.tmap.venue.domain.VenueCategory;
 import ru.tbank.tmap.venue.domain.VenuePendingUpdate;
 import ru.tbank.tmap.venue.domain.VenueStatus;
 import ru.tbank.tmap.venue.domain.VenueTestFactory;
+import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 import ru.tbank.tmap.venue.domain.repository.VenuePendingUpdateRepository;
 import ru.tbank.tmap.venue.domain.repository.VenueRepository;
 
@@ -48,6 +52,12 @@ class BusinessVenueServiceTest {
     @Mock
     private VenueH3Resolver venueH3Resolver;
 
+    @Mock
+    private LoyaltyVenueFacade loyaltyVenueFacade;
+
+    @Mock
+    private TransactionVenueFacade transactionVenueFacade;
+
     private BusinessVenueService businessVenueService;
 
     @BeforeEach
@@ -56,7 +66,9 @@ class BusinessVenueServiceTest {
                 userAccountFacade,
                 venueRepository,
                 venuePendingUpdateRepository,
-                venueH3Resolver
+                venueH3Resolver,
+                loyaltyVenueFacade,
+                transactionVenueFacade
         );
     }
 
@@ -208,5 +220,50 @@ class BusinessVenueServiceTest {
         assertThat(result.venue().getContent().address()).isEqualTo(venueAddress);
         assertThat(result.venue().getStatus()).isEqualTo(VenueStatus.PENDING);
         assertThat(result.venue().getRejectReason()).isNull();
+    }
+
+    @Test
+    void deleteVenue_whenVenueBelongsToOwner_thenDeletesVenue() {
+        final Venue venue = VenueTestFactory.createVenue(VenueStatus.PENDING, null);
+        given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(Optional.of(venue));
+        given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.empty());
+
+        businessVenueService.deleteVenue(OWNER_ID, VENUE_ID);
+
+        verify(loyaltyVenueFacade).deleteVerificationHistory(VENUE_ID);
+        verify(transactionVenueFacade).deleteVenueTransactions(VENUE_ID);
+        verify(venuePendingUpdateRepository).deleteById(VENUE_ID);
+        verify(venueRepository).deleteById(VENUE_ID);
+    }
+
+    @Test
+    void deleteVenue_whenVenueHasPublishedAndPendingPhotos_thenCleansThemUpBeforeDeleting() {
+        final Venue venue = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
+        venue.setPhotoObjectKey("venues/" + VENUE_ID + "/published.jpg");
+        final VenuePendingUpdate pendingUpdate = VenueTestFactory.createPendingUpdate(venue, VenueStatus.PENDING_UPDATE);
+        pendingUpdate.setPendingPhotoObjectKey("venues/" + VENUE_ID + "/pending.jpg");
+
+        given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(Optional.of(venue));
+        given(venuePendingUpdateRepository.findByVenueId(VENUE_ID)).willReturn(Optional.of(pendingUpdate));
+
+        businessVenueService.deleteVenue(OWNER_ID, VENUE_ID);
+
+        assertThat(venue.getPhotoObjectKey()).isNull();
+        assertThat(pendingUpdate.getPendingPhotoObjectKey()).isNull();
+        verify(loyaltyVenueFacade).deleteVerificationHistory(VENUE_ID);
+        verify(transactionVenueFacade).deleteVenueTransactions(VENUE_ID);
+        verify(venuePendingUpdateRepository).save(pendingUpdate);
+        verify(venueRepository).save(venue);
+        verify(venuePendingUpdateRepository).deleteById(VENUE_ID);
+        verify(venueRepository).deleteById(VENUE_ID);
+    }
+
+    @Test
+    void deleteVenue_whenVenueDoesNotBelongToOwner_thenThrowsNotFound() {
+        given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> businessVenueService.deleteVenue(OWNER_ID, VENUE_ID))
+                .isInstanceOf(VenueNotFoundException.class)
+                .hasMessage("Venue not found");
     }
 }

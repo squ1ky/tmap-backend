@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -31,10 +33,7 @@ class BusinessVenuePhotoServiceTest {
 
     private static final UUID OWNER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
-    private static final long H3_RES_9 = 617422037122678783L;
-
     private static final String NEW_KEY = "venues/" + VENUE_ID + "/new.jpg";
-    private static final String OLD_KEY = "venues/" + VENUE_ID + "/old.jpg";
 
     @Mock
     private VenueRepository venueRepository;
@@ -61,48 +60,22 @@ class BusinessVenuePhotoServiceTest {
     }
 
     @Test
-    void uploadVenuePhoto_whenVenueHadNoPhoto_thenUploadsAndReturnsUpdatedVenue() {
-        final Venue existing = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
-        final Venue updated = VenueTestFactory.createVenue(VenueStatus.PENDING_UPDATE, null);
+    void uploadVenuePhoto_whenSuccessful_thenReturnsVenueAndDoesNotTouchStorageCleanup() {
+        final Venue updated = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
         updated.setPhotoObjectKey(NEW_KEY);
         final MultipartFile file = jpegFile();
 
         given(venuePhotoValidator.validateAndGetExtension(file)).willReturn("jpg");
         given(venueRepository.existsByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(true);
-        given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
-                .willReturn(Optional.of(updated));
+        given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(Optional.of(updated));
         given(venuePhotoStorage.upload(eq(VENUE_ID), any(), anyLong(), eq("image/jpeg"), eq("jpg")))
                 .willReturn(NEW_KEY);
-        given(venuePhotoUpdater.swapPhotoKey(VENUE_ID, OWNER_ID, NEW_KEY))
-                .willReturn(null);
+        willDoNothing().given(venuePhotoUpdater).swapPhotoKey(VENUE_ID, OWNER_ID, NEW_KEY);
 
         final Venue result = businessVenuePhotoService.uploadVenuePhoto(OWNER_ID, VENUE_ID, file);
 
         assertThat(result.getPhotoObjectKey()).isEqualTo(NEW_KEY);
-        assertThat(result.getStatus()).isEqualTo(VenueStatus.PENDING_UPDATE);
         verify(venuePhotoStorage, never()).delete(any());
-    }
-
-    @Test
-    void uploadVenuePhoto_whenVenueHadPreviousPhoto_thenDeletesOldObject() {
-        final Venue existing = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
-        existing.setPhotoObjectKey(OLD_KEY);
-        final Venue updated = VenueTestFactory.createVenue(VenueStatus.PENDING_UPDATE, null);
-        updated.setPhotoObjectKey(NEW_KEY);
-        final MultipartFile file = jpegFile();
-
-        given(venuePhotoValidator.validateAndGetExtension(file)).willReturn("jpg");
-        given(venueRepository.existsByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(true);
-        given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
-                .willReturn(Optional.of(existing), Optional.of(updated));
-        given(venuePhotoStorage.upload(eq(VENUE_ID), any(), anyLong(), eq("image/jpeg"), eq("jpg")))
-                .willReturn(NEW_KEY);
-        given(venuePhotoUpdater.swapPhotoKey(VENUE_ID, OWNER_ID, NEW_KEY))
-                .willReturn(OLD_KEY);
-
-        businessVenuePhotoService.uploadVenuePhoto(OWNER_ID, VENUE_ID, file);
-
-        verify(venuePhotoStorage).delete(OLD_KEY);
     }
 
     @Test
@@ -113,8 +86,8 @@ class BusinessVenuePhotoServiceTest {
         given(venueRepository.existsByIdAndOwnerId(VENUE_ID, OWNER_ID)).willReturn(true);
         given(venuePhotoStorage.upload(eq(VENUE_ID), any(), anyLong(), eq("image/jpeg"), eq("jpg")))
                 .willReturn(NEW_KEY);
-        given(venuePhotoUpdater.swapPhotoKey(VENUE_ID, OWNER_ID, NEW_KEY))
-                .willThrow(new RuntimeException("DB write failed"));
+        willThrow(new RuntimeException("DB write failed"))
+                .given(venuePhotoUpdater).swapPhotoKey(VENUE_ID, OWNER_ID, NEW_KEY);
 
         assertThatThrownBy(() -> businessVenuePhotoService.uploadVenuePhoto(OWNER_ID, VENUE_ID, file))
                 .isInstanceOf(RuntimeException.class)
@@ -135,29 +108,16 @@ class BusinessVenuePhotoServiceTest {
     }
 
     @Test
-    void deleteVenuePhoto_whenVenueHadPhoto_thenClearsKeyAndDeletesObject() {
+    void deleteVenuePhoto_returnsVenueAndDelegatesCleanupToEvents() {
         final Venue updated = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
 
-        given(venuePhotoUpdater.clearPhotoKey(VENUE_ID, OWNER_ID)).willReturn(OLD_KEY);
+        willDoNothing().given(venuePhotoUpdater).clearPhotoKey(VENUE_ID, OWNER_ID);
         given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
                 .willReturn(Optional.of(updated));
 
         final Venue result = businessVenuePhotoService.deleteVenuePhoto(OWNER_ID, VENUE_ID);
 
         assertThat(result.getPhotoObjectKey()).isNull();
-        verify(venuePhotoStorage).delete(OLD_KEY);
-    }
-
-    @Test
-    void deleteVenuePhoto_whenVenueHadNoPhoto_thenDoesNotCallStorage() {
-        final Venue updated = VenueTestFactory.createVenue(VenueStatus.ACTIVE, null);
-
-        given(venuePhotoUpdater.clearPhotoKey(VENUE_ID, OWNER_ID)).willReturn(null);
-        given(venueRepository.findByIdAndOwnerId(VENUE_ID, OWNER_ID))
-                .willReturn(Optional.of(updated));
-
-        businessVenuePhotoService.deleteVenuePhoto(OWNER_ID, VENUE_ID);
-
         verify(venuePhotoStorage, never()).delete(any());
     }
 

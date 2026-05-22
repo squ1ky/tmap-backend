@@ -13,6 +13,13 @@ public record VenueDetails(Venue venue, VenuePendingUpdate pendingUpdate) {
         return pendingUpdate != null ? pendingUpdate.getContent() : venue.getContent();
     }
 
+    public String displayPhotoObjectKey() {
+        if (pendingUpdate != null && pendingUpdate.getPendingPhotoObjectKey() != null) {
+            return pendingUpdate.getPendingPhotoObjectKey();
+        }
+        return venue.getPhotoObjectKey();
+    }
+
     public VenueStatus displayStatus() {
         return pendingUpdate != null ? pendingUpdate.getStatus() : venue.getStatus();
     }

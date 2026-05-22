@@ -91,6 +91,13 @@ public class BusinessVenueController implements BusinessOwnerApi {
         return ResponseEntity.ok(venueOwnerMapper.toResponse(venue, toPromotions(venue.getId())));
     }
 
+    @Override
+    public ResponseEntity<Void> deleteVenue(final UUID id) {
+        final UUID ownerId = SecurityUtils.currentUserId();
+        businessVenueService.deleteVenue(ownerId, id);
+        return ResponseEntity.noContent().build();
+    }
+
     private List<LoyaltyRuleResponse> toPromotions(final UUID venueId) {
         return businessLoyaltyRuleMapper.toResponseList(loyaltyRuleFacade.getActiveVenueRules(venueId));
     }

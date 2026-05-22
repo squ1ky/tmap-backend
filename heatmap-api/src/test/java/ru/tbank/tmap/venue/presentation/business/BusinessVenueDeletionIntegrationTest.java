@@ -4,13 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -193,20 +193,26 @@ class BusinessVenueDeletionIntegrationTest {
     }
 
     private void insertTransaction() {
+        long h3Res7 = 607533113720381439L;
+        long h3Res8 = 612036938201382911L;
+        long h3Res9 = 617422037122678783L;
+        long h3Res6 = 607533113720381439L;
+
         jdbcTemplate.update("""
-                INSERT INTO transactions (
-                    id, venue_id, amount, lat, lng, h3_res7, h3_res8, h3_res9, category, occurred_at
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
+            INSERT INTO transactions (
+                id, venue_id, amount, lat, lng, h3_res6, h3_res7, h3_res8, h3_res9, category, occurred_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
                 TRANSACTION_ID,
                 VENUE_ID,
                 BigDecimal.valueOf(1500),
                 55.7905,
                 49.1140,
-                607533113720381439L,
-                612036938201382911L,
-                617422037122678783L,
+                h3Res6,
+                h3Res7,
+                h3Res8,
+                h3Res9,
                 "ENTERTAINMENT",
                 OffsetDateTime.now().minusDays(1)
         );

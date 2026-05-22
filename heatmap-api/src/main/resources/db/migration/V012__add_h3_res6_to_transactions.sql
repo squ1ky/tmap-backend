@@ -1,0 +1,2 @@
+TRUNCATE TABLE transactions;
+ALTER TABLE transactions ADD COLUMN h3_res6 BIGINT NOT NULL;

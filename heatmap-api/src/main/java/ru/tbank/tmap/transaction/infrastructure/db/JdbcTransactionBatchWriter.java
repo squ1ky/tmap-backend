@@ -6,6 +6,8 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Component;
+import ru.tbank.tmap.shared.geo.H3Resolution;
+import ru.tbank.tmap.shared.h3.H3IndexService;
 import ru.tbank.tmap.transaction.application.port.TransactionWriter;
 import ru.tbank.tmap.transaction.domain.Transaction;
 
@@ -19,13 +21,14 @@ public class JdbcTransactionBatchWriter implements TransactionWriter {
 
     private static final String INSERT_SQL = """
         INSERT INTO transactions
-            (id, venue_id, amount, lat, lng, h3_res7, h3_res8, h3_res9, category, occurred_at)
+            (id, venue_id, amount, lat, lng, h3_res6, h3_res7, h3_res8, h3_res9, category, occurred_at)
         VALUES
-            (:id, :venueId, :amount, :lat, :lng, :h3Res7, :h3Res8, :h3Res9, :category, :occurredAt)
+            (:id, :venueId, :amount, :lat, :lng, :h3Res6, :h3Res7, :h3Res8, :h3Res9, :category, :occurredAt)
         ON CONFLICT DO NOTHING
         """;
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final H3IndexService h3IndexService;
 
     @Override
     public int insertBatch(List<Transaction> rows) {
@@ -34,7 +37,7 @@ public class JdbcTransactionBatchWriter implements TransactionWriter {
         }
 
         SqlParameterSource[] parameters = rows.stream()
-                .map(JdbcTransactionBatchWriter::toRow)
+                .map(this::toRow)
                 .map(JdbcTransactionBatchWriter::toParams)
                 .toArray(SqlParameterSource[]::new);
 
@@ -49,16 +52,17 @@ public class JdbcTransactionBatchWriter implements TransactionWriter {
         return inserted;
     }
 
-    private static TransactionRow toRow(Transaction transaction) {
+    private TransactionRow toRow(Transaction transaction) {
         return new TransactionRow(
                 transaction.id(),
                 transaction.venueId(),
                 transaction.amount(),
                 transaction.lat(),
                 transaction.lng(),
-                transaction.h3Res7(),
-                transaction.h3Res8(),
-                transaction.h3Res9(),
+                h3IndexService.toH3(transaction.lat(), transaction.lng(), H3Resolution.RES_6),
+                h3IndexService.toH3(transaction.lat(), transaction.lng(), H3Resolution.RES_7),
+                h3IndexService.toH3(transaction.lat(), transaction.lng(), H3Resolution.RES_8),
+                h3IndexService.toH3(transaction.lat(), transaction.lng(), H3Resolution.RES_9),
                 transaction.category(),
                 transaction.occurredAt()
         );
@@ -71,6 +75,7 @@ public class JdbcTransactionBatchWriter implements TransactionWriter {
                 .addValue("amount", r.amount())
                 .addValue("lat", r.lat())
                 .addValue("lng", r.lng())
+                .addValue("h3Res6", r.h3Res6())
                 .addValue("h3Res7", r.h3Res7())
                 .addValue("h3Res8", r.h3Res8())
                 .addValue("h3Res9", r.h3Res9())

@@ -64,7 +64,6 @@ class TransactionIngestServiceTest {
 
     @Test
     void ingest_whenSingleValidEvent_thenMapsAllFieldsToTransaction() {
-        stubH3IndexService();
         when(transactionWriter.insertBatch(any())).thenReturn(1);
 
         final int inserted = service.ingest(List.of(validEvent(TRANSACTION_ID_1)));
@@ -79,28 +78,12 @@ class TransactionIngestServiceTest {
         assertThat(transaction.amount()).isEqualByComparingTo(VALID_AMOUNT);
         assertThat(transaction.lat()).isEqualTo(VALID_LAT);
         assertThat(transaction.lng()).isEqualTo(VALID_LNG);
-        assertThat(transaction.h3Res7()).isEqualTo(H3_RES7_RESULT);
-        assertThat(transaction.h3Res8()).isEqualTo(H3_RES8_RESULT);
-        assertThat(transaction.h3Res9()).isEqualTo(H3_RES9_RESULT);
         assertThat(transaction.category()).isEqualTo(VenueCategory.FOOD);
         assertThat(transaction.occurredAt()).isEqualTo(VALID_OCCURRED_AT);
     }
 
     @Test
-    void ingest_whenValidEvent_thenComputesH3IndicesForAllResolutions() {
-        stubH3IndexService();
-        when(transactionWriter.insertBatch(any())).thenReturn(1);
-
-        service.ingest(List.of(validEvent(TRANSACTION_ID_1)));
-
-        verify(h3IndexService).toH3(VALID_LAT, VALID_LNG, H3Resolution.RES_7);
-        verify(h3IndexService).toH3(VALID_LAT, VALID_LNG, H3Resolution.RES_8);
-        verify(h3IndexService).toH3(VALID_LAT, VALID_LNG, H3Resolution.RES_9);
-    }
-
-    @Test
     void ingest_whenMultipleValidEvents_thenWritesBatchInOriginalOrder() {
-        stubH3IndexService();
         when(transactionWriter.insertBatch(any())).thenReturn(3);
 
         service.ingest(List.of(
@@ -116,7 +99,6 @@ class TransactionIngestServiceTest {
 
     @Test
     void ingest_whenEventHasNegativeAmount_thenThrowsInvalidTransactionEventExceptionWithIndex() {
-        stubH3IndexService();
         final TransactionEvent invalid = new TransactionEvent(
                 TRANSACTION_ID_2, VENUE_ID, new BigDecimal("-1.00"), VALID_LAT, VALID_LNG, VALID_CATEGORY, VALID_OCCURRED_AT
         );
@@ -130,7 +112,6 @@ class TransactionIngestServiceTest {
 
     @Test
     void ingest_whenEventHasNullVenueId_thenThrowsInvalidTransactionEventException() {
-        stubH3IndexService();
         final TransactionEvent invalid = new TransactionEvent(
                 TRANSACTION_ID_1, null, VALID_AMOUNT, VALID_LAT, VALID_LNG, VALID_CATEGORY, VALID_OCCURRED_AT
         );
@@ -144,7 +125,6 @@ class TransactionIngestServiceTest {
 
     @Test
     void ingest_whenEventHasLatOutOfRange_thenThrowsInvalidTransactionEventException() {
-        stubH3IndexService();
         final TransactionEvent invalid = new TransactionEvent(
                 TRANSACTION_ID_1, VENUE_ID, VALID_AMOUNT, 91.0, VALID_LNG, VALID_CATEGORY, VALID_OCCURRED_AT
         );
@@ -156,7 +136,6 @@ class TransactionIngestServiceTest {
 
     @Test
     void ingest_whenEventHasNullCategory_thenThrowsInvalidTransactionEventException() {
-        stubH3IndexService();
         final TransactionEvent invalid = new TransactionEvent(
                 TRANSACTION_ID_1, VENUE_ID, VALID_AMOUNT, VALID_LAT, VALID_LNG, null, VALID_OCCURRED_AT
         );
@@ -168,7 +147,6 @@ class TransactionIngestServiceTest {
 
     @Test
     void ingest_whenInvalidEventIsThirdInBatch_thenIndexInExceptionIsTwo() {
-        stubH3IndexService();
         final TransactionEvent invalid = new TransactionEvent(
                 TRANSACTION_ID_3, VENUE_ID, BigDecimal.ZERO, VALID_LAT, VALID_LNG, VALID_CATEGORY, VALID_OCCURRED_AT
         );
@@ -184,7 +162,6 @@ class TransactionIngestServiceTest {
 
     @Test
     void ingest_whenWriterReturnsCount_thenServiceReturnsSameCount() {
-        stubH3IndexService();
         when(transactionWriter.insertBatch(any())).thenReturn(42);
 
         final int inserted = service.ingest(List.of(validEvent(TRANSACTION_ID_1)));
@@ -194,7 +171,6 @@ class TransactionIngestServiceTest {
 
     @Test
     void ingest_whenWriterThrowsException_thenServiceRethrowsAsIs() {
-        stubH3IndexService();
         final RuntimeException dbError = new RuntimeException("db down");
         when(transactionWriter.insertBatch(any())).thenThrow(dbError);
 
@@ -204,18 +180,11 @@ class TransactionIngestServiceTest {
 
     @Test
     void ingest_whenAllEventsAreValid_thenWriterIsCalledExactlyOnce() {
-        stubH3IndexService();
         when(transactionWriter.insertBatch(any())).thenReturn(2);
 
         service.ingest(List.of(validEvent(TRANSACTION_ID_1), validEvent(TRANSACTION_ID_2)));
 
         verify(transactionWriter, times(1)).insertBatch(any());
-    }
-
-    private void stubH3IndexService() {
-        when(h3IndexService.toH3(anyDouble(), anyDouble(), eq(H3Resolution.RES_7))).thenReturn(H3_RES7_RESULT);
-        when(h3IndexService.toH3(anyDouble(), anyDouble(), eq(H3Resolution.RES_8))).thenReturn(H3_RES8_RESULT);
-        when(h3IndexService.toH3(anyDouble(), anyDouble(), eq(H3Resolution.RES_9))).thenReturn(H3_RES9_RESULT);
     }
 
     @SuppressWarnings("unchecked")

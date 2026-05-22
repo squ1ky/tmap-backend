@@ -2,11 +2,16 @@ package ru.tbank.tmap.shared.geo;
 
 import lombok.Getter;
 
+import java.util.Set;
+
 @Getter
 public enum H3Resolution {
+    RES_6(6),
     RES_7(7),
     RES_8(8),
     RES_9(9);
+
+    public static final Set<H3Resolution> AGGREGATED = Set.of(RES_7, RES_8, RES_9);
 
     private final int value;
 

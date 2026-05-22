@@ -25,6 +25,7 @@ import ru.tbank.tmap.user.domain.exception.UserAlreadyBlockedException;
 import ru.tbank.tmap.user.domain.exception.UserNotBlockedException;
 import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 import ru.tbank.tmap.venue.domain.exception.InvalidVenuePhotoException;
+import ru.tbank.tmap.venue.domain.exception.VenueDeletionConflictException;
 import ru.tbank.tmap.venue.domain.exception.VenueModerationStateException;
 import ru.tbank.tmap.venue.domain.exception.VenueNotFoundException;
 
@@ -50,6 +51,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(VenueModerationStateException.class)
     public ResponseEntity<ErrorResponse> handleVenueModerationState(final VenueModerationStateException ex) {
         log.warn("Venue moderation conflict: venueId={}, status={}", ex.getVenueId(), ex.getStatus());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(ErrorCode.CONFLICT, ex.getMessage()));
+    }
+
+    @ExceptionHandler(VenueDeletionConflictException.class)
+    public ResponseEntity<ErrorResponse> handleVenueDeletionConflict(final VenueDeletionConflictException ex) {
+        log.warn("Venue deletion conflict: venueId={}", ex.getVenueId());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(ErrorCode.CONFLICT, ex.getMessage()));
     }

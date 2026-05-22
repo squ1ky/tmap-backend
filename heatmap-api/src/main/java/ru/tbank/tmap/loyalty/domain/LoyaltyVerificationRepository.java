@@ -14,5 +14,7 @@ public interface LoyaltyVerificationRepository {
 
     boolean existsByRuleIdAndUserId(UUID ruleId, UUID userId);
 
+    void deleteByVenueId(UUID venueId);
+
     List<LoyaltyRuleUsageCount> countUsagesByRuleIds(Collection<UUID> ruleIds);
 }

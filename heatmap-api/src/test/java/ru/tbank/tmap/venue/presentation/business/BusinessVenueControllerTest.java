@@ -1,8 +1,10 @@
 package ru.tbank.tmap.venue.presentation.business;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -140,6 +142,16 @@ class BusinessVenueControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Bar One"))
                 .andExpect(jsonPath("$.moderationStatus").value("PENDING_UPDATE"));
+    }
+
+    @Test
+    void deleteVenue_whenOwnerAuthenticated_thenReturnsNoContent() throws Exception {
+        mockMvc.perform(delete("/api/v1/business/venues/{id}", VENUE_ID)
+                        .with(user(ownerPrincipal()))
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        verify(businessVenueService).deleteVenue(OWNER_ID, VENUE_ID);
     }
 
     private LoyaltyRuleDetails ruleView() {

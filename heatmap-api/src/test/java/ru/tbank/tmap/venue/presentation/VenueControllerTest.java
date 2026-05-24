@@ -47,6 +47,7 @@ import ru.tbank.tmap.venue.domain.VenueCategory;
 })
 class VenueControllerTest {
 
+    private static final UUID USER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID VENUE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
     private static final UUID RULE_ID = UUID.fromString("44444444-4444-4444-4444-444444444444");
 
@@ -134,20 +135,29 @@ class VenueControllerTest {
     void getVenueById_whenVenueExists_thenReturnVenue() throws Exception {
         given(publicVenueService.getVenueById(VENUE_ID))
                 .willReturn(Optional.of(venueResponse()));
-        given(loyaltyRuleFacade.getActiveVenueRules(VENUE_ID))
+        given(loyaltyRuleFacade.getAvailableVenueRulesForUser(VENUE_ID, USER_ID))
                 .willReturn(List.of(ruleView()));
 
-        mockMvc.perform(get("/api/v1/venues/{id}", VENUE_ID))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(VENUE_ID.toString()))
-                .andExpect(jsonPath("$.name").value("Bar One"))
-                .andExpect(jsonPath("$.category").value("entertainment"))
-                .andExpect(jsonPath("$.promotions").isArray())
-                .andExpect(jsonPath("$.promotions.length()").value(1))
-                .andExpect(jsonPath("$.promotions[0].id").value(RULE_ID.toString()))
-                .andExpect(jsonPath("$.promotions[0].venueId").value(VENUE_ID.toString()))
-                .andExpect(jsonPath("$.promotions[0].discountPercent").value(15))
-                .andExpect(jsonPath("$.promotions[0].remainingUsages").value(96));
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                userPrincipal(),
+                null,
+                userPrincipal().getAuthorities()));
+        try {
+            mockMvc.perform(get("/api/v1/venues/{id}", VENUE_ID)
+                            .with(user(userPrincipal())))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(VENUE_ID.toString()))
+                    .andExpect(jsonPath("$.name").value("Bar One"))
+                    .andExpect(jsonPath("$.category").value("entertainment"))
+                    .andExpect(jsonPath("$.promotions").isArray())
+                    .andExpect(jsonPath("$.promotions.length()").value(1))
+                    .andExpect(jsonPath("$.promotions[0].id").value(RULE_ID.toString()))
+                    .andExpect(jsonPath("$.promotions[0].venueId").value(VENUE_ID.toString()))
+                    .andExpect(jsonPath("$.promotions[0].discountPercent").value(15))
+                    .andExpect(jsonPath("$.promotions[0].remainingUsages").value(96));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
 
     @Test
@@ -247,7 +257,7 @@ class VenueControllerTest {
 
     private CustomUserDetails userPrincipal() {
         return new CustomUserDetails(
-                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                USER_ID,
                 "user@example.com",
                 "ignored",
                 true,

@@ -2,6 +2,7 @@ package ru.tbank.tmap.loyalty.application;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -24,13 +25,31 @@ public class LoyaltyRuleService {
     public List<LoyaltyRuleDetails> getActiveVenueRules(final UUID venueId) {
         final List<LoyaltyRule> rules = loyaltyRuleRepository
                 .findByVenueIdAndActiveTrueOrderByCreatedAtDescIdDesc(venueId);
+        return toRuleDetails(rules);
+    }
+
+    public List<LoyaltyRuleDetails> getAvailableVenueRulesForUser(final UUID venueId, final UUID userId) {
+        final List<LoyaltyRule> rules = loyaltyRuleRepository
+                .findByVenueIdAndActiveTrueOrderByCreatedAtDescIdDesc(venueId);
         if (rules.isEmpty()) {
             return List.of();
         }
 
-        final List<UUID> ruleIds = rules.stream()
-                .map(LoyaltyRule::getId)
-                .toList();
+        final Set<UUID> usedRuleIds = Set.copyOf(
+                loyaltyVerificationRepository.findUsedRuleIdsByUserIdAndRuleIds(userId, extractRuleIds(rules))
+        );
+
+        return toRuleDetails(rules.stream()
+                .filter(rule -> !usedRuleIds.contains(rule.getId()))
+                .toList());
+    }
+
+    private List<LoyaltyRuleDetails> toRuleDetails(final List<LoyaltyRule> rules) {
+        if (rules.isEmpty()) {
+            return List.of();
+        }
+
+        final List<UUID> ruleIds = extractRuleIds(rules);
         final Map<UUID, Long> usagesByRuleId = loyaltyVerificationRepository.countUsagesByRuleIds(ruleIds).stream()
                 .collect(Collectors.toMap(
                         LoyaltyRuleUsageCount::ruleId,
@@ -39,6 +58,12 @@ public class LoyaltyRuleService {
 
         return rules.stream()
                 .map(rule -> new LoyaltyRuleDetails(rule, usagesByRuleId.getOrDefault(rule.getId(), 0L)))
+                .toList();
+    }
+
+    private List<UUID> extractRuleIds(final List<LoyaltyRule> rules) {
+        return rules.stream()
+                .map(LoyaltyRule::getId)
                 .toList();
     }
 }

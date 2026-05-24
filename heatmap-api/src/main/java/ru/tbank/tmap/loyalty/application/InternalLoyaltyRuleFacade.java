@@ -19,4 +19,9 @@ public class InternalLoyaltyRuleFacade implements LoyaltyRuleFacade {
     public List<LoyaltyRuleDetails> getActiveVenueRules(final UUID venueId) {
         return loyaltyRuleService.getActiveVenueRules(venueId);
     }
+
+    @Override
+    public List<LoyaltyRuleDetails> getAvailableVenueRulesForUser(final UUID venueId, final UUID userId) {
+        return loyaltyRuleService.getAvailableVenueRulesForUser(venueId, userId);
+    }
 }

@@ -7,4 +7,6 @@ import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleDetails;
 public interface LoyaltyRuleFacade {
 
     List<LoyaltyRuleDetails> getActiveVenueRules(UUID venueId);
+
+    List<LoyaltyRuleDetails> getAvailableVenueRulesForUser(UUID venueId, UUID userId);
 }

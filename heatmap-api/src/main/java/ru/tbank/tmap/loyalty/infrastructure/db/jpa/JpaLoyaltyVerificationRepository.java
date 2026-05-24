@@ -30,4 +30,14 @@ public interface JpaLoyaltyVerificationRepository
         GROUP BY rule_id
         """, nativeQuery = true)
     List<LoyaltyRuleUsageCount> countUsagesByRuleIds(@Param("ruleIds") Collection<UUID> ruleIds);
+
+    @Override
+    @Query(value = """
+        SELECT rule_id
+        FROM loyalty_verifications
+        WHERE user_id = :userId
+          AND rule_id IN :ruleIds
+        """, nativeQuery = true)
+    List<UUID> findUsedRuleIdsByUserIdAndRuleIds(@Param("userId") UUID userId,
+                                                 @Param("ruleIds") Collection<UUID> ruleIds);
 }

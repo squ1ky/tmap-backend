@@ -42,7 +42,7 @@ class BusinessLoyaltyRuleServiceTest {
     private static final UUID USER_ID = UUID.fromString("55555555-5555-5555-5555-555555555555");
     private static final String QR_PAYLOAD = "lqr:1:test-token";
     private static final RedeemLoyaltyRuleCommand REDEEM_COMMAND =
-            new RedeemLoyaltyRuleCommand(OWNER_ID, RULE_ID, QR_PAYLOAD);
+            new RedeemLoyaltyRuleCommand(OWNER_ID, QR_PAYLOAD);
 
     @Mock
     private LoyaltyRuleRepository loyaltyRuleRepository;
@@ -282,6 +282,7 @@ class BusinessLoyaltyRuleServiceTest {
         final LoyaltyActivationResult result = businessLoyaltyRuleService
                 .redeemLoyaltyRule(REDEEM_COMMAND);
 
+        assertThat(result.ruleId()).isEqualTo(RULE_ID);
         assertThat(result.status()).isEqualTo(LoyaltyActivationStatus.ALREADY_USED);
         assertThat(result.verification()).isNull();
     }
@@ -297,6 +298,7 @@ class BusinessLoyaltyRuleServiceTest {
         final LoyaltyActivationResult result = businessLoyaltyRuleService
                 .redeemLoyaltyRule(REDEEM_COMMAND);
 
+        assertThat(result.ruleId()).isEqualTo(RULE_ID);
         assertThat(result.status()).isEqualTo(LoyaltyActivationStatus.LIMIT_EXCEEDED);
         assertThat(result.verification()).isNull();
     }
@@ -322,27 +324,28 @@ class BusinessLoyaltyRuleServiceTest {
         final LoyaltyActivationResult result = businessLoyaltyRuleService
                 .redeemLoyaltyRule(REDEEM_COMMAND);
 
+        assertThat(result.ruleId()).isEqualTo(RULE_ID);
         assertThat(result.status()).isEqualTo(LoyaltyActivationStatus.SUCCESS);
         assertThat(result.verification()).isEqualTo(savedVerification);
     }
 
     @Test
-    void redeemLoyaltyRule_whenQrBelongsToAnotherRule_thenThrowsValidationError() {
+    void redeemLoyaltyRule_whenQrBelongsToAnotherVenue_thenThrowsValidationError() {
         final LoyaltyRule rule = loyaltyRule("Discount 15%", 15, 100, true);
-        final LoyaltyQrSession wrongRuleSession = new LoyaltyQrSession(
+        final LoyaltyQrSession wrongVenueSession = new LoyaltyQrSession(
                 UUID.randomUUID(),
                 "hash",
                 USER_ID,
-                VENUE_ID,
-                UUID.fromString("77777777-7777-7777-7777-777777777777"),
+                UUID.fromString("88888888-8888-8888-8888-888888888888"),
+                RULE_ID,
                 OffsetDateTime.parse("2026-05-14T10:05:00Z")
         );
-        given(loyaltyQrService.resolveActiveSessionForUpdate(QR_PAYLOAD)).willReturn(wrongRuleSession);
+        given(loyaltyQrService.resolveActiveSessionForUpdate(QR_PAYLOAD)).willReturn(wrongVenueSession);
         given(loyaltyRuleRepository.findByIdForUpdate(RULE_ID)).willReturn(Optional.of(rule));
 
         assertThatThrownBy(() -> businessLoyaltyRuleService.redeemLoyaltyRule(REDEEM_COMMAND))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("QR does not belong to requested loyalty rule");
+                .hasMessage("QR does not belong to requested venue");
     }
 
     private LoyaltyRule loyaltyRule(

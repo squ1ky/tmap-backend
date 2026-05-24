@@ -80,16 +80,11 @@ public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
     }
 
     @Override
-    public ResponseEntity<LoyaltyVerifyResponse> activateLoyaltyQr(
-            final UUID ruleId,
-            @Valid final LoyaltyActivationRequest loyaltyActivationRequest
-    ) {
+    public ResponseEntity<LoyaltyVerifyResponse> activateLoyaltyQr(@Valid final LoyaltyActivationRequest loyaltyActivationRequest) {
         final UUID ownerId = SecurityUtils.currentUserId();
         return ResponseEntity.ok(businessLoyaltyRuleMapper.toVerifyResponse(
-                ruleId,
                 businessLoyaltyRuleService.redeemLoyaltyRule(new RedeemLoyaltyRuleCommand(
                         ownerId,
-                        ruleId,
                         loyaltyActivationRequest.getQrPayload()
                 ))
         ));

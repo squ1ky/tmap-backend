@@ -1,7 +1,6 @@
 package ru.tbank.tmap.loyalty.presentation.mapper;
 
 import java.util.List;
-import java.util.UUID;
 import org.openapitools.model.LoyaltyQrResponse;
 import org.openapitools.model.LoyaltyRuleCreateRequest;
 import org.openapitools.model.LoyaltyRuleResponse;
@@ -57,12 +56,9 @@ public class BusinessLoyaltyRuleMapper {
                 .toList();
     }
 
-    public LoyaltyVerifyResponse toVerifyResponse(
-            final UUID ruleId,
-            final LoyaltyActivationResult activationResult
-    ) {
+    public LoyaltyVerifyResponse toVerifyResponse(final LoyaltyActivationResult activationResult) {
         final LoyaltyVerifyResponse response = new LoyaltyVerifyResponse()
-                .ruleId(ruleId)
+                .ruleId(activationResult.ruleId())
                 .status(toApiStatus(activationResult.status()));
         if (activationResult.verification() != null) {
             final LoyaltyVerification verification = activationResult.verification();

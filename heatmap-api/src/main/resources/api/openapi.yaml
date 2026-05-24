@@ -791,24 +791,17 @@ paths:
         '409':
           $ref: '#/components/responses/Conflict'
 
-  /business/loyalty-rules/{ruleId}/activate:
+  /business/loyalty-rules/activate:
     post:
       tags: [Business Owner Loyalty]
       summary: Activate guest loyalty QR code
       description: >
-        Allows the authenticated owner of the venue linked to the selected
-        loyalty rule to activate it for a specific user.
+        Allows the authenticated owner of the venue linked to the QR session
+        to activate the loyalty rule for a specific user.
       operationId: activateLoyaltyQr
       x-required-roles: [BUSINESS_OWNER]
       security:
         - bearerAuth: []
-      parameters:
-        - name: ruleId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
       requestBody:
         required: true
         content:

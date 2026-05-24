@@ -17,4 +17,6 @@ public interface LoyaltyVerificationRepository {
     void deleteByVenueId(UUID venueId);
 
     List<LoyaltyRuleUsageCount> countUsagesByRuleIds(Collection<UUID> ruleIds);
+
+    List<UUID> findUsedRuleIdsByUserIdAndRuleIds(UUID userId, Collection<UUID> ruleIds);
 }

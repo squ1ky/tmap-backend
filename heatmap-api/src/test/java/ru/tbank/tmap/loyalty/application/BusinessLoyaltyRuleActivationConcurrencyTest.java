@@ -77,9 +77,9 @@ class BusinessLoyaltyRuleActivationConcurrencyTest {
         ).qrPayload();
 
         final RedeemLoyaltyRuleCommand firstCommand =
-                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, firstQrPayload);
+                new RedeemLoyaltyRuleCommand(OWNER_ID, firstQrPayload);
         final RedeemLoyaltyRuleCommand secondCommand =
-                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, secondQrPayload);
+                new RedeemLoyaltyRuleCommand(OWNER_ID, secondQrPayload);
 
         final List<LoyaltyActivationStatus> statuses = runConcurrently(firstCommand, secondCommand);
 
@@ -106,9 +106,9 @@ class BusinessLoyaltyRuleActivationConcurrencyTest {
         ).qrPayload();
 
         final RedeemLoyaltyRuleCommand firstCommand =
-                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, firstQrPayload);
+                new RedeemLoyaltyRuleCommand(OWNER_ID, firstQrPayload);
         final RedeemLoyaltyRuleCommand secondCommand =
-                new RedeemLoyaltyRuleCommand(OWNER_ID, ruleId, secondQrPayload);
+                new RedeemLoyaltyRuleCommand(OWNER_ID, secondQrPayload);
 
         final List<LoyaltyActivationStatus> statuses = runConcurrently(firstCommand, secondCommand);
 

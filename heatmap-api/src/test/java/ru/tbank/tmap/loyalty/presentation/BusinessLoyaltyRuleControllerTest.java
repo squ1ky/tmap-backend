@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.openapitools.model.LoyaltyActivationRequest;
 import org.openapitools.model.LoyaltyRuleCreateRequest;
 import org.openapitools.model.LoyaltyRuleUpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +26,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
 import ru.tbank.tmap.loyalty.application.BusinessLoyaltyRuleService;
+import ru.tbank.tmap.loyalty.application.query.LoyaltyActivationResult;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleDetails;
+import ru.tbank.tmap.loyalty.domain.LoyaltyActivationStatus;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
+import ru.tbank.tmap.loyalty.domain.LoyaltyVerification;
 import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
@@ -157,6 +161,29 @@ class BusinessLoyaltyRuleControllerTest {
     }
 
     @Test
+    void activateLoyaltyQr_whenRequestValid_thenReturnsActivationResult() throws Exception {
+        given(businessLoyaltyRuleService.redeemLoyaltyRule(org.mockito.ArgumentMatchers.any()))
+                .willReturn(new LoyaltyActivationResult(
+                        RULE_ID,
+                        LoyaltyActivationStatus.SUCCESS,
+                        verification()
+                ));
+
+        final LoyaltyActivationRequest request = new LoyaltyActivationRequest()
+                .qrPayload("lqr:1:test-token");
+
+        mockMvc.perform(post("/api/v1/business/loyalty-rules/activate")
+                        .with(user(ownerPrincipal()))
+                        .with(csrf())
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ruleId").value(RULE_ID.toString()))
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.venueId").value(VENUE_ID.toString()));
+    }
+
+    @Test
     @WithMockUser(roles = "USER")
     void getBusinessVenueLoyaltyRules_whenUserIsNotOwnerRole_thenReturnsForbidden() throws Exception {
         mockMvc.perform(get("/api/v1/business/venues/{id}/loyalty-rules", VENUE_ID))
@@ -183,5 +210,18 @@ class BusinessLoyaltyRuleControllerTest {
         rule.setActive(active);
         rule.setCreatedAt(OffsetDateTime.parse("2026-04-27T08:30:00+03:00"));
         return new LoyaltyRuleDetails(rule, currentUsages);
+    }
+
+    private LoyaltyVerification verification() {
+        final LoyaltyRule rule = new LoyaltyRule(RULE_ID, VENUE_ID, "Discount 15%", 15, 100);
+        final LoyaltyVerification verification = new LoyaltyVerification(
+                UUID.fromString("44444444-4444-4444-4444-444444444444"),
+                VENUE_ID,
+                UUID.fromString("55555555-5555-5555-5555-555555555555"),
+                rule,
+                15
+        );
+        verification.setVerifiedAt(OffsetDateTime.parse("2026-05-24T10:00:00+03:00"));
+        return verification;
     }
 }

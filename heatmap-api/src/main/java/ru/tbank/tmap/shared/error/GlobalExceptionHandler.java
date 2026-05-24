@@ -18,6 +18,7 @@ import ru.tbank.tmap.user.api.exception.EmailAlreadyExistsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidCredentialsException;
 import ru.tbank.tmap.auth.domain.exception.InvalidRefreshTokenException;
 import ru.tbank.tmap.heatmap.domain.exception.ClusterNotFoundException;
+import ru.tbank.tmap.loyalty.application.exception.VenueAccessDeniedException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleStateException;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleUpdateValidationException;
@@ -90,6 +91,13 @@ public class GlobalExceptionHandler {
         log.warn("Loyalty rule conflict: ruleId={}, message={}", ex.getRuleId(), ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(ErrorCode.CONFLICT, ex.getMessage()));
+    }
+
+    @ExceptionHandler(VenueAccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleVenueAccessDenied(final VenueAccessDeniedException ex) {
+        log.warn("Venue access denied: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(ErrorCode.FORBIDDEN, ex.getMessage()));
     }
 
     @ExceptionHandler(LoyaltyRuleUpdateValidationException.class)

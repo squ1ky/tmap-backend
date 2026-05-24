@@ -58,7 +58,12 @@ public class VenueController implements VenuesPublicApi {
         return publicVenueService.getVenueById(id)
                 .map(venue -> venuePublicMapper.toResponse(
                         venue,
-                        businessLoyaltyRuleMapper.toResponseList(loyaltyRuleFacade.getActiveVenueRules(venue.id()))
+                        businessLoyaltyRuleMapper.toResponseList(
+                                loyaltyRuleFacade.getAvailableVenueRulesForUser(
+                                        venue.id(),
+                                        SecurityUtils.currentUserId()
+                                )
+                        )
                 ))
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new VenueNotFoundException(id));

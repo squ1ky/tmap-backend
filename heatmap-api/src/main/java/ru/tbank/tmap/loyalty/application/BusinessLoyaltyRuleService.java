@@ -7,11 +7,15 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.loyalty.api.LoyaltyBusinessFacade;
 import ru.tbank.tmap.loyalty.application.command.RedeemLoyaltyRuleCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
+import ru.tbank.tmap.loyalty.application.query.BusinessLoyaltyHistoryProjection;
 import ru.tbank.tmap.loyalty.application.port.VenueOwnershipPort;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyActivationResult;
 import ru.tbank.tmap.loyalty.domain.LoyaltyActivationStatus;
@@ -33,6 +37,7 @@ public class BusinessLoyaltyRuleService {
 
     private final LoyaltyRuleRepository loyaltyRuleRepository;
     private final LoyaltyVerificationRepository loyaltyVerificationRepository;
+    private final LoyaltyBusinessFacade loyaltyBusinessFacade;
     private final VenueOwnershipPort venueOwnershipPort;
     private final LoyaltyQrService loyaltyQrService;
 
@@ -78,6 +83,20 @@ public class BusinessLoyaltyRuleService {
                             loyaltyVerificationRepository.countByRuleId(rule.getId())
                     );
                 });
+    }
+
+    public Page<BusinessLoyaltyHistoryProjection> getRuleHistory(
+            final UUID ownerId,
+            final UUID ruleId,
+            final int page,
+            final int size
+    ) {
+        final LoyaltyRule rule = loyaltyRuleRepository.findById(ruleId)
+                .orElseThrow(() -> new LoyaltyRuleNotFoundException(ruleId));
+
+        venueOwnershipPort.requireOwner(rule.getVenueId(), ownerId);
+
+        return loyaltyBusinessFacade.findRuleHistory(ruleId, PageRequest.of(page, size));
     }
 
     @Transactional

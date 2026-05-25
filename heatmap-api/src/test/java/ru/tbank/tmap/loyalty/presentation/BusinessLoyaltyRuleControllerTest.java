@@ -22,20 +22,24 @@ import org.openapitools.model.LoyaltyRuleUpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
+import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 import ru.tbank.tmap.loyalty.application.BusinessLoyaltyRuleService;
 import ru.tbank.tmap.loyalty.application.exception.VenueAccessDeniedException;
+import ru.tbank.tmap.loyalty.application.query.BusinessLoyaltyHistoryProjection;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyActivationResult;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleDetails;
 import ru.tbank.tmap.loyalty.domain.LoyaltyActivationStatus;
 import ru.tbank.tmap.loyalty.domain.LoyaltyRule;
 import ru.tbank.tmap.loyalty.domain.LoyaltyVerification;
+import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
-import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 
 @WebMvcTest(BusinessLoyaltyRuleController.class)
 @Import({
@@ -183,6 +187,83 @@ class BusinessLoyaltyRuleControllerTest {
                 .andExpect(jsonPath("$.ruleId").value(RULE_ID.toString()))
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.venueId").value(VENUE_ID.toString()));
+    }
+
+    @Test
+    void getBusinessLoyaltyRuleHistory_whenOwnerAuthenticated_thenReturnsHistoryPage() throws Exception {
+        given(businessLoyaltyRuleService.getRuleHistory(
+                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                RULE_ID,
+                0,
+                20
+        )).willReturn(new PageImpl<>(
+                List.of(new BusinessLoyaltyHistoryProjection(
+                        UUID.fromString("44444444-4444-4444-4444-444444444444"),
+                        VENUE_ID,
+                        UUID.fromString("55555555-5555-5555-5555-555555555555"),
+                        RULE_ID,
+                        15,
+                        OffsetDateTime.parse("2026-05-24T10:00:00+03:00")
+                )),
+                PageRequest.of(0, 20),
+                1
+        ));
+
+        mockMvc.perform(get("/api/v1/business/loyalty-rules/{id}/history", RULE_ID)
+                        .with(user(ownerPrincipal()))
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items").isArray())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value("44444444-4444-4444-4444-444444444444"))
+                .andExpect(jsonPath("$.items[0].venueId").value(VENUE_ID.toString()))
+                .andExpect(jsonPath("$.items[0].ruleId").value(RULE_ID.toString()))
+                .andExpect(jsonPath("$.items[0].userLabel").value("Guest #55555555"))
+                .andExpect(jsonPath("$.items[0].discountApplied").value(15))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    void getBusinessLoyaltyRuleHistory_whenRuleNotFound_thenReturnsNotFound() throws Exception {
+        willThrow(new LoyaltyRuleNotFoundException(RULE_ID))
+                .given(businessLoyaltyRuleService)
+                .getRuleHistory(UUID.fromString("11111111-1111-1111-1111-111111111111"), RULE_ID, 0, 20);
+
+        mockMvc.perform(get("/api/v1/business/loyalty-rules/{id}/history", RULE_ID)
+                        .with(user(ownerPrincipal()))
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("Loyalty rule not found"));
+    }
+
+    @Test
+    void getBusinessLoyaltyRuleHistory_whenVenueAccessDenied_thenReturnsForbidden() throws Exception {
+        willThrow(new VenueAccessDeniedException(VENUE_ID))
+                .given(businessLoyaltyRuleService)
+                .getRuleHistory(UUID.fromString("11111111-1111-1111-1111-111111111111"), RULE_ID, 0, 20);
+
+        mockMvc.perform(get("/api/v1/business/loyalty-rules/{id}/history", RULE_ID)
+                        .with(user(ownerPrincipal()))
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"))
+                .andExpect(jsonPath("$.message").value("Venue not accessible " + VENUE_ID));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void getBusinessLoyaltyRuleHistory_whenUserIsNotOwnerRole_thenReturnsForbidden() throws Exception {
+        mockMvc.perform(get("/api/v1/business/loyalty-rules/{id}/history", RULE_ID)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isForbidden());
     }
 
     @Test

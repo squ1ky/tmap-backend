@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.tbank.tmap.loyalty.api.LoyaltyBusinessFacade;
 import ru.tbank.tmap.loyalty.domain.LoyaltyQrSession;
 import ru.tbank.tmap.loyalty.application.command.RedeemLoyaltyRuleCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
@@ -56,6 +57,9 @@ class BusinessLoyaltyRuleServiceTest {
     @Mock
     private LoyaltyQrService loyaltyQrService;
 
+    @Mock
+    private LoyaltyBusinessFacade loyaltyBusinessFacade;
+
     private BusinessLoyaltyRuleService businessLoyaltyRuleService;
 
     @BeforeEach
@@ -63,6 +67,7 @@ class BusinessLoyaltyRuleServiceTest {
         businessLoyaltyRuleService = new BusinessLoyaltyRuleService(
                 loyaltyRuleRepository,
                 loyaltyVerificationRepository,
+                loyaltyBusinessFacade,
                 venueOwnershipPort,
                 loyaltyQrService
         );

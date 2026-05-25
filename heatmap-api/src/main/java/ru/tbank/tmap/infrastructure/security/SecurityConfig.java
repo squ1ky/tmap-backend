@@ -30,8 +30,11 @@ public class SecurityConfig {
     private static final String[] PUBLIC_READ_ENDPOINTS = {
             "/api/v1/heatmap/**",
             "/api/v1/venues",
-            "/api/v1/venues/**"
+            "/api/v1/venues/search",
+            "/api/v1/venues/*"
     };
+
+    private static final String USER_VENUE_QR_ENDPOINT = "/api/v1/venues/*/loyalty-rules/*/qr";
 
     private static final String[] PUBLIC_INFRA_ENDPOINTS = {
             "/error",
@@ -65,6 +68,7 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_AUTH_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, USER_VENUE_QR_ENDPOINT).authenticated()
                         .requestMatchers(PUBLIC_READ_ENDPOINTS).permitAll()
                         .requestMatchers(PUBLIC_INFRA_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, BUSINESS_VENUE_CREATION_ENDPOINT).authenticated()

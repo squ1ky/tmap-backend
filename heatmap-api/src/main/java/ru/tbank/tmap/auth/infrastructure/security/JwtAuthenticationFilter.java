@@ -14,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -49,7 +50,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (tokenIssuer.isValidAccessToken(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
             final String email = tokenIssuer.extractEmail(token);
             if (email != null) {
-                final UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                final UserDetails userDetails;
+                try {
+                    userDetails = userDetailsService.loadUserByUsername(email);
+                } catch (UsernameNotFoundException e) {
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
                 try {
                     userDetailsChecker.check(userDetails);

@@ -8,10 +8,10 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tbank.tmap.loyalty.api.LoyaltyBusinessFacade;
 import ru.tbank.tmap.loyalty.application.command.RedeemLoyaltyRuleCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
@@ -37,6 +37,7 @@ public class BusinessLoyaltyRuleService {
 
     private final LoyaltyRuleRepository loyaltyRuleRepository;
     private final LoyaltyVerificationRepository loyaltyVerificationRepository;
+    private final LoyaltyBusinessFacade loyaltyBusinessFacade;
     private final VenueOwnershipPort venueOwnershipPort;
     private final LoyaltyQrService loyaltyQrService;
 
@@ -95,7 +96,7 @@ public class BusinessLoyaltyRuleService {
 
         venueOwnershipPort.requireOwner(rule.getVenueId(), ownerId);
 
-        return new PageImpl<>(List.of(), PageRequest.of(page, size), 0);
+        return loyaltyBusinessFacade.findRuleHistory(ruleId, PageRequest.of(page, size));
     }
 
     @Transactional

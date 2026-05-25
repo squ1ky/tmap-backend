@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.openapitools.api.BusinessOwnerLoyaltyApi;
+import org.openapitools.model.BusinessLoyaltyVerificationPage;
 import org.openapitools.model.LoyaltyActivationRequest;
 import org.openapitools.model.LoyaltyRuleCreateRequest;
 import org.openapitools.model.LoyaltyRuleResponse;
@@ -87,6 +88,18 @@ public class BusinessLoyaltyRuleController implements BusinessOwnerLoyaltyApi {
                         ownerId,
                         loyaltyActivationRequest.getQrPayload()
                 ))
+        ));
+    }
+
+    @Override
+    public ResponseEntity<BusinessLoyaltyVerificationPage> getBusinessLoyaltyRuleHistory(
+            final UUID id,
+            final Integer page,
+            final Integer size
+    ) {
+        final UUID ownerId = SecurityUtils.currentUserId();
+        return ResponseEntity.ok(businessLoyaltyRuleMapper.toHistoryPageResponse(
+                businessLoyaltyRuleService.getRuleHistory(ownerId, id, page, size)
         ));
     }
 }

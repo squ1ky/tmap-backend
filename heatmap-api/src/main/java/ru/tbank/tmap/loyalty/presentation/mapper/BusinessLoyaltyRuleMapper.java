@@ -1,14 +1,18 @@
 package ru.tbank.tmap.loyalty.presentation.mapper;
 
 import java.util.List;
+import org.openapitools.model.BusinessLoyaltyVerificationPage;
+import org.openapitools.model.BusinessLoyaltyVerificationResponse;
 import org.openapitools.model.LoyaltyQrResponse;
 import org.openapitools.model.LoyaltyRuleCreateRequest;
 import org.openapitools.model.LoyaltyRuleResponse;
 import org.openapitools.model.LoyaltyRuleUpdateRequest;
 import org.openapitools.model.LoyaltyVerifyResponse;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleCreateCommand;
 import ru.tbank.tmap.loyalty.application.command.BusinessLoyaltyRuleUpdateCommand;
+import ru.tbank.tmap.loyalty.application.query.BusinessLoyaltyHistoryProjection;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyActivationResult;
 import ru.tbank.tmap.loyalty.domain.LoyaltyActivationStatus;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyQrView;
@@ -86,5 +90,26 @@ public class BusinessLoyaltyRuleMapper {
                 .ruleId(qrView.ruleId())
                 .qrPayload(qrView.qrPayload())
                 .expiresAt(qrView.expiresAt());
+    }
+
+    public BusinessLoyaltyVerificationPage toHistoryPageResponse(
+            final Page<BusinessLoyaltyHistoryProjection> pageView
+    ) {
+        return new BusinessLoyaltyVerificationPage()
+                .items(pageView.getContent().stream().map(this::toHistoryResponse).toList())
+                .page(pageView.getNumber())
+                .size(pageView.getSize())
+                .totalPages(pageView.getTotalPages())
+                .totalElements(pageView.getTotalElements());
+    }
+
+    private BusinessLoyaltyVerificationResponse toHistoryResponse(final BusinessLoyaltyHistoryProjection item) {
+        return new BusinessLoyaltyVerificationResponse()
+                .id(item.id())
+                .venueId(item.venueId())
+                .userLabel("Guest #" + item.userId().toString().substring(0, 8))
+                .ruleId(item.ruleId())
+                .discountApplied(item.discountApplied())
+                .verifiedAt(item.verifiedAt());
     }
 }

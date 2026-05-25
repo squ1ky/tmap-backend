@@ -21,11 +21,14 @@ import org.openapitools.model.LoyaltyRuleUpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
 import ru.tbank.tmap.loyalty.application.BusinessLoyaltyRuleService;
+import ru.tbank.tmap.loyalty.application.query.BusinessLoyaltyHistoryProjection;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyActivationResult;
 import ru.tbank.tmap.loyalty.application.query.LoyaltyRuleDetails;
 import ru.tbank.tmap.loyalty.domain.LoyaltyActivationStatus;
@@ -181,6 +184,32 @@ class BusinessLoyaltyRuleControllerTest {
                 .andExpect(jsonPath("$.ruleId").value(RULE_ID.toString()))
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.venueId").value(VENUE_ID.toString()));
+    }
+
+    @Test
+    void getBusinessLoyaltyRuleHistory_whenOwnerAuthenticated_thenReturnsHistoryPage() throws Exception {
+        given(businessLoyaltyRuleService.getRuleHistory(
+                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                RULE_ID,
+                0,
+                20
+        )).willReturn(new PageImpl<>(
+                List.of(),
+                PageRequest.of(0, 20),
+                0
+        ));
+
+        mockMvc.perform(get("/api/v1/business/loyalty-rules/{id}/history", RULE_ID)
+                        .with(user(ownerPrincipal()))
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items").isArray())
+                .andExpect(jsonPath("$.items.length()").value(0))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.totalPages").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 
     @Test

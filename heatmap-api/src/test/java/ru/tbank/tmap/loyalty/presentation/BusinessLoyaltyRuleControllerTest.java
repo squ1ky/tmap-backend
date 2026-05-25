@@ -28,6 +28,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.tbank.tmap.auth.infrastructure.security.CustomUserDetails;
+import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 import ru.tbank.tmap.loyalty.application.BusinessLoyaltyRuleService;
 import ru.tbank.tmap.loyalty.application.exception.VenueAccessDeniedException;
 import ru.tbank.tmap.loyalty.application.query.BusinessLoyaltyHistoryProjection;
@@ -39,7 +40,6 @@ import ru.tbank.tmap.loyalty.domain.LoyaltyVerification;
 import ru.tbank.tmap.loyalty.domain.exception.LoyaltyRuleNotFoundException;
 import ru.tbank.tmap.loyalty.presentation.mapper.BusinessLoyaltyRuleMapper;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
-import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 
 @WebMvcTest(BusinessLoyaltyRuleController.class)
 @Import({
@@ -264,6 +264,25 @@ class BusinessLoyaltyRuleControllerTest {
                         .param("page", "0")
                         .param("size", "20"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void activateLoyaltyQr_whenVenueAccessDenied_thenReturnsForbidden() throws Exception {
+        willThrow(new VenueAccessDeniedException(VENUE_ID))
+                .given(businessLoyaltyRuleService)
+                .redeemLoyaltyRule(org.mockito.ArgumentMatchers.any());
+
+        final LoyaltyActivationRequest request = new LoyaltyActivationRequest()
+                .qrPayload("lqr:1:test-token");
+
+        mockMvc.perform(post("/api/v1/business/loyalty-rules/activate")
+                        .with(user(ownerPrincipal()))
+                        .with(csrf())
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"))
+                .andExpect(jsonPath("$.message").value("Venue not accessible " + VENUE_ID));
     }
 
     @Test

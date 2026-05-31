@@ -1110,6 +1110,45 @@ paths:
         '409':
           $ref: '#/components/responses/Conflict'
 
+  /admin/users/{id}/role:
+    patch:
+      tags: [AdminUsers]
+      summary: Change user role
+      operationId: updateAdminUserRole
+      x-required-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUserRoleUpdateRequest'
+      responses:
+        '200':
+          description: User role updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserModerationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
 # ──────────────────────────────────────────────
 #  COMPONENTS
 # ──────────────────────────────────────────────
@@ -1231,6 +1270,17 @@ components:
     UserRole:
       type: string
       enum: [USER, BUSINESS_OWNER, ADMIN]
+
+    AdminUserAssignableRole:
+      type: string
+      enum: [USER, BUSINESS_OWNER]
+
+    AdminUserRoleUpdateRequest:
+      type: object
+      required: [role]
+      properties:
+        role:
+          $ref: '#/components/schemas/AdminUserAssignableRole'
 
     VenueModerationStatus:
       type: string
@@ -1829,6 +1879,10 @@ components:
           example: "PromoSpammer"
         role:
           $ref: '#/components/schemas/UserRole'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminUserAssignableRole'
         blocked:
           type: boolean
           example: true

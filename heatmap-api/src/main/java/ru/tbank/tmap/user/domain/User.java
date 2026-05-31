@@ -92,6 +92,14 @@ public class User {
         }
     }
 
+    public void changeRole(final UserRole newRole) {
+        Objects.requireNonNull(newRole, "newRole");
+        if (role == UserRole.ADMIN || newRole == UserRole.ADMIN) {
+            throw new IllegalArgumentException("Only USER and BUSINESS_OWNER roles can be managed");
+        }
+        role = newRole;
+    }
+
     public void block() {
         if (blocked) {
             throw new UserAlreadyBlockedException(id);

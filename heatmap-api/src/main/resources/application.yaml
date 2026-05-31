@@ -109,7 +109,7 @@ app:
   kafka:
     transactions-topic: ${KAFKA_TRANSACTIONS_TOPIC}
   cache:
-    enabled: true
+    enabled: false
   minio:
     endpoint: ${MINIO_ENDPOINT}
     public-endpoint: ${MINIO_PUBLIC_ENDPOINT:${MINIO_ENDPOINT}}

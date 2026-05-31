@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -154,6 +155,13 @@ public class GlobalExceptionHandler {
                         ErrorCode.VALIDATION_ERROR,
                         "Invalid value for parameter: " + ex.getName()
                 ));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadableMessage(final HttpMessageNotReadableException ex) {
+        log.warn("Request body parse error: {}", ex.getMessage());
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse(ErrorCode.VALIDATION_ERROR, "Malformed request body"));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

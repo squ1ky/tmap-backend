@@ -2,6 +2,7 @@ package ru.tbank.tmap.user.presentation;
 
 import lombok.RequiredArgsConstructor;
 import org.openapitools.api.AdminUsersApi;
+import org.openapitools.model.AdminUserRoleUpdateRequest;
 import org.openapitools.model.AdminUserModerationPage;
 import org.openapitools.model.AdminUserModerationResponse;
 import org.openapitools.model.UserRole;
@@ -55,5 +56,18 @@ public class AdminUserController implements AdminUsersApi {
     @Override
     public ResponseEntity<AdminUserModerationResponse> unblockAdminUser(final UUID id) {
         return ResponseEntity.ok(adminUserMapper.toResponse(adminUserService.unblock(id)));
+    }
+
+    @Override
+    public ResponseEntity<AdminUserModerationResponse> updateAdminUserRole(
+            final UUID id,
+            final AdminUserRoleUpdateRequest adminUserRoleUpdateRequest
+    ) {
+        return ResponseEntity.ok(adminUserMapper.toResponse(
+                adminUserService.updateRole(
+                        id,
+                        adminUserMapper.toDomainAssignableRole(adminUserRoleUpdateRequest.getRole())
+                )
+        ));
     }
 }

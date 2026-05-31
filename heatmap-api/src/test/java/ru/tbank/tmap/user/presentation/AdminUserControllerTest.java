@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -23,6 +24,7 @@ import ru.tbank.tmap.infrastructure.security.TestSecurityConfig;
 import ru.tbank.tmap.shared.error.GlobalExceptionHandler;
 import ru.tbank.tmap.user.application.service.AdminUserService;
 import ru.tbank.tmap.user.domain.User;
+import ru.tbank.tmap.user.domain.UserRole;
 import ru.tbank.tmap.user.domain.UserSearchCriteria;
 import ru.tbank.tmap.user.domain.UserTestFactory;
 import ru.tbank.tmap.user.domain.exception.UserAlreadyBlockedException;
@@ -69,6 +71,7 @@ class AdminUserControllerTest {
                 .andExpect(jsonPath("$.items[0].nickname").value(UserTestFactory.DEFAULT_NICKNAME))
                 .andExpect(jsonPath("$.items[0].email").value(UserTestFactory.DEFAULT_EMAIL))
                 .andExpect(jsonPath("$.items[0].role").value("USER"))
+                .andExpect(jsonPath("$.items[0].roles[0]").value("USER"))
                 .andExpect(jsonPath("$.items[0].blocked").value(false))
                 .andExpect(jsonPath("$.totalElements").value(1));
     }
@@ -156,5 +159,71 @@ class AdminUserControllerTest {
         mockMvc.perform(patch("/api/v1/admin/users/{id}/unblock", USER_ID)
                         .with(csrf()))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void updateAdminUserRole_whenUserIsAdmin_thenReturnUpdatedUser() throws Exception {
+        final User owner = UserTestFactory.createUser(UserRole.BUSINESS_OWNER, false);
+        given(adminUserService.updateRole(USER_ID, UserRole.BUSINESS_OWNER)).willReturn(owner);
+
+        mockMvc.perform(patch("/api/v1/admin/users/{id}/role", USER_ID)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "role": "BUSINESS_OWNER"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(USER_ID.toString()))
+                .andExpect(jsonPath("$.role").value("BUSINESS_OWNER"))
+                .andExpect(jsonPath("$.roles[0]").value("USER"))
+                .andExpect(jsonPath("$.roles[1]").value("BUSINESS_OWNER"));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void updateAdminUserRole_whenUserIsNotAdmin_thenReturnForbidden() throws Exception {
+        mockMvc.perform(patch("/api/v1/admin/users/{id}/role", USER_ID)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "role": "BUSINESS_OWNER"
+                                }
+                                """))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void updateAdminUserRole_whenUserDoesNotExist_thenReturnNotFound() throws Exception {
+        given(adminUserService.updateRole(USER_ID, UserRole.BUSINESS_OWNER))
+                .willThrow(UserNotFoundException.byId(USER_ID));
+
+        mockMvc.perform(patch("/api/v1/admin/users/{id}/role", USER_ID)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "role": "BUSINESS_OWNER"
+                                }
+                                """))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void updateAdminUserRole_whenRoleIsInvalid_thenReturnBadRequest() throws Exception {
+        mockMvc.perform(patch("/api/v1/admin/users/{id}/role", USER_ID)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "role": "ADMIN"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
     }
 }

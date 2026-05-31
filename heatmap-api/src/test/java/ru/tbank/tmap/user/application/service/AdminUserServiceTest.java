@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRepository;
+import ru.tbank.tmap.user.domain.UserRole;
 import ru.tbank.tmap.user.domain.UserSearchCriteria;
 import ru.tbank.tmap.user.domain.UserTestFactory;
 import ru.tbank.tmap.user.domain.exception.UserAlreadyBlockedException;
@@ -116,5 +117,45 @@ class AdminUserServiceTest {
 
         assertThatThrownBy(() -> adminUserService.unblock(USER_ID))
                 .isInstanceOf(UserNotBlockedException.class);
+    }
+
+    @Test
+    void updateRole_whenUserExists_thenChangeRole() {
+        final User user = UserTestFactory.createUser(false);
+        given(userRepository.findById(USER_ID)).willReturn(Optional.of(user));
+
+        final User result = adminUserService.updateRole(USER_ID, UserRole.BUSINESS_OWNER);
+
+        assertThat(result.getRole()).isEqualTo(UserRole.BUSINESS_OWNER);
+        assertThat(result).isSameAs(user);
+    }
+
+    @Test
+    void updateRole_whenUserDoesNotExist_thenReturnNotFound() {
+        given(userRepository.findById(USER_ID)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> adminUserService.updateRole(USER_ID, UserRole.BUSINESS_OWNER))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessage("User not found");
+    }
+
+    @Test
+    void updateRole_whenTargetRoleIsAdmin_thenReturnValidationError() {
+        final User user = UserTestFactory.createUser(false);
+        given(userRepository.findById(USER_ID)).willReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> adminUserService.updateRole(USER_ID, UserRole.ADMIN))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Only USER and BUSINESS_OWNER roles can be managed");
+    }
+
+    @Test
+    void updateRole_whenCurrentUserIsAdmin_thenReturnValidationError() {
+        final User user = UserTestFactory.createUser(UserRole.ADMIN, false);
+        given(userRepository.findById(USER_ID)).willReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> adminUserService.updateRole(USER_ID, UserRole.USER))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Only USER and BUSINESS_OWNER roles can be managed");
     }
 }

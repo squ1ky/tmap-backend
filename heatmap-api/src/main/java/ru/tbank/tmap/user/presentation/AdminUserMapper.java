@@ -2,6 +2,7 @@ package ru.tbank.tmap.user.presentation;
 
 import org.openapitools.model.AdminUserModerationPage;
 import org.openapitools.model.AdminUserModerationResponse;
+import org.openapitools.model.AdminUserAssignableRole;
 import org.openapitools.model.UserRole;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ public class AdminUserMapper {
                 .email(user.getEmail())
                 .nickname(user.getNickname())
                 .role(toApiRole(user.getRole()))
+                .roles(toApiRoles(user.getRole()))
                 .blocked(user.isBlocked())
                 .createdAt(user.getCreatedAt());
     }
@@ -39,7 +41,19 @@ public class AdminUserMapper {
         return role == null ? null : ru.tbank.tmap.user.domain.UserRole.valueOf(role.name());
     }
 
+    public ru.tbank.tmap.user.domain.UserRole toDomainAssignableRole(final AdminUserAssignableRole role) {
+        return role == null ? null : ru.tbank.tmap.user.domain.UserRole.valueOf(role.name());
+    }
+
     private UserRole toApiRole(final ru.tbank.tmap.user.domain.UserRole role) {
         return UserRole.valueOf(role.name());
+    }
+
+    private List<AdminUserAssignableRole> toApiRoles(final ru.tbank.tmap.user.domain.UserRole role) {
+        return switch (role) {
+            case USER -> List.of(AdminUserAssignableRole.USER);
+            case BUSINESS_OWNER -> List.of(AdminUserAssignableRole.USER, AdminUserAssignableRole.BUSINESS_OWNER);
+            case ADMIN -> List.of();
+        };
     }
 }

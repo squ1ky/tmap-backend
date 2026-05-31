@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tbank.tmap.user.domain.User;
 import ru.tbank.tmap.user.domain.UserRepository;
+import ru.tbank.tmap.user.domain.UserRole;
 import ru.tbank.tmap.user.domain.UserSearchCriteria;
 import ru.tbank.tmap.user.domain.exception.UserNotFoundException;
 
@@ -36,6 +37,14 @@ public class AdminUserService {
         final User user = userRepository.findById(userId)
                 .orElseThrow(() -> UserNotFoundException.byId(userId));
         user.unblock();
+        return user;
+    }
+
+    @Transactional
+    public User updateRole(final UUID userId, final UserRole role) {
+        final User user = userRepository.findById(userId)
+                .orElseThrow(() -> UserNotFoundException.byId(userId));
+        user.changeRole(role);
         return user;
     }
 }

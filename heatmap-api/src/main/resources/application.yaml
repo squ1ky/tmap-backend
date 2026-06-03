@@ -76,6 +76,8 @@ app:
       same-site: None
     cors:
       allowed-origin-patterns:
+        - "https://t-map.ru"
+        - "https://t-map-heatmap.netlify.app"
         - "https://deploy-preview-*--t-map-heatmap.netlify.app"
         - "http://localhost:5173"
       allowed-methods:
@@ -101,7 +103,7 @@ app:
     initial-delay-ms: 10000
     interval-ms: 60000
   anomaly:
-    ratio-threshold: 0.5
+    ratio-threshold: 1.2
     min-baseline: 1
     min-baseline-days: 1
   qr:

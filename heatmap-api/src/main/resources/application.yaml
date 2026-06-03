@@ -76,7 +76,7 @@ app:
       same-site: None
     cors:
       allowed-origin-patterns:
-        - "https://tmap.ru"
+        - "https://t-map.ru"
         - "https://t-map-heatmap.netlify.app"
         - "https://deploy-preview-*--t-map-heatmap.netlify.app"
         - "http://localhost:5173"

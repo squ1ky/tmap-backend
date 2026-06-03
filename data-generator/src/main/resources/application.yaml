@@ -37,10 +37,10 @@ app:
   generator:
     topic: ${KAFKA_TRANSACTIONS_TOPIC}
     batch:
-      min-size: 50
-      max-size: 150
-      min-interval-ms: 200
-      max-interval-ms: 800
+      min-size: 5
+      max-size: 20
+      min-interval-ms: 2000
+      max-interval-ms: 5000
     amount:
       min: 100.00
       max: 5000.00
